@@ -1,5 +1,6 @@
 package me.salamander.noisetest.render.api;
 
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -12,6 +13,9 @@ public class Window {
 
     private long windowHandle;
     private boolean resized;
+
+    private int previousWidth, previousHeight, previousX, previousY;
+    private boolean fullscreen = false;
 
     public Window(String title, int width, int height){
         this.title = title;
@@ -39,8 +43,6 @@ public class Window {
         glfwMakeContextCurrent(windowHandle);
         GL.createCapabilities();
         glfwSwapInterval(1);
-
-        glfwShowWindow(windowHandle);
 
         glEnable(GL_DEPTH_TEST);
         //glEnable(GL_FRAMEBUFFER_SRGB);
@@ -84,5 +86,42 @@ public class Window {
         glfwGetCursorPos(windowHandle, xpos, ypos);
 
         return new double[]{xpos[0], ypos[0]};
+    }
+
+    public void show(){
+        glfwShowWindow(windowHandle);
+    }
+
+    public void hide(){
+        glfwHideWindow(windowHandle);
+    }
+
+    public void fullscreen(){
+        long monitor = glfwGetPrimaryMonitor();
+        GLFWVidMode videoMode = glfwGetVideoMode(monitor);
+
+        previousWidth = width;
+        previousHeight = height;
+        int[] xTemp = new int[1];
+        int[] yTemp = new int[1];
+        glfwGetWindowPos(windowHandle, xTemp, yTemp);
+        previousX = xTemp[0];
+        previousY = yTemp[0];
+
+        glfwSetWindowMonitor(windowHandle, monitor, 0, 0, videoMode.width(), videoMode.height(), videoMode.refreshRate());
+    }
+
+    public void exitFullscreen(){
+        glfwSetWindowMonitor(windowHandle, 0, previousX, previousY, previousWidth, previousHeight, 0);
+    }
+
+    public void toggleFullscreen(){
+        fullscreen = !fullscreen;
+
+        if(fullscreen){
+            fullscreen();
+        }else{
+            exitFullscreen();
+        }
     }
 }

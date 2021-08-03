@@ -1,6 +1,7 @@
 package me.salamander.noisetest.render;
 
 import me.salamander.noisetest.NoiseTest;
+import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.render.api.*;
@@ -8,6 +9,7 @@ import me.salamander.noisetest.render.api.Window;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
@@ -28,8 +30,10 @@ public class HeightMapRenderer {
     private float heightScale = 0;
 
     private final int mvpLocation, lightDirectionLocation, doDiffuseLocation;
-
     private final int width, height;
+
+    private float defaultStep = 0.01f;
+    private ColorSampler defaultSampler = ColorGradient.DEFAULT;
 
     private final List<NamedBuffer> buffers = new ArrayList<>();
 
@@ -100,9 +104,13 @@ public class HeightMapRenderer {
         addBuffer(name, buffer);
     }
 
-    public void addHeightmap(String name, NoiseModule module, float heightScale, ColorSampler sampler){
-        double[][] heightMap = RenderHelper.generateNoise(module, width, height, 0.01f);
+    public void addHeightmap(String name, NoiseModule module, float heightScale, ColorSampler sampler, float step){
+        double[][] heightMap = RenderHelper.generateNoise(module, width, height, step);
         addBuffer(name, RenderHelper.createBufferFromHeightmap(heightMap, heightScale, sampler));
+    }
+
+    public void addHeightmap(String name, NoiseModule module){
+        addHeightmap(name, module, heightScale, defaultSampler, defaultStep);
     }
 
     public void setHeightmapData(BufferObject buffer){
@@ -143,26 +151,8 @@ public class HeightMapRenderer {
         glDrawElements(GL_TRIANGLES, (width - 1) * (height - 1) * 2 * 3, GL_UNSIGNED_INT, 0);
     }
 
-    //Blocking call. Only use for testing purposes
-    public void mainLoop(){
-        Camera camera = new Camera(window, width / 2, heightScale + 5, height / 2); //Create main camera
-
-        program.bind();
-        program.setUniform(doDiffuseLocation, true);
-
-        TimeMeasurer dtGetter = new TimeMeasurer();
-        while(!window.shouldClose()){
-            camera.handleInput(window, dtGetter.getDT());
-
-            draw(camera.getViewMatrix());
-
-            window.swapBuffers();
-
-            glfwPollEvents();
-        }
-    }
-
     public void renderAll(){
+        window.show();
         Camera camera = new Camera(window, width / 2, heightScale + 5, height / 2);
 
         program.bind();
@@ -170,6 +160,7 @@ public class HeightMapRenderer {
 
         TimeMeasurer dtGetter = new TimeMeasurer();
         FirstClicked switcher = new FirstClicked(window, GLFW_KEY_K);
+        FirstClicked fullscreen = new FirstClicked(window, GLFW_KEY_F11);
 
         int i = 0;
         System.out.println("Rendering: " + buffers.get(i).name);
@@ -186,6 +177,10 @@ public class HeightMapRenderer {
                 setHeightmapData(buffers.get(i).buffer);
             }
 
+            if(fullscreen.wasClicked()){
+                window.toggleFullscreen();
+            }
+
             window.swapBuffers();
 
             glfwPollEvents();
@@ -193,4 +188,12 @@ public class HeightMapRenderer {
     }
 
     private static final record NamedBuffer(String name, BufferObject buffer){ }
+
+    public void setDefaultStep(float defaultStep) {
+        this.defaultStep = defaultStep;
+    }
+
+    public void setDefaultSampler(ColorSampler defaultSampler) {
+        this.defaultSampler = defaultSampler;
+    }
 }

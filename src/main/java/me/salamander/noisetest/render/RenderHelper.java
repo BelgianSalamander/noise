@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.awt.*;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL45.*;
 
@@ -151,4 +153,22 @@ public class RenderHelper {
         }
         return out;
     }
+
+    /*public static double[][] generateNoiseConcurrent(@NotNull NoiseModule module, int width, int height, double step){
+        return Stream.generate(new Supplier<Integer>() {
+            int y = 0;
+
+            @Override
+            public Integer get() {
+                return y++;
+            }
+        }).parallel().map(y -> {
+            return Stream.generate(new Supplier<Double>(){
+                int x = 0;
+                @Override
+                public Double get() {
+                    return module.sample((x++) * step, y * step);
+                }
+            }).mapToDouble(i -> i).toArray();
+        }).toArray(double[][]::new);*/
 }

@@ -2,6 +2,7 @@ package me.salamander.noisetest;
 
 import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
+import me.salamander.noisetest.color.SingleColor;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.combiner.Max;
 import me.salamander.noisetest.modules.combiner.Select;
@@ -29,11 +30,9 @@ public class NoiseTest {
         NoiseModule head = new Max(new Const(0.0), selector);
 
         HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
-        renderer.addHeightmap("baseTerrain", baseTerrain, 20.f, ColorGradient.TERRAIN);
-        renderer.addHeightmap("mountainTerrain", mountainTerrain, 20.f, ColorGradient.TERRAIN);
-        renderer.addHeightmap("selector", selector.getVisualizer(0.5, 1.0), 20.f, ColorGradient.TERRAIN);
-        renderer.addHeightmap("finalTerrain", head, 20.f, ColorGradient.TERRAIN);
-        renderer.setHeightScale(20.f);
+        renderer.setHeightScale(20.0f);
+        renderer.setDefaultSampler(new SingleColor(Color.RED));
+        renderer.addHeightmap("baseTerrain", baseTerrain);
         renderer.renderAll();
     }
 

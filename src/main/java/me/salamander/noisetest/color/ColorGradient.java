@@ -97,7 +97,7 @@ public class ColorGradient implements ColorSampler {
     }
 
     static {
-        DEFAULT.addColorPoint(0.0f, 0.0f, 0.0f, 0.0f);
+        DEFAULT.addColorPoint(-1.0f, 0.0f, 0.0f, 0.0f);
         DEFAULT.addColorPoint(1.0f, 1.0f, 1.0f, 1.0f);
         DEFAULT.generate();
 
