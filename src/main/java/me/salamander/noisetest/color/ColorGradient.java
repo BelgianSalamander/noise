@@ -1,6 +1,5 @@
-package me.salamander.noisetest;
+package me.salamander.noisetest.color;
 
-import me.salamander.noisetest.color.ColorSampler;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;

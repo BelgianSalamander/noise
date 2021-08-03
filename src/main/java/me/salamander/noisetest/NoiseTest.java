@@ -1,36 +1,40 @@
 package me.salamander.noisetest;
 
+import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
-import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.combiner.Max;
 import me.salamander.noisetest.modules.combiner.Select;
-import me.salamander.noisetest.modules.modifier.Max;
 import me.salamander.noisetest.modules.modifier.Turbulence;
 import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.render.HeightMapRenderer;
-import org.jetbrains.annotations.NotNull;
+import me.salamander.noisetest.render.RenderHelper;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Random;
 
 public class NoiseTest {
     public static void main(String[] args) {
-        NoiseGUI gui = new NoiseGUI();
-        gui.setVisible(true);
+        renderDemo();
     }
 
     private static void renderDemo(){
-        NoiseModule module = getNoiseSampler((new Random()).nextLong());
+        NoiseModule baseTerrain = new Perlin();
+        Ridge mountainTerrain = new Ridge();
+        Select selector = new Select(baseTerrain, mountainTerrain, baseTerrain);
+        selector.setThreshold(0.4);
+        selector.setEdgeFalloff(0.2);
 
-        module = new Max(module, new Const(0.0));
-
-        double[][] map = generateNoise(module, 500, 500, 0.01);
+        NoiseModule head = new Max(new Const(0.0), selector);
 
         HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
-        renderer.setHeightmapData(map, 20.f, ColorGradient.TERRAIN);
-        renderer.mainLoop();
+        renderer.addHeightmap("baseTerrain", baseTerrain, 20.f, ColorGradient.TERRAIN);
+        renderer.addHeightmap("mountainTerrain", mountainTerrain, 20.f, ColorGradient.TERRAIN);
+        renderer.addHeightmap("selector", selector.getVisualizer(0.5, 1.0), 20.f, ColorGradient.TERRAIN);
+        renderer.addHeightmap("finalTerrain", head, 20.f, ColorGradient.TERRAIN);
+        renderer.setHeightScale(20.f);
+        renderer.renderAll();
     }
 
     private static NoiseModule rivers(){
@@ -43,7 +47,6 @@ public class NoiseTest {
 
         return select;
     }
-
     private static NoiseModule getNoiseSampler(long seed){
         Ridge mountainTerrain = new Ridge(6, seed);
         Billow baseFlatTerrain = new Billow(6, seed);
@@ -64,16 +67,23 @@ public class NoiseTest {
 
         return turbulence;
     }
+    private static NoiseModule getEpicSampler(){
+        Billow plains = new Billow();
+        plains.setFrequency(2.0);
 
-    @NotNull
-    private static double[][] generateNoise(@NotNull NoiseModule module, int width, int height, double step){
-        double[][] out = new double[width][height];
-        for(int x = 0; x < width; x++){
-            for(int y = 0; y < height; y++){
-                out[x][y] = module.sample(x * step,y * step);
-            }
-        }
-        return out;
+        Perlin oceanBase = new Perlin();
+        NoiseModule ocean = oceanBase.multiply(0.4).add(-0.6);
+
+        Perlin oceanOrNot = new Perlin(3);
+
+        Select oceanSelector = new Select(ocean, plains, oceanOrNot);
+        oceanSelector.setEdgeFalloff(0.25);
+
+        Turbulence wobbler = new Turbulence(oceanSelector);
+        wobbler.setTurbulencePower(0.25);
+        wobbler.setFrequency(0.5);
+
+        return wobbler;
     }
 
     private static void displayArray(double[][] array, ColorSampler colorSampler){

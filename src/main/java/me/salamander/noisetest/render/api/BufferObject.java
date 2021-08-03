@@ -24,6 +24,11 @@ public class BufferObject {
         glBufferData(bindingPoint, size, usage);
     }
 
+    public void data(int bindingPoint, float[] data, int usage){
+        bind(bindingPoint);
+        glBufferData(bindingPoint, data, usage);
+    }
+
     public void subData(int bindingPoint, FloatBuffer data, long offset){
         bind(bindingPoint);
         glBufferSubData(bindingPoint, offset, data);
