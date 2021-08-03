@@ -18,12 +18,18 @@ public class Camera {
     private double[] previousPos;
 
     private static final float ROTATION_SPEED = 0.005f;
-    private static final float MOVEMENT_SPEED = 1.0f;
+    private static final float MOVEMENT_SPEED = 100.0f;
     private static final float MAX_PITCH = (float) (Math.PI * 0.495f);
     private static final float MIN_PITCH = (float) (Math.PI * -0.495f);
 
     public Camera(Window window){
         position = new Vector3f(0, 0, 0);
+
+        initialisePreviousPosition(window);
+    }
+
+    public Camera(Window window, float x, float y, float z){
+        position = new Vector3f(x, y, z);
 
         initialisePreviousPosition(window);
     }
@@ -130,17 +136,18 @@ public class Camera {
     }
 
     public Matrix4f getViewMatrix(){
+        forward.normalize();
+
         Vector3f cameraRight = new Vector3f(UP);
-        cameraRight.cross(forward);
+        cameraRight.cross(forward).normalize();
         Vector3f cameraUp = new Vector3f(forward);
-        cameraUp.cross(cameraRight);
+        cameraUp.cross(cameraRight).normalize();
 
         Matrix4f view = new Matrix4f(
                 cameraRight.x, cameraUp.x, forward.x, 0.0f,
                 cameraRight.y, cameraUp.y, forward.y, 0.0f,
                 cameraRight.z, cameraUp.z, forward.z, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f);
-        view.translate(position.negate(new Vector3f()));
+                -cameraRight.dot(position), -cameraUp.dot(position), -forward.dot(position), 1.0f);
 
         return view;
     }

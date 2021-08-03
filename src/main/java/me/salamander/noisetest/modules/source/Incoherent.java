@@ -3,21 +3,15 @@ package me.salamander.noisetest.modules.source;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.Parameter;
 
-public class Const implements NoiseModule {
-    private double value = 0;
+import java.util.Random;
 
-    private static final Parameter[] parameters = new Parameter[]{new Parameter(0, "Value", -1.0, 1.0)};
-
-    public Const(){}
-    public Const(double value){this.value = value;}
+public class Incoherent implements NoiseModule {
+    private final Random random = new Random();
 
     @Override
     public double sample(double x, double y) {
-        return value;
-    }
-
-    public void setValue(double value) {
-        this.value = value;
+        random.setSeed((long) (x * 352735782578L + y * 56276574645L));
+        return random.nextDouble() * 2 - 1;
     }
 
     @Override
@@ -32,23 +26,17 @@ public class Const implements NoiseModule {
 
     @Override
     public void setParameter(int index, double value) {
-        if(index == 0){
-            this.value = value;
-        }
-        throw new IllegalArgumentException("Index is out of bounds!");
+        throw new IllegalStateException("Tried to set parameter of module with no parameters!");
     }
 
     @Override
     public double getParameter(int index) {
-        if(index == 0){
-            return this.value;
-        }
-        throw new IllegalArgumentException("Index is out of bounds!");
+        throw new IllegalStateException("Tried to get parameter of module with no parameters!");
     }
 
     @Override
     public String getName() {
-        return "Constant";
+        return "Noise";
     }
 
     @Override
@@ -58,7 +46,7 @@ public class Const implements NoiseModule {
 
     @Override
     public Parameter[] parameters() {
-        return parameters;
+        return new Parameter[0];
     }
 
 

@@ -1,6 +1,7 @@
 package me.salamander.noisetest.modules.modifier;
 
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.Parameter;
 import me.salamander.noisetest.modules.source.Perlin;
 
 import java.util.Random;
@@ -9,6 +10,11 @@ public class Turbulence implements NoiseModule {
     private final Perlin xTurbulence, yTurbulence;
     private NoiseModule source;
     private double turbulencePower = 1.0;
+
+    private static final Parameter[] parameters = new Parameter[]{
+            new Parameter(0, "Turbulence Power", 0.0, 5.0)
+    };
+    private static final String[] inputNames = new String[]{"Source"};
 
     public Turbulence(NoiseModule source){
         this(source, (new Random()).nextLong());
@@ -65,5 +71,54 @@ public class Turbulence implements NoiseModule {
     public void setLacunarity(double lacunarity){
         xTurbulence.setLacunarity(lacunarity);
         yTurbulence.setLacunarity(lacunarity);
+    }
+
+    @Override
+    public int getNumInputs() {
+        return 1;
+    }
+
+    @Override
+    public void setInput(int index, NoiseModule module) {
+        switch (index){
+            case 0:
+                source = module;
+                break;
+            default:
+                throw new IllegalArgumentException("Index '" + index + "' out of bounds for module with two inputs!");
+        }
+    }
+
+    @Override
+    public void setParameter(int index, double value) {
+        if(index == 0){
+            turbulencePower = value;
+        }else{
+            throw new IllegalArgumentException("Index is out of bounds!");
+        }
+    }
+
+    @Override
+    public double getParameter(int index) {
+        if(0 == index){
+            return turbulencePower;
+        }else{
+            throw new IllegalArgumentException("Index is out of bounds!");
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "Turbulence";
+    }
+
+    @Override
+    public String[] inputNames() {
+        return inputNames;
+    }
+
+    @Override
+    public Parameter[] parameters() {
+        return parameters;
     }
 }

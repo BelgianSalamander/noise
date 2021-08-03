@@ -43,6 +43,11 @@ public class Window {
         glfwShowWindow(windowHandle);
 
         glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_FRAMEBUFFER_SRGB);
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CW);
     }
 
     public String getTitle() {

@@ -1,41 +1,56 @@
 package me.salamander.noisetest;
 
 import me.salamander.noisetest.color.ColorSampler;
+import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.combiner.Select;
+import me.salamander.noisetest.modules.modifier.Max;
 import me.salamander.noisetest.modules.modifier.Turbulence;
-import me.salamander.noisetest.modules.source.Billow;
-import me.salamander.noisetest.modules.source.Const;
-import me.salamander.noisetest.modules.source.Perlin;
-import me.salamander.noisetest.modules.source.Ridge;
+import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.render.HeightMapRenderer;
-import me.salamander.noisetest.render.api.GLUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 public class NoiseTest {
     public static void main(String[] args) {
-        NoiseModule testSampler = getNoiseSampler();
+        NoiseGUI gui = new NoiseGUI();
+        gui.setVisible(true);
+    }
 
-        double[][] map = generateNoise(testSampler, 500, 500, 0.01);
+    private static void renderDemo(){
+        NoiseModule module = getNoiseSampler((new Random()).nextLong());
 
-        //displayArray(map, ColorGradient.MOUNTAIN);
+        module = new Max(module, new Const(0.0));
+
+        double[][] map = generateNoise(module, 500, 500, 0.01);
 
         HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
-        renderer.setHeightmapData(map, ColorGradient.MOUNTAIN);
+        renderer.setHeightmapData(map, 20.f, ColorGradient.TERRAIN);
         renderer.mainLoop();
     }
 
-    private static NoiseModule getNoiseSampler(){
-        Ridge mountainTerrain = new Ridge();
-        Billow baseFlatTerrain = new Billow();
+    private static NoiseModule rivers(){
+        NoiseModule mountainTerrain = (new Ridge()).multiply(2).add(-1);
+        Perlin riverSelector = new Perlin();
+
+        Select select = new Select(new Const(-0.5), new Const(0.5), riverSelector);
+        select.setThreshold(-0.5);
+        select.setEdgeFalloff(0.25);
+
+        return select;
+    }
+
+    private static NoiseModule getNoiseSampler(long seed){
+        Ridge mountainTerrain = new Ridge(6, seed);
+        Billow baseFlatTerrain = new Billow(6, seed);
         baseFlatTerrain.setFrequency(2.0);
         NoiseModule flatTerrain = baseFlatTerrain.multiply(0.25).add(-0.75);
 
-        Perlin terrainType = new Perlin();
+        Perlin terrainType = new Perlin(6, seed);
         terrainType.setFrequency(0.5);
         terrainType.setPersistence(0.25);
 
@@ -43,9 +58,9 @@ public class NoiseTest {
         selector.setThreshold(0.0);
         selector.setEdgeFalloff(0.25);
 
-        Turbulence turbulence = new Turbulence(selector);
+        Turbulence turbulence = new Turbulence(selector, seed);
         turbulence.setFrequency(0.5);
-        turbulence.setTurbulencePower(0.125);
+        turbulence.setTurbulencePower(0.125f);
 
         return turbulence;
     }
@@ -93,36 +108,6 @@ public class NoiseTest {
         frame.getContentPane().add(panel);
         frame.pack();
         frame.setVisible(true);
-    }
-
-    private static void normalize(double[][] array){
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-
-        for(double[] a : array){
-            for(double n : a){
-                if(n < min){
-                    min = n;
-                }
-                if(max < n){
-                    max = n;
-                }
-            }
-        }
-
-        double rangeFactor = 2 / (max - min);
-        System.out.println("Min: " + min);
-        System.out.println("Max: " + max);
-        System.out.println("Range: " + (max - min));
-        System.out.println("Inverse Range: " + rangeFactor);
-
-        for(int i = 0; i < array.length; i++){
-            for(int j = 0; j < array[0].length; j++){
-                array[i][j] -= min;
-                array[i][j] *= rangeFactor;
-                array[i][j] -= 1;
-            }
-        }
     }
 
     private static Color safeColor(int r, int g, int b){

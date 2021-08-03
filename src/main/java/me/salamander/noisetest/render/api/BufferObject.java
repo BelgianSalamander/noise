@@ -4,10 +4,10 @@ import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL45.*;
 
-public class Buffer {
+public class BufferObject {
     private final int bufferHandle;
 
-    public Buffer(){
+    public BufferObject(){
         bufferHandle = glGenBuffers();
     }
 
@@ -27,5 +27,9 @@ public class Buffer {
     public void subData(int bindingPoint, FloatBuffer data, long offset){
         bind(bindingPoint);
         glBufferSubData(bindingPoint, offset, data);
+    }
+
+    public int getBufferHandle() {
+        return bufferHandle;
     }
 }

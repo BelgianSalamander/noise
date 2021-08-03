@@ -3,25 +3,25 @@ package me.salamander.noisetest.modules.modifier;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.Parameter;
 
-public class Add implements NoiseModule {
-    private NoiseModule noiseOne, noiseTwo;
+public class Max implements NoiseModule {
+    private NoiseModule moduleOne, moduleTwo;
 
-    public Add(NoiseModule noiseOne, NoiseModule noiseTwo) {
-        this.noiseOne = noiseOne;
-        this.noiseTwo = noiseTwo;
+    public Max(NoiseModule moduleOne, NoiseModule moduleTwo) {
+        this.moduleOne = moduleOne;
+        this.moduleTwo = moduleTwo;
     }
 
     @Override
     public double sample(double x, double y) {
-        return noiseOne.sample(x, y) + noiseTwo.sample(x, y);
+        return Math.max(moduleOne.sample(x, y), moduleTwo.sample(x, y));
     }
 
-    public void setNoiseOne(NoiseModule noiseOne) {
-        this.noiseOne = noiseOne;
+    public void setModuleOne(NoiseModule moduleOne) {
+        this.moduleOne = moduleOne;
     }
 
-    public void setNoiseTwo(NoiseModule noiseTwo) {
-        this.noiseTwo = noiseTwo;
+    public void setModuleTwo(NoiseModule moduleTwo) {
+        this.moduleTwo = moduleTwo;
     }
 
     @Override
@@ -33,29 +33,28 @@ public class Add implements NoiseModule {
     public void setInput(int index, NoiseModule module) {
         switch (index){
             case 0:
-                noiseOne = module;
+                moduleOne = module;
                 break;
             case 1:
-                noiseTwo = module;
+                moduleTwo = module;
                 break;
             default:
                 throw new IllegalArgumentException("Index '" + index + "' out of bounds for module with two inputs!");
         }
     }
-
     @Override
     public void setParameter(int index, double value) {
-        throw new IllegalStateException("Set parameter should not be called on module with no parameters (Add)");
+        throw new IllegalStateException("Set parameter should not be called on module with no parameters (Max)");
     }
 
     @Override
     public double getParameter(int index) {
-        throw new IllegalStateException("Get parameter should not be called on module with no parameters (Add)");
+        throw new IllegalStateException("Get parameter should not be called on module with no parameters (Max)");
     }
 
     @Override
     public String getName() {
-        return "Add";
+        return "Max";
     }
 
     @Override
@@ -69,4 +68,5 @@ public class Add implements NoiseModule {
     }
 
     private static String[] inputs = new String[]{"Module One", "Module Two"};
+
 }
