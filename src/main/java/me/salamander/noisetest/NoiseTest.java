@@ -3,6 +3,7 @@ package me.salamander.noisetest;
 import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
 import me.salamander.noisetest.color.SingleColor;
+import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.combiner.Max;
 import me.salamander.noisetest.modules.combiner.Select;
@@ -17,7 +18,11 @@ import java.awt.image.BufferedImage;
 
 public class NoiseTest {
     public static void main(String[] args) {
-        renderDemo();
+        guiDemo();
+    }
+
+    public static void guiDemo(){
+        new NoiseGUI();
     }
 
     private static void renderDemo(){

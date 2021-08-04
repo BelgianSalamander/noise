@@ -24,7 +24,7 @@ public class GLUtil {
     private static Window window;
     static ShaderProgram program;
 
-    public static float FOV = (float) Math.toRadians(60.0);
+    public static float FOV = (float) Math.toRadians(170.0);
 
     private static final float Z_NEAR = 0.01f;
     private static final float Z_FAR = 1000.f;
