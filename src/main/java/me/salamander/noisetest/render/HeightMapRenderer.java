@@ -14,10 +14,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -182,6 +179,9 @@ public class HeightMapRenderer {
             }
 
             window.swapBuffers();
+
+            //Random random = new Random();
+            //glfwSetWindowPos(window.getWindowHandle(), random.nextInt(1920), random.nextInt(1020));
 
             glfwPollEvents();
         }

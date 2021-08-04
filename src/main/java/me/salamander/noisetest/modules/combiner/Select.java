@@ -73,4 +73,11 @@ public class Select implements NoiseModule {
         t = t * t * (3 - 2 * t);
         return v0 * (1 - t) + v1 * t;
     }
+
+    @Override
+    public void setSeed(long s) {
+        if(noiseMapOne != null) noiseMapOne.setSeed(s);
+        if(noiseMapTwo != null) noiseMapTwo.setSeed(s);
+        if(selector != null) selector.setSeed(s);
+    }
 }

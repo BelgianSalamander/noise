@@ -6,7 +6,7 @@ import me.salamander.noisetest.noise.PerlinNoise2D;
 import java.util.Random;
 
 public class Billow implements NoiseModule {
-    private final long seed;
+    private long seed;
     private PerlinNoise2D[] perlinSamplers;
     private int octaves;
     private double frequency = 1.0;
@@ -71,5 +71,12 @@ public class Billow implements NoiseModule {
 
     public void setFrequency(double frequency) {
         this.frequency = frequency;
+    }
+
+    @Override
+    public void setSeed(long s) {
+        this.seed = s;
+
+        createSamplers();
     }
 }

@@ -35,9 +35,11 @@ public class NoiseTest {
         NoiseModule head = new Max(new Const(0.0), selector);
 
         HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
+        renderer.setDefaultStep(0.01f);
         renderer.setHeightScale(20.0f);
-        renderer.setDefaultSampler(new SingleColor(Color.RED));
+        renderer.setDefaultSampler(ColorGradient.TERRAIN);
         renderer.addHeightmap("baseTerrain", baseTerrain);
+        renderer.addHeightmap("endTerrain", head);
         renderer.renderAll();
     }
 
@@ -88,40 +90,6 @@ public class NoiseTest {
         wobbler.setFrequency(0.5);
 
         return wobbler;
-    }
-
-    private static void displayArray(double[][] array, ColorSampler colorSampler){
-        final int width = array.length;
-        final int height = array[0].length;
-        final BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = (Graphics2D) img.getGraphics();
-        for(int i = 0; i < width; i++){
-            for(int j = 0; j < height; j++){
-                double shade = array[i][j];
-                g.setColor(colorSampler.sample(shade));
-                g.fillRect(i, j, 1, 1);
-            }
-        }
-
-        JFrame frame = new JFrame("noise");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel panel = new JPanel(){
-            @Override
-            protected void paintComponent(Graphics g){
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.clearRect(0, 0, getWidth(), getHeight());
-                g2d.setRenderingHint(
-                        RenderingHints.KEY_INTERPOLATION,
-                        RenderingHints.VALUE_INTERPOLATION_BILINEAR
-                );
-                g2d.scale(500 / width, 500 / height);
-                g2d.drawImage(img, 0, 0, this);
-            }
-        };
-        panel.setPreferredSize(new Dimension(500, 500));
-        frame.getContentPane().add(panel);
-        frame.pack();
-        frame.setVisible(true);
     }
 
     private static Color safeColor(int r, int g, int b){

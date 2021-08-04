@@ -22,4 +22,10 @@ public class Multiply implements NoiseModule {
     public void setModuleTwo(NoiseModule moduleTwo) {
         this.moduleTwo = moduleTwo;
     }
+
+    @Override
+    public void setSeed(long s) {
+        if(moduleOne != null) moduleOne.setSeed(s);
+        if(moduleTwo != null) moduleTwo.setSeed(s);
+    }
 }

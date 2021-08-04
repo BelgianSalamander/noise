@@ -24,10 +24,10 @@ public class GLUtil {
     private static Window window;
     static ShaderProgram program;
 
-    public static float FOV = (float) Math.toRadians(170.0);
+    public static float FOV = (float) Math.toRadians(60.0);
 
     private static final float Z_NEAR = 0.01f;
-    private static final float Z_FAR = 1000.f;
+    private static final float Z_FAR = 1.0f / 0.0f;
 
     private static boolean initialised = false;
 
@@ -45,6 +45,7 @@ public class GLUtil {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_REFRESH_RATE, 1);
     }
 
     static void createProgram(){

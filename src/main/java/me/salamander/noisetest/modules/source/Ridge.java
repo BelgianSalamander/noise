@@ -6,7 +6,7 @@ import me.salamander.noisetest.noise.PerlinNoise2D;
 import java.util.Random;
 
 public class Ridge implements NoiseModule {
-    private final long seed;
+    private long seed;
     private PerlinNoise2D[] perlinSamplers;
     private int octaves;
     private double frequency = 1.0;
@@ -84,6 +84,13 @@ public class Ridge implements NoiseModule {
         if(this.octaves == octaves) return;
 
         this.octaves = octaves;
+
+        createSamplers();
+    }
+
+    @Override
+    public void setSeed(long s) {
+        this.seed = s;
 
         createSamplers();
     }

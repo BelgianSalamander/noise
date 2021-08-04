@@ -68,4 +68,9 @@ public class Turbulence implements NoiseModule {
         xTurbulence.setLacunarity(lacunarity);
         yTurbulence.setLacunarity(lacunarity);
     }
+
+    @Override
+    public void setSeed(long s) {
+        if(source != null) source.setSeed(s);
+    }
 }

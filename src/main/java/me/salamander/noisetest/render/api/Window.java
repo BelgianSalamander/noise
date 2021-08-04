@@ -108,7 +108,8 @@ public class Window {
         previousX = xTemp[0];
         previousY = yTemp[0];
 
-        glfwSetWindowMonitor(windowHandle, monitor, 0, 0, videoMode.width(), videoMode.height(), videoMode.refreshRate());
+        glfwSetWindowMonitor(windowHandle, monitor, 0, 0, videoMode.width(), videoMode.height(), 0);
+        glfwSwapInterval(1);
     }
 
     public void exitFullscreen(){
