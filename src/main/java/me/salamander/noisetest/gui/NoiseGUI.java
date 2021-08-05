@@ -2,11 +2,15 @@ package me.salamander.noisetest.gui;
 
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.gui.panels.ModulePanel;
+import me.salamander.noisetest.gui.panels.ModuleSelector;
 import me.salamander.noisetest.gui.panels.ParameterPanel;
 import me.salamander.noisetest.modules.GUIModule;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.function.Supplier;
 
 public class NoiseGUI extends JFrame {
     private ModulePanel modulePanel;
@@ -14,9 +18,20 @@ public class NoiseGUI extends JFrame {
 
     public NoiseGUI(){
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
 
         setLayout(new GridBagLayout());
-        setSize(500, 500);
+        setSize(1000, 1000);
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -35,12 +50,36 @@ public class NoiseGUI extends JFrame {
         parameterPanel = new ParameterPanel();
         add(parameterPanel, constraints);
 
-
+        createMenu();
 
         setVisible(true);
     }
 
     public void showParameters(GUINoiseModule module){
         parameterPanel.showParameters(module);
+    }
+
+    private void createMenu(){
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu editMenu = new JMenu("Edit");
+
+        JMenuItem addModule = new JMenuItem("Add Module");
+
+        NoiseGUI actualThis = this;
+        addModule.addActionListener(e -> new ModuleSelector(actualThis));
+        editMenu.add(addModule);
+
+        menuBar.add(editMenu);
+
+        setJMenuBar(menuBar);
+    }
+
+    public void addModule(Supplier<GUINoiseModule> supplier) {
+        modulePanel.addModule(supplier);
+    }
+
+    public GUINoiseModule getSelected() {
+        return parameterPanel.getSelectedComponent();
     }
 }

@@ -1,9 +1,10 @@
 package me.salamander.noisetest.modules.combiner;
 
+import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.source.Const;
 
-public class Select implements NoiseModule {
+public class Select implements GUIModule {
     private NoiseModule noiseMapOne, noiseMapTwo, selector;
     private double edgeFalloff = 0.0;
     private double threshold = 0;
@@ -22,25 +23,25 @@ public class Select implements NoiseModule {
 
     @Override
     public double sample(double x, double y) {
-        final double selectorValue = selector.sample(x, y);
+        final double selectorValue = NoiseModule.safeSample(selector, x, y);
 
         if(edgeFalloff > 0.0){
             if(selectorValue < threshold - edgeFalloff){
-                return noiseMapOne.sample(x, y);
+                return NoiseModule.safeSample(noiseMapOne, x, y);
             }else if(selectorValue < threshold + edgeFalloff){
                 return cubicInterpolation(
-                        noiseMapOne.sample(x, y),
-                        noiseMapTwo.sample(x, y),
+                        NoiseModule.safeSample(noiseMapOne, x, y),
+                        NoiseModule.safeSample(noiseMapTwo, x, y),
                         (selectorValue - threshold + edgeFalloff) / (2 * edgeFalloff)
                 );
             }else{
-                return noiseMapTwo.sample(x, y);
+                return NoiseModule.safeSample(noiseMapTwo, x, y);
             }
         }else{
             if(selectorValue < threshold){
-                return noiseMapOne.sample(x, y);
+                return NoiseModule.safeSample(noiseMapOne, x, y);
             }else{
-                return noiseMapTwo.sample(x, y);
+                return NoiseModule.safeSample(noiseMapTwo, x, y);
             }
         }
     }
@@ -79,5 +80,50 @@ public class Select implements NoiseModule {
         if(noiseMapOne != null) noiseMapOne.setSeed(s);
         if(noiseMapTwo != null) noiseMapTwo.setSeed(s);
         if(selector != null) selector.setSeed(s);
+    }
+
+
+    @Override
+    public int numInputs() {
+        return 3;
+    }
+
+    @Override
+    public void setInput(int index, NoiseModule module) {
+        switch (index){
+            case 0:
+                noiseMapOne = module;
+                break;
+            case 1:
+                noiseMapTwo = module;
+                break;
+            case 2:
+                selector = module;
+                break;
+            default:
+                throw new IllegalArgumentException("Index out of bounds!");
+        }
+    }
+
+    @Override
+    public void setParameter(int index, double value) {
+        if(index == 0){
+            threshold = value;
+        }else if(index == 1){
+            edgeFalloff = value;
+        }else{
+            throw new IllegalArgumentException("Index out of bounds!");
+        }
+    }
+
+    @Override
+    public double getParameter(int index) {
+        if(index == 0){
+            return threshold;
+        }else if(index == 1){
+            return edgeFalloff;
+        }else{
+            throw new IllegalArgumentException("Index out of bounds!");
+        }
     }
 }

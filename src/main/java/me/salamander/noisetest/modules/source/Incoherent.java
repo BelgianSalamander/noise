@@ -1,10 +1,11 @@
 package me.salamander.noisetest.modules.source;
 
+import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 
 import java.util.Random;
 
-public class Incoherent implements NoiseModule {
+public class Incoherent implements GUIModule {
     private final Random random = new Random();
 
     private long seed;
@@ -21,5 +22,25 @@ public class Incoherent implements NoiseModule {
     @Override
     public void setSeed(long s) {
         this.seed = seed;
+    }
+
+    @Override
+    public int numInputs() {
+        return 0;
+    }
+
+    @Override
+    public void setInput(int index, NoiseModule module) {
+        throw new IllegalArgumentException("No Inputs!");
+    }
+
+    @Override
+    public void setParameter(int index, double value) {
+        throw new IllegalArgumentException("No Parameters!");
+    }
+
+    @Override
+    public double getParameter(int index) {
+        throw new IllegalArgumentException("No Parameters!");
     }
 }

@@ -138,4 +138,8 @@ public class Perlin implements GUIModule {
                 throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
         }
     }
+
+    public double getFrequency() {
+        return frequency;
+    }
 }

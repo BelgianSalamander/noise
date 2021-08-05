@@ -13,7 +13,7 @@ public class Add implements GUIModule {
 
     @Override
     public double sample(double x, double y) {
-        return NoiseModule.safeSample(noiseOne, x, y) + NoiseModule.safeSample(noiseTwo, x, y) ;
+        return NoiseModule.safeSample(noiseOne, x, y) + NoiseModule.safeSample(noiseTwo, x, y);
     }
 
     public void setNoiseOne(NoiseModule noiseOne) {

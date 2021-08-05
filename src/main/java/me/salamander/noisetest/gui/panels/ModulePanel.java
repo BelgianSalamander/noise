@@ -8,6 +8,7 @@ import me.salamander.noisetest.modules.GUIModule;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -42,9 +43,27 @@ public class ModulePanel extends JPanel {
         setMinimumSize(new Dimension(400, 300));
         setSize(400, 300);
 
-        addModule(Modules.ADD);
-        addModule(Modules.PERLIN);
-        addModule(Modules.CHECKERBOARD);
+        getInputMap().put(KeyStroke.getKeyStroke("DELETE"), "deleteSelected");
+        getActionMap().put("deleteSelected", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                deleteSelected();
+            }
+        });
+    }
+
+    private void deleteSelected(){
+        NoiseGUI containing = (NoiseGUI) (SwingUtilities.getWindowAncestor(this));
+        GUINoiseModule selected = containing.getSelected();
+        if(selected != null){
+            removeConnection(selected.getOutputConnection());
+            for(int i = 0; i < selected.getNoiseModule().numInputs(); i++){
+                removeConnection(selected.getInputConnection(i));
+            }
+        }
+        remove(selected);
+        containing.showParameters(null);
+        repaint();
     }
 
     private void resetSelection(){
@@ -78,7 +97,9 @@ public class ModulePanel extends JPanel {
         Connection currentConnection = to.getInputConnection(index);
         if(currentConnection != null){
             removeConnection(currentConnection);
+            repaint();
         }
+        if(!creatingConnection) return;
         to.getNoiseModule().setInput(index, connectingFrom.getNoiseModule());
         activeConnections.add(new Connection(connectingFrom, to, index));
         cancelConnection();
@@ -125,6 +146,7 @@ public class ModulePanel extends JPanel {
     }
 
     public void removeConnection(Connection connection){
+        if(connection == null) return;
         connection.output().destroyOutputConnection();
         connection.input().destroyInputConnection(connection.inputIndex());
         activeConnections.remove(connection);

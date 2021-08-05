@@ -19,6 +19,7 @@ public class GUINoiseModule extends JPanel {
     private final GUIModule noiseModule;
     private final String title;
     private final int height;
+    private int width;
 
     private final Parameter[] parameters;
     private final String[] inputNames;
@@ -29,7 +30,7 @@ public class GUINoiseModule extends JPanel {
     private static final int TITLE_HEIGHT = 40;
     private static final int INPUT_HEIGHT = 20;
     private static final int TITLE_FONT_SIZE = 20;
-    private static final int WIDTH = 100;
+    private static final int DEFAULT_WIDTH = 100;
     private static final int CONNECTION_SIZE = 10;
 
     private boolean visible = true;
@@ -53,15 +54,16 @@ public class GUINoiseModule extends JPanel {
         height = TITLE_HEIGHT + module.numInputs() * INPUT_HEIGHT;
 
         setLayout(null);
-        this.noiseModule = module;
         setBackground(Color.GRAY);
-        setSize(WIDTH, height);
+        this.noiseModule = module;
 
         createTitle();
         addDragging();
 
         createOutput();
         createInputs();
+
+        setSize(width, height);
     }
 
     private void createInputs(){
@@ -69,7 +71,7 @@ public class GUINoiseModule extends JPanel {
         for(String inputName : inputNames){
             JLabel label = new JLabel(inputName);
             System.out.println("Create input " + inputName);
-            label.setBounds(10, TITLE_HEIGHT + INPUT_HEIGHT * i, WIDTH, INPUT_HEIGHT);
+            label.setBounds(10, TITLE_HEIGHT + INPUT_HEIGHT * i, width, INPUT_HEIGHT);
             label.setHorizontalAlignment(SwingConstants.LEFT);
             label.setVerticalAlignment(SwingConstants.CENTER);
             add(label);
@@ -85,7 +87,7 @@ public class GUINoiseModule extends JPanel {
     private void createOutput(){
         JComponent test = new JPanel();
         test.setBackground(Color.BLACK);
-        test.setBounds(WIDTH - CONNECTION_SIZE / 2, TITLE_HEIGHT / 2 - CONNECTION_SIZE / 2, CONNECTION_SIZE, CONNECTION_SIZE);
+        test.setBounds(width - CONNECTION_SIZE / 2, TITLE_HEIGHT / 2 - CONNECTION_SIZE / 2, CONNECTION_SIZE, CONNECTION_SIZE);
         add(test);
     }
 
@@ -95,7 +97,8 @@ public class GUINoiseModule extends JPanel {
         titleLabel.setFont(new Font(titleLabel.getFont().getName(), titleLabel.getFont().getStyle(), TITLE_FONT_SIZE));
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
         add(titleLabel);
-        titleLabel.setBounds(0, 0, WIDTH, TITLE_HEIGHT);
+        width = Math.max(titleLabel.getPreferredSize().width + 20, DEFAULT_WIDTH);
+        titleLabel.setBounds(0, 0, width, TITLE_HEIGHT);
     }
 
     private void showParameters(){
@@ -108,7 +111,7 @@ public class GUINoiseModule extends JPanel {
     }
 
     private void startConnection(MouseEvent e){
-        ((ModulePanel) getParent()).beginConnection(getX() + WIDTH, getY() + TITLE_HEIGHT / 2, this);
+        ((ModulePanel) getParent()).beginConnection(getX() + width, getY() + TITLE_HEIGHT / 2, this);
     }
 
     private boolean checkForInputs(MouseEvent e){
@@ -135,7 +138,7 @@ public class GUINoiseModule extends JPanel {
     }
 
     public Point getOutputLocation(){
-        return new Point(getX() + WIDTH, getY() + TITLE_HEIGHT / 2);
+        return new Point(getX() + width, getY() + TITLE_HEIGHT / 2);
     }
 
     public Point getInputLocation(int index){
@@ -151,7 +154,7 @@ public class GUINoiseModule extends JPanel {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if(e.getX() > WIDTH - CONNECTION_SIZE / 2 && e.getY() > TITLE_HEIGHT / 2 - CONNECTION_SIZE / 2 && e.getY() < TITLE_HEIGHT / 2 + CONNECTION_SIZE / 2){
+                if(e.getX() > width - CONNECTION_SIZE / 2 && e.getY() > TITLE_HEIGHT / 2 - CONNECTION_SIZE / 2 && e.getY() < TITLE_HEIGHT / 2 + CONNECTION_SIZE / 2){
                     System.out.println("Clicked connection!");
                     startConnection(e);
                     return;
@@ -240,6 +243,10 @@ public class GUINoiseModule extends JPanel {
 
     public ModulePanel.Connection getInputConnection(int index){
         return inputConnections[index];
+    }
+
+    public ModulePanel.Connection getOutputConnection() {
+        return outputConnection;
     }
 
     public void setOutputConnection(ModulePanel.Connection outputConnection) {

@@ -174,13 +174,17 @@ public class ParameterPanel extends JPanel {
         String stepAsText = stepField.getText();
         double step = 0.01;
         try{
-            step = Double.valueOf(stepAsText);
+            step = Double.parseDouble(stepAsText);
         }catch(NullPointerException e){}
 
         ColorSampler sampler = ColorSamplers.getSampler((String) samplerSelector.getSelectedItem());
 
         double[][] heightmap = RenderHelper.generateNoise(selected.getNoiseModule(), 500, 500, step);
         GUIHelper.displayArray(heightmap, sampler);
+    }
+
+    public GUINoiseModule getSelectedComponent() {
+        return selected;
     }
 
     private static class ParameterChangeListener implements ChangeListener{

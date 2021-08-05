@@ -1,11 +1,12 @@
 package me.salamander.noisetest.modules.source;
 
+import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.noise.PerlinNoise2D;
 
 import java.util.Random;
 
-public class Ridge implements NoiseModule {
+public class Ridge implements GUIModule {
     private long seed;
     private PerlinNoise2D[] perlinSamplers;
     private int octaves;
@@ -93,5 +94,51 @@ public class Ridge implements NoiseModule {
         this.seed = s;
 
         createSamplers();
+    }
+
+    @Override
+    public int numInputs() {
+        return 0;
+    }
+
+    @Override
+    public void setInput(int index, NoiseModule module) {
+        throw new IllegalArgumentException("Index out of bounds for module with 0 inputs!");
+    }
+
+    @Override
+    public void setParameter(int index, double value) {
+        switch (index){
+            case 0:
+                setNumOctaves((int) value);
+                break;
+            case 1:
+                frequency = value;
+                break;
+            case 2:
+                persistence = value;
+                break;
+            case 3:
+                lacunarity = value;
+                break;
+            default:
+                throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
+        }
+    }
+
+    @Override
+    public double getParameter(int index) {
+        switch (index){
+            case 0:
+                return octaves;
+            case 1:
+                return frequency;
+            case 2:
+                return persistence;
+            case 3:
+                return lacunarity;
+            default:
+                throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
+        }
     }
 }
