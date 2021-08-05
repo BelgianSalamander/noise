@@ -7,6 +7,8 @@ import me.salamander.noisetest.modules.NoiseModule;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -24,7 +26,7 @@ public class GUINoiseModule extends JPanel {
     private final Parameter[] parameters;
     private final String[] inputNames;
 
-    private ModulePanel.Connection outputConnection = null;
+    private List<ModulePanel.Connection> outputConnections = new ArrayList<>();
     private ModulePanel.Connection[] inputConnections;
 
     private static final int TITLE_HEIGHT = 40;
@@ -128,8 +130,8 @@ public class GUINoiseModule extends JPanel {
         return false;
     }
 
-    public void destroyOutputConnection(){
-        outputConnection = null;
+    public void destroyOutputConnections(){
+        outputConnections.clear();
     }
 
     public void destroyInputConnection(int index){
@@ -245,15 +247,19 @@ public class GUINoiseModule extends JPanel {
         return inputConnections[index];
     }
 
-    public ModulePanel.Connection getOutputConnection() {
-        return outputConnection;
-    }
-
-    public void setOutputConnection(ModulePanel.Connection outputConnection) {
-        this.outputConnection = outputConnection;
-    }
-
     public void setInputConnection(ModulePanel.Connection connection, int index){
         inputConnections[index] = connection;
+    }
+
+    public void addOutputConnection(ModulePanel.Connection connection){
+        outputConnections.add(connection);
+    }
+
+    public void removeOutputConnection(ModulePanel.Connection connection){
+        outputConnections.remove(connection);
+    }
+
+    public List<ModulePanel.Connection> getOutputConnections(){
+        return outputConnections;
     }
 }

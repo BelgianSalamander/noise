@@ -56,7 +56,9 @@ public class ModulePanel extends JPanel {
         NoiseGUI containing = (NoiseGUI) (SwingUtilities.getWindowAncestor(this));
         GUINoiseModule selected = containing.getSelected();
         if(selected != null){
-            removeConnection(selected.getOutputConnection());
+            for(int i = selected.getOutputConnections().size() - 1; i >= 0; i--){
+                removeConnection(selected.getOutputConnections().get(i));
+            }
             for(int i = 0; i < selected.getNoiseModule().numInputs(); i++){
                 removeConnection(selected.getInputConnection(i));
             }
@@ -141,13 +143,13 @@ public class ModulePanel extends JPanel {
     }
 
     private void destroyConnection(Connection connection){
-        connection.output().destroyOutputConnection();
+        connection.output().removeOutputConnection(connection);
         connection.input().destroyInputConnection(connection.inputIndex());
     }
 
     public void removeConnection(Connection connection){
         if(connection == null) return;
-        connection.output().destroyOutputConnection();
+        connection.output().removeOutputConnection(connection);
         connection.input().destroyInputConnection(connection.inputIndex());
         activeConnections.remove(connection);
     }
@@ -183,7 +185,7 @@ public class ModulePanel extends JPanel {
             this.input = input;
             this.inputIndex = inputIndex;
 
-            this.output.setOutputConnection(this);
+            this.output.addOutputConnection(this);
             this.input.setInputConnection(this, inputIndex);
         }
     }

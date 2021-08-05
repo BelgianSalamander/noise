@@ -1,10 +1,11 @@
 package me.salamander.noisetest.render.api;
 
+import java.lang.ref.Cleaner;
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL45.*;
 
-public class BufferObject {
+public class BufferObject implements Cleaner.Cleanable {
     private final int bufferHandle;
 
     public BufferObject(){
@@ -36,5 +37,10 @@ public class BufferObject {
 
     public int getBufferHandle() {
         return bufferHandle;
+    }
+
+    @Override
+    public void clean() {
+        glDeleteBuffers(bufferHandle);
     }
 }
