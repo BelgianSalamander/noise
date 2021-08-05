@@ -7,6 +7,7 @@ import me.salamander.noisetest.gui.Parameter;
 import me.salamander.noisetest.gui.util.GUIHelper;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
 
 import javax.swing.*;
@@ -31,6 +32,7 @@ import java.util.List;
 public class ParameterPanel extends JPanel {
     private JLabel selectedItemLabel = new JLabel("No Module Selected");
     private GUINoiseModule selected = null;
+    private HeightMapRenderer renderer = null;
 
     private JPanel parameterPanel = new JPanel();
     private JPanel previewPanel = new JPanel();
@@ -94,11 +96,16 @@ public class ParameterPanel extends JPanel {
 
         constraints.gridx = 0;
         constraints.gridy = 2;
-        constraints.gridwidth = 2;
-        JButton button = new JButton("Generate Preview");
+        JButton button = new JButton("Preview");
         button.addActionListener(e -> createPreview());
         button.setAlignmentX(0.5f);
         previewPanel.add(button, constraints);
+
+        constraints.gridx = 1;
+        JButton renderButton = new JButton("Render");
+        renderButton.addActionListener(e -> render());
+        renderButton.setAlignmentX(0.5f);
+        previewPanel.add(renderButton, constraints);
 
         previewPanel.setVisible(false);
     }
@@ -181,6 +188,36 @@ public class ParameterPanel extends JPanel {
 
         double[][] heightmap = RenderHelper.generateNoise(selected.getNoiseModule(), 500, 500, step);
         GUIHelper.displayArray(heightmap, sampler);
+    }
+    private void render(){
+        if(selected == null) return;
+
+        String stepAsText = stepField.getText();
+        double step = 0.01;
+        try{
+            step = Double.parseDouble(stepAsText);
+        }catch(NullPointerException e){}
+
+        ColorSampler sampler = ColorSamplers.getSampler((String) samplerSelector.getSelectedItem());
+        if(renderer != null){
+            renderer.stop();
+        }
+        renderer = new HeightMapRenderer(500, 500, false);
+        double finalStep = step;
+        Thread rendererThread = new Thread(){
+            @Override
+            public void run() {
+                renderer.init();
+                renderer.setHeightScale(20.0f);
+                renderer.setDefaultSampler(sampler);
+                renderer.setDefaultStep((float) finalStep);
+                renderer.addHeightmap("main", selected.getNoiseModule());
+                renderer.renderAll();
+                System.out.println("Rendering ended!");
+            }
+        };
+
+        rendererThread.start();
     }
 
     public GUINoiseModule getSelectedComponent() {

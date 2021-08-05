@@ -20,13 +20,16 @@ import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class HeightMapRenderer {
-    private final int vaoID;
-    private final int indexVboID, posVboID;
-    private final Window window;
-    private final ShaderProgram program;
+    private boolean initialized = false;
+    private int vaoID;
+    private int indexVboID, posVboID;
+    private Window window;
+    private ShaderProgram program;
     private float heightScale = 0;
 
-    private final int mvpLocation, lightDirectionLocation, doDiffuseLocation;
+    private boolean running = true;
+
+    private int mvpLocation, lightDirectionLocation, doDiffuseLocation;
     private final int width, height;
 
     private float defaultStep = 0.01f;
@@ -35,10 +38,27 @@ public class HeightMapRenderer {
     private final List<NamedBuffer> buffers = new ArrayList<>();
 
     public HeightMapRenderer(int width, int height){
-        GLUtil.init();
-
         this.width = width;
         this.height = height;
+
+        init();
+    }
+
+    public HeightMapRenderer(int width, int height, boolean initialize){
+        this.width = width;
+        this.height = height;
+        if(initialize)
+            init();
+    }
+
+    public void init(){
+        if(initialized){
+            System.out.println("Warning: Tried to reinitialise renderer!");
+            return;
+        }
+        initialized = true;
+
+        GLUtil.init();
 
         window = new Window("Heightmap", 1000, 1000);
         program = new ShaderProgram(
@@ -148,6 +168,10 @@ public class HeightMapRenderer {
         glDrawElements(GL_TRIANGLES, (width - 1) * (height - 1) * 2 * 3, GL_UNSIGNED_INT, 0);
     }
 
+    public void stop(){
+        running = false;
+    }
+
     public void renderAll(){
         window.show();
         Camera camera = new Camera(window, width / 2, heightScale + 5, height / 2);
@@ -162,7 +186,7 @@ public class HeightMapRenderer {
         int i = 0;
         System.out.println("Rendering: " + buffers.get(i).name);
         setHeightmapData(buffers.get(i).buffer);
-        while(!window.shouldClose()){
+        while(!window.shouldClose() && running){
             camera.handleInput(window, dtGetter.getDT());
 
             draw(camera.getViewMatrix());

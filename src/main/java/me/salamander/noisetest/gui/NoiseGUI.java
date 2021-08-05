@@ -63,13 +63,10 @@ public class NoiseGUI extends JFrame {
         JMenuBar menuBar = new JMenuBar();
 
         JMenu editMenu = new JMenu("Edit");
-
         JMenuItem addModule = new JMenuItem("Add Module");
-
         NoiseGUI actualThis = this;
         addModule.addActionListener(e -> new ModuleSelector(actualThis));
         editMenu.add(addModule);
-
         menuBar.add(editMenu);
 
         setJMenuBar(menuBar);
