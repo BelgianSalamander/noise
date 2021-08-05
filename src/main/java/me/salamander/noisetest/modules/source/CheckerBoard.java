@@ -11,7 +11,7 @@ public class CheckerBoard implements GUIModule {
 
     @Override
     public double sample(double x, double y) {
-        return (floor(x) + floor(y)) % (2 * frequency) < frequency ? -1 : 1;
+        return (floor(x * frequency) + floor(y * frequency)) % 2 < 1 ? -1 : 1;
     }
 
     public void setFrequency(double frequency) {
@@ -41,8 +41,9 @@ public class CheckerBoard implements GUIModule {
     public void setParameter(int index, double value) {
         if(index == 0){
             frequency = value;
+        }else {
+            throw new IllegalArgumentException("Index '" + index + "' is out of bounds!");
         }
-        throw new IllegalArgumentException("Index '" +index + "' is out of bounds!");
     }
 
     @Override

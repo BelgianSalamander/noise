@@ -14,7 +14,7 @@ import static me.salamander.noisetest.gui.ModuleCategory.*;
 
 public class Modules {
     public static List<Pair<ModuleCategory, List<Pair<String, Supplier<GUINoiseModule>>>>> categories = new ArrayList<>();
-    private static Supplier<GUINoiseModule> register(String name, ModuleCategory category, Supplier<GUINoiseModule> supplier){
+    public static Supplier<GUINoiseModule> register(String name, ModuleCategory category, Supplier<GUINoiseModule> supplier){
         categories.get(category.ordinal()).getSecond().add(new Pair<>(name, supplier));
         return supplier;
     }
