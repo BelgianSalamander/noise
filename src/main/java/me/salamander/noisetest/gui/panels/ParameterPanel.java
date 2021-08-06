@@ -152,7 +152,7 @@ public class ParameterPanel extends JPanel {
                 slider = new JSlider(
                         minValue * 10,
                         maxValue * 10,
-                        (int) (10 * module.getNoiseModule().getParameter(parameter.index()))
+                        clamp(minValue*10,(int) (10 * module.getNoiseModule().getParameter(parameter.index())),maxValue*10)
                 );
 
                 amountValues = 10*maxValue - 10*minValue + 1;

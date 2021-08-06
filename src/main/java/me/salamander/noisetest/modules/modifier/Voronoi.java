@@ -32,7 +32,6 @@ public class Voronoi implements GUIModule {
 			this.size = value;
 			break;
 		case 1:
-			// TODO explicit boolean parameters or make relaxation a double-variable value (which is easily possible tbh)
 			this.relaxed = value > 0.5 ? true : false;
 		default:
 			throw new IllegalArgumentException("Index out of bounds: " + index);
