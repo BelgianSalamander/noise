@@ -33,6 +33,7 @@ public class GUINoiseModule extends JPanel {
     private static final int INPUT_HEIGHT = 20;
     private static final int TITLE_FONT_SIZE = 20;
     private static final int DEFAULT_WIDTH = 100;
+
     private static final int CONNECTION_SIZE = 10;
 
     private boolean visible = true;
@@ -117,11 +118,11 @@ public class GUINoiseModule extends JPanel {
     }
 
     private boolean checkForInputs(MouseEvent e){
-        if(e.getX() < CONNECTION_SIZE / 2){
+        if(e.getX() < CONNECTION_SIZE * 1.5){
             int y = e.getY() - TITLE_HEIGHT;
             int input = y / INPUT_HEIGHT;
             y %= INPUT_HEIGHT;
-            if(y >= (INPUT_HEIGHT - CONNECTION_SIZE) / 2 && y <= (INPUT_HEIGHT + CONNECTION_SIZE) / 2){
+            if(y >= (INPUT_HEIGHT - 2 * CONNECTION_SIZE) / 2 && y <= (INPUT_HEIGHT + 2 * CONNECTION_SIZE) / 2){
                 System.out.println("Tried to connect to input #"+input);
                 ((ModulePanel) getParent()).createConnection(this, input);
                 return true;
@@ -156,7 +157,7 @@ public class GUINoiseModule extends JPanel {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if(e.getX() > width - CONNECTION_SIZE / 2 && e.getY() > TITLE_HEIGHT / 2 - CONNECTION_SIZE / 2 && e.getY() < TITLE_HEIGHT / 2 + CONNECTION_SIZE / 2){
+                if(e.getX() > width - 15 && e.getY() < TITLE_HEIGHT){
                     System.out.println("Clicked connection!");
                     startConnection(e);
                     return;
@@ -227,7 +228,9 @@ public class GUINoiseModule extends JPanel {
             }
 
             @Override
-            public void mouseMoved(MouseEvent e) { }
+            public void mouseMoved(MouseEvent e) {
+                ((ModulePanel) getParent()).mouseMovement(e);
+            }
         });
     }
 

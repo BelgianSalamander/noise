@@ -45,7 +45,7 @@ public class ParameterPanel extends JPanel {
 
         setMinimumSize(new Dimension(300, 300));
         JLabel label = new JLabel("Parameter Editor");
-        label.setBorder(BorderFactory.createLineBorder(Color.GREEN));
+        //label.setBorder(BorderFactory.createLineBorder(Color.GREEN));
         GUIHelper.setFontSize(label, 30);
         label.setAlignmentX(0.5f);
         add(label);
@@ -57,7 +57,7 @@ public class ParameterPanel extends JPanel {
         add(Box.createVerticalStrut(50));
 
         parameterPanel.setLayout(new BoxLayout(parameterPanel, BoxLayout.Y_AXIS));
-        parameterPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+        //parameterPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
         add(parameterPanel);
 
         createPreviewPanel();
@@ -67,7 +67,7 @@ public class ParameterPanel extends JPanel {
 
     private void createPreviewPanel(){
         previewPanel.setLayout(new GridBagLayout());
-        previewPanel.setBorder(BorderFactory.createLineBorder(Color.ORANGE));
+        //previewPanel.setBorder(BorderFactory.createLineBorder(Color.ORANGE));
         add(previewPanel);
         previewPanel.setMaximumSize(new Dimension(1000, 100));
 
@@ -121,13 +121,17 @@ public class ParameterPanel extends JPanel {
         if(module == null){
             selectedItemLabel.setText("No Module Selected");
             previewPanel.setVisible(false);
+            parameterPanel.setVisible(false);
             return;
         }
+        parameterPanel.setVisible(true);
+        parameterPanel.setBackground(Color.LIGHT_GRAY);
 
         clearParameters();
         selectedItemLabel.setText(module.getTitle());
         module.setBorder(BorderFactory.createMatteBorder(5, 0, 5, 0, Color.LIGHT_GRAY));
         previewPanel.setVisible(true);
+        previewPanel.setBackground(Color.LIGHT_GRAY);
 
         for(Parameter parameter : module.getParameters()){
             double value = module.getNoiseModule().getParameter(parameter.index());
@@ -165,8 +169,9 @@ public class ParameterPanel extends JPanel {
             slider.setMajorTickSpacing(amountValues - 1);
             slider.setPaintTicks(true);
             slider.setPaintLabels(true);
+            slider.setForeground(Color.BLACK);
             slider.addChangeListener(new ParameterChangeListener(module.getNoiseModule(), parameter, label));
-
+            slider.setBackground(Color.LIGHT_GRAY);
             parameterPanel.add(slider);
         }
     }
