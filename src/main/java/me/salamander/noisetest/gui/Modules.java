@@ -3,6 +3,7 @@ package me.salamander.noisetest.gui;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.modules.combiner.*;
 import me.salamander.noisetest.modules.modifier.Turbulence;
+import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.util.Pair;
 
@@ -35,6 +36,10 @@ public class Modules {
             new Parameter("Turbulence Power", 0, 0.1, 5.0, 0.1),
             new Parameter("Frequency", 1, 0.1, 5.0, 0.1)
     };
+    private static Parameter[] VORONOI_PARAMETERS = new Parameter[]{
+            new Parameter("Size", 0, 0.1, 10.0, 0.1),
+            new Parameter("Relaxed", 1, 0.0, 1.0, 1.0)
+    };
     private static Parameter[] SELECT_PARAMETERS = new Parameter[]{
             new Parameter("Threshold", 0, -1.0, 1.0, 0.1),
             new Parameter("Edge Falloff", 1, 0.0, 1.0, 0.1)
@@ -56,6 +61,7 @@ public class Modules {
 
     public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new GUINoiseModule("Perlin", new Perlin(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE, () -> new GUINoiseModule("Simplex", new Simplex(), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> OPENSIMPLEX = register("OpenSimplex", SOURCE, () -> new GUINoiseModule("OpenSimplex", new OpenSimplex(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new GUINoiseModule("Billow", new Billow(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new GUINoiseModule("Ridge", new Ridge(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new GUINoiseModule("Checkerboard", new CheckerBoard(), FREQUENCY_ONLY, NO_INPUTS));
@@ -69,5 +75,6 @@ public class Modules {
     public static Supplier<GUINoiseModule> SELECT = register("Select", COMBINER, () -> new GUINoiseModule("Select", new Select(null, null, null), SELECT_PARAMETERS, SELECT_INPUTS));
 
     public static Supplier<GUINoiseModule> TURBULENCE = register("Turbulence", MODIFIER, () -> new GUINoiseModule("Turbulence", new Turbulence(null), TURBULENCE_PARAMETERS, ONE_INPUT));
+    public static Supplier<GUINoiseModule> VORONOI = register("Voronoi", MODIFIER, () -> new GUINoiseModule("Voronoi", new Voronoi(), VORONOI_PARAMETERS, ONE_INPUT));
 
 }

@@ -150,7 +150,7 @@ public class ParameterPanel extends JPanel {
                 slider = new JSlider(
                         minValue,
                         maxValue,
-                        (int) (module.getNoiseModule().getParameter(parameter.index()) / parameter.step())
+                        clamp((int)Math.ceil(minValue), (int)Math.floor(maxValue), (int) (module.getNoiseModule().getParameter(parameter.index())))
                 );
 
                 amountValues = maxValue - minValue + 1;
@@ -276,5 +276,9 @@ public class ParameterPanel extends JPanel {
 
         @Override
         public void keyReleased(KeyEvent e) { }
+    }
+
+    private static int clamp(int min, int val, int max) {
+    	return val < min ? min : (val > max ? max : val);
     }
 }
