@@ -24,6 +24,7 @@ public class NoiseGUI extends JFrame {
 
 	    setLayout(new GridBagLayout());
         setSize(1000, 1000);
+        setTitle("Noise Editor");
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -56,8 +57,7 @@ public class NoiseGUI extends JFrame {
 
         JMenu editMenu = new JMenu("Edit");
         JMenuItem addModule = new JMenuItem("Add Module");
-        NoiseGUI actualThis = this;
-        addModule.addActionListener(e -> new ModuleSelector(actualThis));
+        addModule.addActionListener(e -> new ModuleSelector(this));
         editMenu.add(addModule);
         menuBar.add(editMenu);
 

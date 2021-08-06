@@ -23,7 +23,7 @@ public class ModulePanel extends JPanel {
 
     public ModulePanel(){
         setLayout(null);
-        setBorder(BorderFactory.createLineBorder(Color.RED));
+        //setBorder(BorderFactory.createLineBorder(Color.RED));
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -35,15 +35,14 @@ public class ModulePanel extends JPanel {
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                if(creatingConnection)
-                    repaint();
+                mouseMovement(e);
             }
         });
 
         setMinimumSize(new Dimension(400, 300));
         setSize(400, 300);
 
-        getInputMap().put(KeyStroke.getKeyStroke("DELETE"), "deleteSelected");
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("DELETE"), "deleteSelected");
         getActionMap().put("deleteSelected", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -53,6 +52,7 @@ public class ModulePanel extends JPanel {
     }
 
     private void deleteSelected(){
+        System.out.println("Deleting Selected");
         NoiseGUI containing = (NoiseGUI) (SwingUtilities.getWindowAncestor(this));
         GUINoiseModule selected = containing.getSelected();
         if(selected != null){
@@ -177,6 +177,11 @@ public class ModulePanel extends JPanel {
         }
 
         g.fillRect(x, y, width, height);
+    }
+
+    public void mouseMovement(MouseEvent e) {
+        if(creatingConnection)
+            repaint();
     }
 
     public static record Connection(GUINoiseModule output, GUINoiseModule input, int inputIndex){
