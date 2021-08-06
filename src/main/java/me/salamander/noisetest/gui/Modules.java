@@ -55,6 +55,7 @@ public class Modules {
     private static String[] SELECT_INPUTS = new String[]{"Source One", "Source Two", "Selector"};
 
     public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new GUINoiseModule("Perlin", new Perlin(), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE, () -> new GUINoiseModule("Simplex", new Simplex(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new GUINoiseModule("Billow", new Billow(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new GUINoiseModule("Ridge", new Ridge(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new GUINoiseModule("Checkerboard", new CheckerBoard(), FREQUENCY_ONLY, NO_INPUTS));

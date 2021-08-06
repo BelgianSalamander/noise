@@ -3,72 +3,75 @@ package me.salamander.noisetest.modules.source;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.noise.PerlinNoise2D;
+import me.salamander.noisetest.noise.SimplexNoise2D;
 
 import java.util.Random;
 
-public class Ridge implements GUIModule {
+public class Simplex implements GUIModule {
     private long seed;
-    private PerlinNoise2D[] perlinSamplers;
+    private SimplexNoise2D[] perlinSamplers = null;
     private int octaves;
     private double frequency = 1.0;
     private double persistence = 0.5;
     private double lacunarity = 2.0;
 
-    public Ridge(){
+    public Simplex(){
         this.seed = (new Random()).nextLong();
         this.octaves = 6;
-        perlinSamplers = new PerlinNoise2D[octaves];
 
-        createSamplers();
+        createSamplers(true);
     }
 
-    public Ridge(int octaves){
+    public Simplex(int octaves){
         this.seed = (new Random()).nextLong();
         this.octaves = octaves;
-        perlinSamplers = new PerlinNoise2D[octaves];
+        perlinSamplers = new SimplexNoise2D[octaves];
 
-        createSamplers();
+        createSamplers(true);
     }
 
-    public Ridge(int octaves, long seed){
+    public Simplex(int octaves, long seed){
         this.seed = seed;
         this.octaves = octaves;
-        perlinSamplers = new PerlinNoise2D[octaves];
+        perlinSamplers = new SimplexNoise2D[octaves];
 
-        createSamplers();
+        createSamplers(true);
     }
 
-    private void createSamplers(){
+    private void createSamplers(boolean regenerate){
+        SimplexNoise2D[] newSamplers = new SimplexNoise2D[octaves];
         Random random = new Random(seed);
 
         for(int i = 0; i < octaves; i++){
-            perlinSamplers[i] = new PerlinNoise2D(random.nextLong());
+            boolean usedPrevious = false;
+            if(perlinSamplers != null && !regenerate) {
+                if (i < perlinSamplers.length) {
+                    newSamplers[i] = perlinSamplers[i];
+                    usedPrevious = true;
+                    random.nextLong();
+                }
+            }
+            if(!usedPrevious){
+                newSamplers[i] = new SimplexNoise2D(random.nextLong());
+            }
         }
+
+        perlinSamplers = newSamplers;
     }
 
     @Override
     public double sample(double x, double y) {
         double total = 0;
+        for(int i = 0; i < octaves; i++)
+            total += Math.pow(persistence, i) * perlinSamplers[i].sample(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
+        return total;
+    }
 
-        final double offset = 1.0;
-        final double gain = 2.0;
+    @Override
+    public void setSeed(long s) {
+        this.seed = s;
 
-        double weight = 1.0;
-
-        for(int i = 0; i < octaves; i++) {
-            double signal =  perlinSamplers[i].sample(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
-
-            signal = offset - Math.abs(signal);
-            signal *= signal * weight;
-
-            weight = signal * gain;
-            if(weight > 1.0) weight = 1.0;
-            else if(weight < 0.0) weight = 0.0;
-
-            total += signal * Math.pow(persistence, i);
-        }
-
-        return total * 1.25 - 1.0;
+        createSamplers(true);
     }
 
     public void setPersistence(double persistence) {
@@ -87,16 +90,9 @@ public class Ridge implements GUIModule {
         if(this.octaves == octaves) return;
 
         this.octaves = octaves;
-
-        createSamplers();
+        createSamplers(false);
     }
 
-    @Override
-    public void setSeed(long s) {
-        this.seed = s;
-
-        createSamplers();
-    }
 
     @Override
     public int numInputs() {
@@ -142,5 +138,9 @@ public class Ridge implements GUIModule {
             default:
                 throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
         }
+    }
+
+    public double getFrequency() {
+        return frequency;
     }
 }

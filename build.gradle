@@ -122,4 +122,5 @@ task runJar(type : JavaExec){
     mainClass = 'me.salamander.noisetest.NoiseTest'
 }
 
-runJar.dependsOn jar
+runJar.dependsOn test
+test.dependsOn jar
