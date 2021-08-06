@@ -76,8 +76,8 @@ public class SimplexNoise2D {
 
         double total = 0;
         for(int i = 0; i < 3; i++){
-            double distance = Math.max(R_SQUARED, displacement[i].lengthSquared());
-            total += distance * distance * distance * distance * gradients[i].dot(displacement[i]);
+            double distance = Math.max(0, R_SQUARED - displacement[i].lengthSquared());
+            total += distance * gradients[i].dot(displacement[i]);
         }
 
         return total;
