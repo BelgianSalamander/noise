@@ -1,6 +1,9 @@
-package me.salamander.noisetest.modules;
+package me.salamander.noisetest.modules.types;
 
-public abstract class ArrayModule implements GUIModule{
+import me.salamander.noisetest.modules.GUIModule;
+import me.salamander.noisetest.modules.NoiseModule;
+
+public abstract class ArrayModule implements GUIModule {
     protected final NoiseModule[] inputs;
     protected final double[] parameters;
 

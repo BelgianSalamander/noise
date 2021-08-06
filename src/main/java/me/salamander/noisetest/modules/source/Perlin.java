@@ -2,42 +2,44 @@ package me.salamander.noisetest.modules.source;
 
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.types.ArraySourceModule;
 import me.salamander.noisetest.noise.PerlinNoise2D;
 
 import java.util.Random;
 
-public class Perlin implements GUIModule {
+public class Perlin extends ArraySourceModule {
     private long seed;
     private PerlinNoise2D[] perlinSamplers = null;
-    private int octaves;
-    private double frequency = 1.0;
-    private double persistence = 0.5;
-    private double lacunarity = 2.0;
 
     public Perlin(){
+        super(4);
+
+        initParameters();
+
         this.seed = (new Random()).nextLong();
-        this.octaves = 6;
 
         createSamplers(true);
     }
-
     public Perlin(int octaves){
+        super(4);
         this.seed = (new Random()).nextLong();
-        this.octaves = octaves;
+        initParameters();
+        parameters[0] = octaves;
         perlinSamplers = new PerlinNoise2D[octaves];
 
         createSamplers(true);
     }
-
     public Perlin(int octaves, long seed){
+        super(4);
         this.seed = seed;
-        this.octaves = octaves;
+        initParameters();
+        parameters[0] = octaves;
         perlinSamplers = new PerlinNoise2D[octaves];
 
         createSamplers(true);
     }
-
     private void createSamplers(boolean regenerate){
+        int octaves = (int) parameters[0];
         PerlinNoise2D[] newSamplers = new PerlinNoise2D[octaves];
         Random random = new Random(seed);
 
@@ -58,8 +60,20 @@ public class Perlin implements GUIModule {
         perlinSamplers = newSamplers;
     }
 
+    private void initParameters(){
+        parameters[0] = 6;
+        parameters[1] = 1.0;
+        parameters[2] = 0.5;
+        parameters[3] = 2.0;
+    }
+
     @Override
     public double sample(double x, double y) {
+        int octaves = (int) parameters[0];
+        double frequency = parameters[1];
+        double persistence = parameters[2];
+        double lacunarity = parameters[3];
+
         double total = 0;
         for(int i = 0; i < octaves; i++)
             total += Math.pow(persistence, i) * perlinSamplers[i].sample(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
@@ -74,72 +88,28 @@ public class Perlin implements GUIModule {
     }
 
     public void setPersistence(double persistence) {
-        this.persistence = persistence;
+        parameters[2] = persistence;
     }
-
     public void setLacunarity(double lacunarity) {
-        this.lacunarity = lacunarity;
+        parameters[3] = lacunarity;
     }
-
     public void setFrequency(double frequency) {
-        this.frequency = frequency;
+        parameters[1] = frequency;
     }
-
     public void setNumOctaves(int octaves){
-        if(this.octaves == octaves) return;
+        if(((int) parameters[0]) == octaves) return;
 
-        this.octaves = octaves;
+        parameters[0] = octaves;
         createSamplers(false);
     }
 
-
-    @Override
-    public int numInputs() {
-        return 0;
-    }
-
-    @Override
-    public void setInput(int index, NoiseModule module) {
-        throw new IllegalArgumentException("Index out of bounds for module with 0 inputs!");
+    public double getFrequency() {
+        return parameters[1];
     }
 
     @Override
     public void setParameter(int index, double value) {
-        switch (index){
-            case 0:
-                setNumOctaves((int) value);
-                break;
-            case 1:
-                frequency = value;
-                break;
-            case 2:
-                persistence = value;
-                break;
-            case 3:
-                lacunarity = value;
-                break;
-            default:
-                throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
-        }
-    }
-
-    @Override
-    public double getParameter(int index) {
-        switch (index){
-            case 0:
-                return octaves;
-            case 1:
-                return frequency;
-            case 2:
-                return persistence;
-            case 3:
-                return lacunarity;
-            default:
-                throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
-        }
-    }
-
-    public double getFrequency() {
-        return frequency;
+        if(index == 0) setNumOctaves((int) value);
+        else super.setParameter(index, value);
     }
 }

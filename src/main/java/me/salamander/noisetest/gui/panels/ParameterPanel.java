@@ -13,21 +13,10 @@ import me.salamander.noisetest.render.RenderHelper;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DocumentFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.text.Format;
-import java.text.NumberFormat;
 import java.util.*;
-import java.util.List;
 
 public class ParameterPanel extends JPanel {
     private JLabel selectedItemLabel = new JLabel("No Module Selected");
@@ -156,7 +145,7 @@ public class ParameterPanel extends JPanel {
                 slider = new JSlider(
                         minValue,
                         maxValue,
-                        clamp(minValue,(int) (10 * module.getNoiseModule().getParameter(parameter.index())),maxValue)
+                        (int) (10 * module.getNoiseModule().getParameter(parameter.index()) / parameter.step())
                 );
 
                 amountValues = (maxValue - minValue)/10 + 1;
@@ -168,6 +157,10 @@ public class ParameterPanel extends JPanel {
             }
 
             slider.setMinorTickSpacing(isInt ? 1 : 10);
+            slider.setMinorTickSpacing(1);
+            while (amountValues > 100){
+                amountValues /= 2;
+            }
             slider.setMajorTickSpacing(amountValues - 1);
             slider.setPaintTicks(true);
             slider.setPaintLabels(true);

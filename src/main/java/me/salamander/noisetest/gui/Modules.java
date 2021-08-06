@@ -5,6 +5,7 @@ import me.salamander.noisetest.modules.combiner.*;
 import me.salamander.noisetest.modules.modifier.Turbulence;
 import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
+import me.salamander.noisetest.modules.types.BinaryModule;
 import me.salamander.noisetest.util.Pair;
 
 import java.util.ArrayList;
@@ -66,13 +67,12 @@ public class Modules {
     public static Supplier<GUINoiseModule> CONST = register("Const", SOURCE, () -> new GUINoiseModule("Const", new Const(), CONST_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> INCOHERENT = register("Incoherent", SOURCE, () -> new GUINoiseModule("Incoherent", new Incoherent(), NO_PARAMETERS, NO_INPUTS));
 
-    public static Supplier<GUINoiseModule> ADD = register("Add", COMBINER, () -> new GUINoiseModule("Add", new Add(null, null), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> MULTIPLY = register("Multiply", COMBINER, () -> new GUINoiseModule("Multiply", new Multiply(null, null), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> MAX = register("Max", COMBINER, () -> new GUINoiseModule("Max", new Max(null, null), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> MIN = register("Min", COMBINER, () -> new GUINoiseModule("Min", new Min(null, null), NO_PARAMETERS, TWO_INPUTS));
+    public static Supplier<GUINoiseModule> ADD = register("Add", COMBINER, () -> new GUINoiseModule("Add", new BinaryModule((a, b) -> a + b), NO_PARAMETERS, TWO_INPUTS));
+    public static Supplier<GUINoiseModule> MULTIPLY = register("Multiply", COMBINER, () -> new GUINoiseModule("Multiply", new BinaryModule((a, b) -> a * b), NO_PARAMETERS, TWO_INPUTS));
+    public static Supplier<GUINoiseModule> MAX = register("Max", COMBINER, () -> new GUINoiseModule("Max", new BinaryModule((a, b) -> Math.max(a, b)), NO_PARAMETERS, TWO_INPUTS));
+    public static Supplier<GUINoiseModule> MIN = register("Min", COMBINER, () -> new GUINoiseModule("Min", new BinaryModule((a, b) -> Math.min(a, b)), NO_PARAMETERS, TWO_INPUTS));
     public static Supplier<GUINoiseModule> SELECT = register("Select", COMBINER, () -> new GUINoiseModule("Select", new Select(null, null, null), SELECT_PARAMETERS, SELECT_INPUTS));
 
     public static Supplier<GUINoiseModule> TURBULENCE = register("Turbulence", MODIFIER, () -> new GUINoiseModule("Turbulence", new Turbulence(null), TURBULENCE_PARAMETERS, ONE_INPUT));
     public static Supplier<GUINoiseModule> VORONOI = register("Voronoi", MODIFIER, () -> new GUINoiseModule("Voronoi", new Voronoi(), VORONOI_PARAMETERS, ONE_INPUT));
-
 }

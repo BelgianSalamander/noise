@@ -62,18 +62,6 @@ public class Billow implements GUIModule {
         return total;
     }
 
-    public void setPersistence(double persistence) {
-        this.persistence = persistence;
-    }
-
-    public void setLacunarity(double lacunarity) {
-        this.lacunarity = lacunarity;
-    }
-
-    public void setFrequency(double frequency) {
-        this.frequency = frequency;
-    }
-
     @Override
     public void setSeed(long s) {
         this.seed = s;

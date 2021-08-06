@@ -3,15 +3,15 @@ package me.salamander.noisetest.modules.modifier;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.source.Perlin;
+import me.salamander.noisetest.modules.types.ModifierModule;
 
 import java.util.Random;
 
-public class Turbulence implements GUIModule {
+public class Turbulence extends ModifierModule {
     private final Perlin xTurbulence, yTurbulence;
-    private NoiseModule source;
     private double turbulencePower = 1.0;
 
-    private static final String[] inputNames = new String[]{"Source"};
+    private static final int TURBULENCE_POWER_INDEX = 0, TURBULENCE_FREQUENCY_INDEX = 1;
 
     public Turbulence(NoiseModule source){
         this(source, (new Random()).nextLong());
@@ -19,6 +19,8 @@ public class Turbulence implements GUIModule {
     }
 
     public Turbulence(NoiseModule source, long seed){
+        super(2);
+        initParameters();
         xTurbulence = new Perlin(3, seed + 3);
         yTurbulence = new Perlin(3, seed * 4723537 ^ 4264);
         this.source = source;
@@ -32,6 +34,10 @@ public class Turbulence implements GUIModule {
     public Turbulence(NoiseModule source, long seed, double turbulencePower){
         this(source, seed);
         this.turbulencePower = turbulencePower;
+    }
+
+    private void initParameters(){
+        parameters[TURBULENCE_POWER_INDEX] = 1.0;
     }
 
     @Override
@@ -49,71 +55,20 @@ public class Turbulence implements GUIModule {
         return source.sample(distortedX, distortedY);
     }
 
-    public void setTurbulencePower(double turbulencePower) {
-        this.turbulencePower = turbulencePower;
-    }
-
-    public void setSource(NoiseModule source) {
-        this.source = source;
-    }
-
     public void setFrequency(double frequency){
         xTurbulence.setFrequency(frequency);
         yTurbulence.setFrequency(frequency);
     }
 
-    public void setPersistence(double persistence){
-        xTurbulence.setPersistence(persistence);
-        yTurbulence.setPersistence(persistence);
-    }
-
-    public void setLacunarity(double lacunarity){
-        xTurbulence.setLacunarity(lacunarity);
-        yTurbulence.setLacunarity(lacunarity);
-    }
-
-    @Override
-    public void setSeed(long s) {
-        if(source != null) source.setSeed(s);
-    }
-
-
-    @Override
-    public int numInputs() {
-        return 1;
-    }
-
-    @Override
-    public void setInput(int index, NoiseModule module) {
-        if(index == 0){
-            source = module;
-        }else{
-            throw new IllegalArgumentException("Index out of bounds!");
-        }
-    }
-
     @Override
     public void setParameter(int index, double value) {
-        switch (index){
-            case 0:
-                turbulencePower = value;
-                break;
-            case 1:
-                setFrequency(value);
-                break;
-            default:
-                throw new IllegalArgumentException("Index out of bounds!");
-        }
+        if(index == TURBULENCE_FREQUENCY_INDEX) setFrequency(value);
+        else super.setParameter(index, value);
     }
 
     @Override
     public double getParameter(int index) {
-        if(index == 0){
-            return turbulencePower;
-        }else if(index == 1){
-            return xTurbulence.getFrequency();
-        }else{
-            throw new IllegalArgumentException("Index out of bounds!");
-        }
+        if(index == TURBULENCE_FREQUENCY_INDEX) return xTurbulence.getFrequency();
+        else return super.getParameter(index);
     }
 }
