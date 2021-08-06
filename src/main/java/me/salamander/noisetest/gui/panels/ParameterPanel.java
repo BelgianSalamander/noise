@@ -146,24 +146,24 @@ public class ParameterPanel extends JPanel {
 
                 amountValues = (int) (parameter.maxValue() - parameter.minValue() + 1);
             }else{
-                int minValue = (int) (parameter.minValue() / parameter.step());
-                int maxValue = (int) (parameter.maxValue() / parameter.step());
+                int minValue = (int) (10*parameter.minValue() / parameter.step());
+                int maxValue = (int) (10*parameter.maxValue() / parameter.step());
 
                 slider = new JSlider(
-                        minValue * 10,
-                        maxValue * 10,
-                        clamp(minValue*10,(int) (10 * module.getNoiseModule().getParameter(parameter.index())),maxValue*10)
+                        minValue,
+                        maxValue,
+                        clamp(minValue,(int) (10 * module.getNoiseModule().getParameter(parameter.index())),maxValue)
                 );
 
-                amountValues = 10*maxValue - 10*minValue + 1;
+                amountValues = (maxValue - minValue)/10 + 1;
 
                 Hashtable labelTables = new Hashtable<>();
-                labelTables.put(10*minValue, new JLabel(Double.toString(parameter.minValue())));
-                labelTables.put(10*maxValue, new JLabel(Double.toString(parameter.maxValue())));
+                labelTables.put(minValue, new JLabel(Double.toString(parameter.minValue())));
+                labelTables.put(maxValue, new JLabel(Double.toString(parameter.maxValue())));
                 slider.setLabelTable(labelTables);
             }
 
-            slider.setMinorTickSpacing(isInt ? 10 : 1);
+            slider.setMinorTickSpacing(isInt ? 1 : 10);
             slider.setMajorTickSpacing(amountValues - 1);
             slider.setPaintTicks(true);
             slider.setPaintLabels(true);

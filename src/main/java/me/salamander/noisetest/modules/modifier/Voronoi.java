@@ -7,9 +7,9 @@ import me.salamander.noisetest.noise.VoronoiSampler;
 
 public class Voronoi implements GUIModule {
 	private NoiseModule source;
-	private double size = 1.0;
+	private double size = 0.3;
 	private int voronoiSeed = 69420;
-	private boolean relaxed;
+	private double relaxation = 0.0;
 
 	@Override
 	public int numInputs() {
@@ -32,7 +32,8 @@ public class Voronoi implements GUIModule {
 			this.size = value;
 			break;
 		case 1:
-			this.relaxed = value > 0.5 ? true : false;
+			this.relaxation = value;
+			break;
 		default:
 			throw new IllegalArgumentException("Index out of bounds: " + index);
 		}
@@ -44,7 +45,7 @@ public class Voronoi implements GUIModule {
 		case 0:
 			return this.size;
 		case 1:
-			return this.relaxed ? 1.0 : 0.0;
+			return this.relaxation;
 		default:
 			throw new IllegalArgumentException("Index out of bounds: " + index);
 		}
@@ -52,7 +53,7 @@ public class Voronoi implements GUIModule {
 
 	@Override
 	public double sample(double x, double y) {
-		Vec2 location = VoronoiSampler.sampleVoronoi(x / this.size, y / this.size, this.voronoiSeed, this.relaxed);
+		Vec2 location = VoronoiSampler.sampleVoronoi(x / this.size, y / this.size, this.voronoiSeed, this.relaxation);
 		return this.source == null ? 0 : this.source.sample(location.getX() * this.size, location.getY() * this.size);
 	}
 

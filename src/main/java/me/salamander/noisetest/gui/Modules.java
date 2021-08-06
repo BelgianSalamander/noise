@@ -37,8 +37,8 @@ public class Modules {
             new Parameter("Frequency", 1, 0.1, 5.0, 0.1)
     };
     private static Parameter[] VORONOI_PARAMETERS = new Parameter[]{
-            new Parameter("Size", 0, 0.1, 10.0, 0.1),
-            new Parameter("Relaxed", 1, 0.0, 1.0, 1.0)
+            new Parameter("Size", 0, 0.1, 5.0, 0.1),
+            new Parameter("Relaxation", 1, 0.0, 1.0, 0.1)
     };
     private static Parameter[] SELECT_PARAMETERS = new Parameter[]{
             new Parameter("Threshold", 0, -1.0, 1.0, 0.1),
@@ -51,8 +51,6 @@ public class Modules {
             new Parameter("Frequency", 0, 0.1, 5, 0.1)
     };
     private static Parameter[] NO_PARAMETERS = new Parameter[0];
-
-
 
     private static String[] NO_INPUTS = new String[0];
     private static String[] ONE_INPUT = new String[]{"Source"};

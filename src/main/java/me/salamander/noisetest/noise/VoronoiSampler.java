@@ -1,22 +1,3 @@
-/*
- * Naturverbunden
- * Copyright (C) 2021 Valoeghese
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- */
-
 package me.salamander.noisetest.noise;
 
 /**
@@ -33,7 +14,9 @@ public final class VoronoiSampler {
 		return (int) (seed & 0xFFFFFFFF);
 	}
 
-	private static Vec2 sampleRelaxedVoronoi(double x, double y, int seed) {
+	public static Vec2 sampleVoronoi(double x, double y, int seed, double relaxation) {
+		double unrelaxation = 1.0 - relaxation;
+
 		final int baseX = (int) Math.floor(x);
 		final int baseY = (int) Math.floor(y);
 		double rx = 0;
@@ -46,9 +29,8 @@ public final class VoronoiSampler {
 			for (int yo = -1; yo <= 1; ++yo) {
 				int gridY = baseY + yo;
 
-				// ensure more evenly distributed
-				double vx = gridX + (randomdouble(gridX, gridY, seed) + 0.5) * 0.5;
-				double vy = gridY + (randomdouble(gridX, gridY, seed + 1) + 0.5) * 0.5;
+				double vx = gridX + (relaxation * 0.5 + unrelaxation * randomdouble(gridX, gridY, seed));
+				double vy = gridY + (relaxation * 0.5 + unrelaxation * randomdouble(gridX, gridY, seed + 1));
 				double vdist = squaredDist(x, y, vx, vy);
 
 				if (vdist < rdist) {
@@ -60,38 +42,6 @@ public final class VoronoiSampler {
 		}
 
 		return new Vec2(rx, ry);
-	}
-
-	public static Vec2 sampleVoronoi(double x, double y, int seed, boolean relaxed) {
-		if (relaxed) {
-			return sampleRelaxedVoronoi(x, y, seed);
-		} else {
-			final int baseX = (int) Math.floor(x);
-			final int baseY = (int) Math.floor(y);
-			double rx = 0;
-			double ry = 0;
-			double rdist = 1000;
-
-			for (int xo = -1; xo <= 1; ++xo) {
-				int gridX = baseX + xo;
-
-				for (int yo = -1; yo <= 1; ++yo) {
-					int gridY = baseY + yo;
-
-					double vx = gridX + randomdouble(gridX, gridY, seed);
-					double vy = gridY + randomdouble(gridX, gridY, seed + 1);
-					double vdist = squaredDist(x, y, vx, vy);
-
-					if (vdist < rdist) {
-						rx = vx;
-						ry = vy;
-						rdist = vdist;
-					}
-				}
-			}
-
-			return new Vec2(rx, ry);
-		}
 	}
 
 	public static double sampleD1D2SquaredWorley(double x, double y, int seed) {
