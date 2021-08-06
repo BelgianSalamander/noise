@@ -1,5 +1,7 @@
 package me.salamander.noisetest.gui;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.gui.panels.ModulePanel;
 import me.salamander.noisetest.gui.panels.ModuleSelector;
@@ -18,19 +20,9 @@ public class NoiseGUI extends JFrame {
 
     public NoiseGUI(){
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        try {
-            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
-        }
+	    FlatLightLaf.install();
 
-        setLayout(new GridBagLayout());
+	    setLayout(new GridBagLayout());
         setSize(1000, 1000);
         setTitle("Noise Editor");
 

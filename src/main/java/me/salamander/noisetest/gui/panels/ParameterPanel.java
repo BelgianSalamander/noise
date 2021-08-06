@@ -143,21 +143,23 @@ public class ParameterPanel extends JPanel {
             GUIHelper.setFontSize(label, 15);
             JSlider slider;
             int amountValues;
-            if(parameter.step() == 1.0) { //Is int
+            boolean isInt = parameter.step() == 1.0;
+
+            if(isInt) { //Is int
                 slider = new JSlider((int) parameter.minValue(), (int)  parameter.maxValue(), (int) module.getNoiseModule().getParameter(parameter.index()));
 
                 amountValues = (int) (parameter.maxValue() - parameter.minValue() + 1);
             }else{
-                int minValue = (int) (parameter.minValue() / parameter.step());
-                int maxValue = (int) (parameter.maxValue() / parameter.step());
+                int minValue = (int) (10*parameter.minValue() / parameter.step());
+                int maxValue = (int) (10*parameter.maxValue() / parameter.step());
 
                 slider = new JSlider(
                         minValue,
                         maxValue,
-                        (int) (module.getNoiseModule().getParameter(parameter.index()) / parameter.step())
+                        clamp(minValue,(int) (10 * module.getNoiseModule().getParameter(parameter.index())),maxValue)
                 );
 
-                amountValues = maxValue - minValue + 1;
+                amountValues = (maxValue - minValue)/10 + 1;
 
                 Hashtable labelTables = new Hashtable<>();
                 labelTables.put(minValue, new JLabel(Double.toString(parameter.minValue())));
@@ -165,13 +167,15 @@ public class ParameterPanel extends JPanel {
                 slider.setLabelTable(labelTables);
             }
 
-            slider.setMinorTickSpacing(1);
+            slider.setMinorTickSpacing(isInt ? 1 : 10);
             slider.setMajorTickSpacing(amountValues - 1);
             slider.setPaintTicks(true);
             slider.setPaintLabels(true);
+
             slider.setForeground(Color.BLACK);
-            slider.addChangeListener(new ParameterChangeListener(module.getNoiseModule(), parameter, label));
+            slider.addChangeListener(new ParameterChangeListener(module.getNoiseModule(), parameter, label, isInt));
             slider.setBackground(Color.LIGHT_GRAY);
+
             parameterPanel.add(slider);
         }
     }
@@ -233,19 +237,26 @@ public class ParameterPanel extends JPanel {
         private final GUIModule noiseModule;
         private final Parameter parameter;
         private final JLabel label;
+        private final boolean isInt;
 
-        private ParameterChangeListener(GUIModule noiseModule, Parameter parameter, JLabel label) {
+        private ParameterChangeListener(GUIModule noiseModule, Parameter parameter, JLabel label, boolean isInt) {
             this.noiseModule = noiseModule;
             this.parameter = parameter;
             this.label = label;
+            this.isInt = isInt;
         }
 
         @Override
         public void stateChanged(ChangeEvent e) {
             double value = ((JSlider) e.getSource()).getValue() * parameter.step();
+
+            if (!this.isInt) {
+            	value *= 0.1;
+            }
+
             noiseModule.setParameter(parameter.index(), value);
 
-            String valueAsString = parameter.step() == 1.0 ? Integer.toString((int) value) : String.format("%.2f", value);
+            String valueAsString = this.isInt ? Integer.toString((int) value) : String.format("%.2f", value);
             label.setText(parameter.name() + ": " + valueAsString);
         }
     }
@@ -281,5 +292,9 @@ public class ParameterPanel extends JPanel {
 
         @Override
         public void keyReleased(KeyEvent e) { }
+    }
+
+    private static int clamp(int min, int val, int max) {
+    	return val < min ? min : (val > max ? max : val);
     }
 }

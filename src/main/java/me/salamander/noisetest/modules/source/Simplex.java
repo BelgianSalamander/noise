@@ -6,40 +6,41 @@ import me.salamander.noisetest.noise.PerlinNoise2D;
 import me.salamander.noisetest.noise.SimplexNoise2D;
 
 import java.util.Random;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.LongFunction;
 
 public class Simplex implements GUIModule {
     private long seed;
-    private SimplexNoise2D[] perlinSamplers = null;
+    private DoubleBinaryOperator[] perlinSamplers;
     private int octaves;
     private double frequency = 1.0;
     private double persistence = 0.5;
     private double lacunarity = 2.0;
+    private final LongFunction<DoubleBinaryOperator> noiseConstructor;
 
-    public Simplex(){
-        this.seed = (new Random()).nextLong();
-        this.octaves = 6;
-
-        createSamplers(true);
+    public Simplex() {
+        this(6);
     }
 
-    public Simplex(int octaves){
-        this.seed = (new Random()).nextLong();
-        this.octaves = octaves;
-        perlinSamplers = new SimplexNoise2D[octaves];
+	public Simplex(int octaves){
+    	this(octaves, new Random().nextLong());
+	}
 
-        createSamplers(true);
+	public Simplex(int octaves, long seed){
+    	this(octaves, seed, l -> new SimplexNoise2D(l)::sample);
+	}
+
+    protected Simplex(int octaves, long seed, LongFunction<DoubleBinaryOperator> noiseConstructor) {
+	    this.seed = seed;
+	    this.octaves = 6;
+	    perlinSamplers = new DoubleBinaryOperator[octaves];
+	    this.noiseConstructor = noiseConstructor;
+
+	    createSamplers(true, noiseConstructor);
     }
 
-    public Simplex(int octaves, long seed){
-        this.seed = seed;
-        this.octaves = octaves;
-        perlinSamplers = new SimplexNoise2D[octaves];
-
-        createSamplers(true);
-    }
-
-    private void createSamplers(boolean regenerate){
-        SimplexNoise2D[] newSamplers = new SimplexNoise2D[octaves];
+    private void createSamplers(boolean regenerate, LongFunction<DoubleBinaryOperator> noiseConstructor) {
+        DoubleBinaryOperator[] newSamplers = new DoubleBinaryOperator[octaves];
         Random random = new Random(seed);
 
         for(int i = 0; i < octaves; i++){
@@ -51,8 +52,9 @@ public class Simplex implements GUIModule {
                     random.nextLong();
                 }
             }
-            if(!usedPrevious){
-                newSamplers[i] = new SimplexNoise2D(random.nextLong());
+
+            if(!usedPrevious) {
+                newSamplers[i] = noiseConstructor.apply(random.nextLong());
             }
         }
 
@@ -63,15 +65,14 @@ public class Simplex implements GUIModule {
     public double sample(double x, double y) {
         double total = 0;
         for(int i = 0; i < octaves; i++)
-            total += Math.pow(persistence, i) * perlinSamplers[i].sample(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
+            total += Math.pow(persistence, i) * perlinSamplers[i].applyAsDouble(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
         return total;
     }
 
     @Override
     public void setSeed(long s) {
         this.seed = s;
-
-        createSamplers(true);
+        createSamplers(true, this.noiseConstructor);
     }
 
     public void setPersistence(double persistence) {
@@ -90,7 +91,7 @@ public class Simplex implements GUIModule {
         if(this.octaves == octaves) return;
 
         this.octaves = octaves;
-        createSamplers(false);
+        createSamplers(false, this.noiseConstructor);
     }
 
 
