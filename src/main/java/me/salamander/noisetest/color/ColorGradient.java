@@ -56,6 +56,10 @@ public class ColorGradient implements ColorSampler {
         }
     }
 
+    public void addColorPoint(float n, Color color) {
+        colorPoints.add(new ColorPoint(n, new InterpolatableColor(color.getRed() / 255.f, color.getGreen() / 255.f, color.getBlue() / 255.f)));
+    }
+
     private record ColorPoint(float value, InterpolatableColor color) implements Comparable {
 
         public float getValue() {

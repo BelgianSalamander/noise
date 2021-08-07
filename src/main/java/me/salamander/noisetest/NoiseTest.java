@@ -14,7 +14,7 @@ import javax.swing.*;
 
 public class NoiseTest {
     public static void main(String[] args) {
-        guiDemo();
+        gradientEditorTest();
     }
 
     public static void guiDemo(){

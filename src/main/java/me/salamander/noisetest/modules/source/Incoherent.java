@@ -18,7 +18,7 @@ public class Incoherent extends SourceModule {
 
     @Override
     public double sample(double x, double y) {
-        random.setSeed((long) (x * 352735782573L + y * 56276574645L + seed * 625627L));
+        random.setSeed((long) (x * 357621L + y * 562457L + seed * 625627L));
         return random.nextDouble() * 2 - 1;
     }
 
