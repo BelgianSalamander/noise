@@ -1,5 +1,6 @@
 package me.salamander.noisetest.modules;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.source.Const;
 
 public interface NoiseModule {
@@ -13,4 +14,8 @@ public interface NoiseModule {
             return 0.0;
         }
     }
+
+    void readNBT(CompoundTag tag);
+    void writeNBT(CompoundTag tag);
+    String getNodeRegistryName();
 }

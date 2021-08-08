@@ -1,15 +1,19 @@
 package me.salamander.noisetest.gui;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
+import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.combiner.*;
 import me.salamander.noisetest.modules.modifier.Turbulence;
 import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.modules.types.BinaryModule;
 import me.salamander.noisetest.util.Pair;
+import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static me.salamander.noisetest.gui.ModuleCategory.*;
@@ -21,11 +25,38 @@ public class Modules {
         return supplier;
     }
 
+    private static Map<String, Supplier<NoiseModule>> nodeRegistry;
+
+    public static void registerNode(Supplier<NoiseModule> nodeSupplier) {
+    	nodeRegistry.put(nodeSupplier.get().getNodeRegistryName(), nodeSupplier);
+    }
+
     static {
         for(ModuleCategory category : ModuleCategory.values()){
             categories.add(new Pair<>(category, new ArrayList<>()));
         }
+
+        // Register Node Suppliers Here (used for deserialisation, to get an instance to call readNBT on)
+	    registerNode(() -> new NoiseSourceModule(NoiseType.PERLIN));
+        registerNode(() -> new Turbulence(null));
     }
+
+	public static CompoundTag nodeToTag(NoiseModule module) {
+    	CompoundTag result = new CompoundTag();
+    	result.putString("type", module.getNodeRegistryName());
+
+    	CompoundTag properties = new CompoundTag();
+    	module.writeNBT(properties);
+    	result.put("properties", properties);
+
+    	return result;
+	}
+
+	public static NoiseModule tagToNode(CompoundTag tag) {
+    	NoiseModule result = nodeRegistry.get(tag.getString("type")).get();
+    	result.readNBT(tag.getSubTag("properties"));
+    	return result;
+	}
 
     private static Parameter[] PERLIN_PARAMETERS = new Parameter[]{
             new Parameter("Octaves", 0, 1, 10, 1),
@@ -58,10 +89,10 @@ public class Modules {
     private static String[] TWO_INPUTS = new String[]{"Source One", "Source Two"};
     private static String[] SELECT_INPUTS = new String[]{"Source One", "Source Two", "Selector"};
 
-    public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new GUINoiseModule("Perlin", new Perlin(), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE, () -> new GUINoiseModule("Simplex", new Simplex(), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> OPENSIMPLEX = register("OpenSimplex", SOURCE, () -> new GUINoiseModule("OpenSimplex", new OpenSimplex(), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new GUINoiseModule("Billow", new Billow(), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new GUINoiseModule("Perlin", new NoiseSourceModule(NoiseType.PERLIN), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE, () -> new GUINoiseModule("Simplex", new NoiseSourceModule(NoiseType.SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> OPENSIMPLEX = register("OpenSimplex", SOURCE, () -> new GUINoiseModule("OpenSimplex", new NoiseSourceModule(NoiseType.OPEN_SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new GUINoiseModule("Billow", new NoiseSourceModule(NoiseType.BILLOW), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new GUINoiseModule("Ridge", new Ridge(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new GUINoiseModule("Checkerboard", new CheckerBoard(), FREQUENCY_ONLY, NO_INPUTS));
     public static Supplier<GUINoiseModule> CONST = register("Const", SOURCE, () -> new GUINoiseModule("Const", new Const(), CONST_PARAMETERS, NO_INPUTS));

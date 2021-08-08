@@ -31,7 +31,7 @@ public class NoiseTest {
     }
 
     private static void renderDemo(){
-        NoiseModule baseTerrain = new Perlin();
+        NoiseModule baseTerrain = new NoiseSourceModule(NoiseType.PERLIN);
         Ridge mountainTerrain = new Ridge();
         Select selector = new Select(baseTerrain, mountainTerrain, baseTerrain);
         selector.setThreshold(0.4);

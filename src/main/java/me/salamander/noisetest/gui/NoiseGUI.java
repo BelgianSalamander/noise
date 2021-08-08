@@ -2,6 +2,8 @@ package me.salamander.noisetest.gui;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import io.github.antiquitymc.nbt.NbtDeserializer;
+import io.github.antiquitymc.nbt.NbtIo;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.gui.panels.ModulePanel;
 import me.salamander.noisetest.gui.panels.ModuleSelector;
@@ -54,6 +56,16 @@ public class NoiseGUI extends JFrame {
 
     private void createMenu(){
         JMenuBar menuBar = new JMenuBar();
+
+        // todo make this
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem open = new JMenuItem("Open Project");
+        fileMenu.add(open);
+        JMenuItem save = new JMenuItem("Save Project");
+        fileMenu.add(save);
+        JMenuItem saveAs = new JMenuItem("Save Project As");
+	    fileMenu.add(saveAs);
+        menuBar.add(fileMenu);
 
         JMenu editMenu = new JMenu("Edit");
         JMenuItem addModule = new JMenuItem("Add Module");
