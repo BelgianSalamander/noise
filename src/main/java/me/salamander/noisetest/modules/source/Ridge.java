@@ -1,12 +1,16 @@
 package me.salamander.noisetest.modules.source;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.types.SourceModule;
 import me.salamander.noisetest.noise.PerlinNoise2D;
 
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Random;
 
-public class Ridge implements GUIModule {
+public class Ridge extends SourceModule {
     private long seed;
     private PerlinNoise2D[] perlinSamplers;
     private int octaves;
@@ -99,16 +103,6 @@ public class Ridge implements GUIModule {
     }
 
     @Override
-    public int numInputs() {
-        return 0;
-    }
-
-    @Override
-    public void setInput(int index, NoiseModule module) {
-        throw new IllegalArgumentException("Index out of bounds for module with 0 inputs!");
-    }
-
-    @Override
     public void setParameter(int index, double value) {
         switch (index){
             case 0:
@@ -142,5 +136,28 @@ public class Ridge implements GUIModule {
             default:
                 throw new IllegalArgumentException("Index out of bounds for module with 4 parameters!");
         }
+    }
+
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        seed = tag.getLong("seed");
+        octaves = tag.getInt("octaves");
+        frequency = tag.getDouble("frequency");
+        persistence = tag.getDouble("persistence");
+        lacunarity = tag.getDouble("lacunarity");
+    }
+
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        tag.putLong("seed", seed);
+        tag.putInt("octaves", octaves);
+        tag.putDouble("frequency", frequency);
+        tag.putDouble("persistence", persistence);
+        tag.putDouble("lacunarity", lacunarity);
+    }
+
+    @Override
+    public String getNodeRegistryName() {
+        return "Ridge";
     }
 }

@@ -2,8 +2,11 @@ package me.salamander.noisetest.modules.types;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.LongArrayTag;
+import me.salamander.noisetest.modules.NoiseModule;
 
 import java.util.Arrays;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 public abstract class ArraySourceModule extends SourceModule{
     protected final double[] parameters;
@@ -22,22 +25,21 @@ public abstract class ArraySourceModule extends SourceModule{
         return parameters[index];
     }
 
+
 	@Override
-	public void writeNBT(CompoundTag tag) {
-    	long[] data = Arrays.stream(this.parameters).mapToLong(Double::doubleToLongBits).toArray();
-		tag.put("parameters", new LongArrayTag(data));
+	public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+		System.arraycopy(
+				Arrays.stream(((LongArrayTag)tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray(),
+				0,
+				this.parameters,
+				0,
+				this.parameters.length
+		);
 	}
 
 	@Override
-	public void readNBT(CompoundTag tag) {
-    	if (tag.containsKey("parameters")) {
-    		System.arraycopy(
-				    Arrays.stream(((LongArrayTag)tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray(),
-				    0,
-				    this.parameters,
-				    0,
-				    this.parameters.length
-		    );
-		}
+	public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+		long[] data = Arrays.stream(this.parameters).mapToLong(Double::doubleToLongBits).toArray();
+		tag.put("parameters", new LongArrayTag(data));
 	}
 }

@@ -6,7 +6,7 @@ import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 
-import java.util.Arrays;
+import java.util.*;
 
 public abstract class ModifierModule implements GUIModule {
     protected NoiseModule source;
@@ -46,30 +46,31 @@ public abstract class ModifierModule implements GUIModule {
     @Override //Should set the seed of the source
     public void setSeed(long s){source.setSeed(s * 46237 ^ 42534);};
 
-	@Override
-	public void writeNBT(CompoundTag tag) {
-		if (this.source != null) {
-			tag.put("source", Modules.nodeToTag(this.source));
-		}
+    @Override
+    public Collection<NoiseModule> getSources() {
+        Collection<NoiseModule> sources = new ArrayList<>();
+        sources.add(source);
+        return sources;
+    }
 
-		long[] data = Arrays.stream(this.parameters).mapToLong(Double::doubleToLongBits).toArray();
-		tag.put("parameters", new LongArrayTag(data));
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        if(tag.containsKey("source")){
+            source = sourceLookup.get(tag.getInt("source"));
+        }
+
+        double[] new_params = Arrays.stream(((LongArrayTag) tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray();
+        for(int i = 0; i < new_params.length; i++){
+            setParameter(i, new_params[i]);
+        }
 	}
 
-	@Override
-	public void readNBT(CompoundTag tag) {
-		if (tag.containsKey("source")) {
-			this.source = Modules.tagToNode(tag.getSubTag("source"));
-		}
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        if(source != null){
+            tag.putInt("source", indexLookup.get(source));
+        }
 
-		if (tag.containsKey("parameters")) {
-			System.arraycopy(
-					Arrays.stream(((LongArrayTag)tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray(),
-					0,
-					this.parameters,
-					0,
-					this.parameters.length
-			);
-		}
-	}
+        tag.put("parameters", new LongArrayTag(Arrays.stream(parameters).mapToLong(Double::doubleToLongBits).toArray()));
+    }
 }

@@ -1,9 +1,14 @@
 package me.salamander.noisetest.modules.source;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.types.SourceModule;
 
-public class Const implements GUIModule {
+import java.util.IdentityHashMap;
+import java.util.List;
+
+public class Const extends SourceModule {
     private double value = 0;
 
     public Const(){}
@@ -21,17 +26,6 @@ public class Const implements GUIModule {
     @Override
     public void setSeed(long s) { }
 
-
-    @Override
-    public int numInputs() {
-        return 0;
-    }
-
-    @Override
-    public void setInput(int index, NoiseModule module) {
-        throw new IllegalArgumentException("Index out of bounds for module with no inputs");
-    }
-
     @Override
     public void setParameter(int index, double value) {
         if(index == 0){
@@ -48,5 +42,20 @@ public class Const implements GUIModule {
         }else{
             throw new IllegalArgumentException("Index '" + index + "' out of bounds for module with one parameter");
         }
+    }
+
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        value = tag.getDouble("value");
+    }
+
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        tag.putDouble("value", value);
+    }
+
+    @Override
+    public String getNodeRegistryName() {
+        return "Const";
     }
 }

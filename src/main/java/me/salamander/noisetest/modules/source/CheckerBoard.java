@@ -1,9 +1,14 @@
 package me.salamander.noisetest.modules.source;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.types.SourceModule;
 
-public class CheckerBoard implements GUIModule {
+import java.util.IdentityHashMap;
+import java.util.List;
+
+public class CheckerBoard extends SourceModule {
     private double frequency = 1.0;
 
     public CheckerBoard(){}
@@ -26,17 +31,6 @@ public class CheckerBoard implements GUIModule {
     @Override
     public void setSeed(long s) {}
 
-
-    @Override
-    public int numInputs() {
-        return 0;
-    }
-
-    @Override
-    public void setInput(int index, NoiseModule module) {
-        throw new IllegalArgumentException("Index is out of bounds!");
-    }
-
     @Override
     public void setParameter(int index, double value) {
         if(index == 0){
@@ -52,5 +46,20 @@ public class CheckerBoard implements GUIModule {
             return frequency;
         }
         throw new IllegalArgumentException("Index '" +index + "' is out of bounds!");
+    }
+
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        frequency = tag.getDouble("frequency");
+    }
+
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        tag.putDouble("frequency", frequency);
+    }
+
+    @Override
+    public String getNodeRegistryName() {
+        return "Checkerboard";
     }
 }

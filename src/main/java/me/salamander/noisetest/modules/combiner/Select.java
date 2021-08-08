@@ -1,8 +1,14 @@
 package me.salamander.noisetest.modules.combiner;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.source.Const;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 public class Select implements GUIModule {
     private NoiseModule noiseMapOne, noiseMapTwo, selector;
@@ -126,4 +132,56 @@ public class Select implements GUIModule {
             throw new IllegalArgumentException("Index out of bounds!");
         }
     }
+
+    @Override
+    public Collection<NoiseModule> getSources() {
+        List<NoiseModule> sources =  new ArrayList<>();
+        sources.add(selector);
+        sources.add(noiseMapOne);
+        sources.add(noiseMapTwo);
+        return sources;
+    }
+
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        edgeFalloff = tag.getDouble("edgeFalloff");
+        threshold = tag.getDouble("threshold");
+
+        if(tag.containsKey("inputOne")){
+            noiseMapOne = sourceLookup.get(tag.getInt("inputOne"));
+        }
+
+        if(tag.containsKey("inputTwo")){
+            noiseMapTwo = sourceLookup.get(tag.getInt("inputTwo"));
+        }
+
+        if(tag.containsKey("selector")){
+            selector = sourceLookup.get(tag.getInt("selector"));
+        }
+    }
+
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        tag.putDouble("edgeFalloff", edgeFalloff);
+        tag.putDouble("threshold", threshold);
+
+        if(noiseMapOne != null){
+            tag.putInt("inputOne", indexLookup.get(noiseMapOne));
+        }
+
+        if(noiseMapTwo != null){
+            tag.putInt("inputTwo", indexLookup.get(noiseMapTwo));
+        }
+
+        if(selector != null){
+            tag.putInt("selector", indexLookup.get(selector));
+        }
+    }
+
+    @Override
+    public String getNodeRegistryName() {
+        return "Select";
+    }
+
+
 }

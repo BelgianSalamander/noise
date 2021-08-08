@@ -1,8 +1,11 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.types.ArraySourceModule;
 
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.function.DoubleBinaryOperator;
 
@@ -68,6 +71,10 @@ public class NoiseSourceModule extends ArraySourceModule {
         createSamplers(true, this.noiseType);
     }
 
+    public long getSeed() {
+        return seed;
+    }
+
     public void setPersistence(double persistence) {
         this.parameters[2] = persistence;
     }
@@ -97,24 +104,29 @@ public class NoiseSourceModule extends ArraySourceModule {
         return parameters[1];
     }
 
-	@Override
-	public void readNBT(CompoundTag tag) {
-    	super.readNBT(tag);
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        super.readNBT(tag, sourceLookup);
 
-    	if (tag.containsKey("type")) {
-		    this.noiseType = NoiseType.fromString(tag.getString("type"));
-		    createSamplers(true, this.noiseType);
-	    }
-	}
+        seed = tag.getLong("seed");
 
-	@Override
-	public void writeNBT(CompoundTag tag) {
-    	super.writeNBT(tag);
-    	tag.putString("type", this.noiseType.toString());
-	}
+        noiseType = NoiseType.fromString(tag.getString("type"));
+        createSamplers(true, noiseType);
+    }
 
-	@Override
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        super.writeNBT(tag, indexLookup);
+        tag.putString("type", this.noiseType.toString());
+        tag.putLong("seed", seed);
+    }
+
+    @Override
 	public String getNodeRegistryName() {
 		return "NoiseSource";
 	}
+
+    public NoiseType getNoiseType() {
+        return noiseType;
+    }
 }

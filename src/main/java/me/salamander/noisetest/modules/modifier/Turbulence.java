@@ -1,15 +1,17 @@
 package me.salamander.noisetest.modules.modifier;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.source.NoiseSourceModule;
 import me.salamander.noisetest.modules.source.NoiseType;
 import me.salamander.noisetest.modules.types.ModifierModule;
 
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Random;
 
 public class Turbulence extends ModifierModule {
     private final NoiseSourceModule xTurbulence, yTurbulence;
-    private double turbulencePower = 1.0;
 
     private static final int TURBULENCE_POWER_INDEX = 0, TURBULENCE_FREQUENCY_INDEX = 1;
 
@@ -28,12 +30,12 @@ public class Turbulence extends ModifierModule {
 
     public Turbulence(NoiseModule source, double turbulencePower){
         this(source);
-        this.turbulencePower = turbulencePower;
+        parameters[TURBULENCE_POWER_INDEX] = turbulencePower;
     }
 
     public Turbulence(NoiseModule source, long seed, double turbulencePower){
         this(source, seed);
-        this.turbulencePower = turbulencePower;
+        parameters[TURBULENCE_POWER_INDEX] = turbulencePower;
     }
 
     private void initParameters(){
@@ -49,10 +51,28 @@ public class Turbulence extends ModifierModule {
         final double x1 = x + (23436.0 / 65536.0);
         final double y1 = y + (43765.0 / 65536.0);
 
-        final double distortedX = x + xTurbulence.sample(x0, y0) * turbulencePower;
-        final double distortedY = y + yTurbulence.sample(x1, y1) * turbulencePower;
+        final double distortedX = x + xTurbulence.sample(x0, y0) * parameters[TURBULENCE_POWER_INDEX];
+        final double distortedY = y + yTurbulence.sample(x1, y1) * parameters[TURBULENCE_POWER_INDEX];
 
         return source.sample(distortedX, distortedY);
+    }
+
+    @Override
+    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+        super.readNBT(tag, sourceLookup);
+
+        setFrequency(parameters[TURBULENCE_FREQUENCY_INDEX]);
+        xTurbulence.setSeed(tag.getLong("xSeed"));
+        yTurbulence.setSeed(tag.getLong("ySeed"));
+    }
+
+    @Override
+    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+        parameters[TURBULENCE_FREQUENCY_INDEX] = xTurbulence.getFrequency();
+        super.writeNBT(tag, indexLookup);
+
+        tag.putLong("xSeed", xTurbulence.getSeed());
+        tag.putLong("ySeed", yTurbulence.getSeed());
     }
 
     public void setFrequency(double frequency){

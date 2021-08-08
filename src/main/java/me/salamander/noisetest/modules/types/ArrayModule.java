@@ -1,6 +1,7 @@
 package me.salamander.noisetest.modules.types;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import io.github.antiquitymc.nbt.IntArrayTag;
 import io.github.antiquitymc.nbt.ListTag;
 import io.github.antiquitymc.nbt.LongArrayTag;
 import me.salamander.noisetest.gui.Modules;
@@ -8,6 +9,9 @@ import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.NoiseModule;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class ArrayModule implements GUIModule {
@@ -52,9 +56,9 @@ public abstract class ArrayModule implements GUIModule {
     public abstract void setSeed(long s);
 
 	@Override
-	public void writeNBT(CompoundTag tag) {
+	public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
 		if (this.inputs.length > 0) {
-			tag.put("sources", new ListTag(Arrays.stream(this.inputs).map(o -> Modules.nodeToTag(o)).collect(Collectors.toList())));
+			tag.put("sources", new IntArrayTag(Arrays.stream(inputs).mapToInt(indexLookup::get).toArray()));
 		}
 
 		long[] data = Arrays.stream(this.parameters).mapToLong(Double::doubleToLongBits).toArray();
@@ -62,12 +66,12 @@ public abstract class ArrayModule implements GUIModule {
 	}
 
 	@Override
-	public void readNBT(CompoundTag tag) {
+	public void readNBT(CompoundTag tag, List<NoiseModule> moduleLookup) {
 		if (tag.containsKey("sources")) {
-			ListTag sources = (ListTag) tag.get("sources");
+			IntArrayTag sources = (IntArrayTag) tag.get("sources");
 
 			System.arraycopy(
-					sources.stream().map(o -> Modules.tagToNode((CompoundTag) o)).toArray(),
+                    Arrays.stream(sources.getValue()).mapToObj(moduleLookup::get),
 					0,
 					this.inputs,
 					0,
@@ -85,4 +89,9 @@ public abstract class ArrayModule implements GUIModule {
 			);
 		}
 	}
+
+    @Override
+    public Collection<NoiseModule> getSources() {
+        return Arrays.asList(inputs);
+    }
 }
