@@ -66,7 +66,7 @@ public class BinaryModule implements GUIModule {
         sources.add(inputOne);
         sources.add(inputTwo);
 
-        return getSources();
+        return sources;
     }
 
     @Override
@@ -98,5 +98,9 @@ public class BinaryModule implements GUIModule {
     @Override
     public String getNodeRegistryName() {
         return "BinaryModule";
+    }
+
+    public BinaryFunctionType getFunctionType() {
+        return functionType;
     }
 }

@@ -21,11 +21,18 @@ public class NoiseSourceModule extends ArraySourceModule {
     public NoiseSourceModule(int octaves, long seed, NoiseType type) {
     	super(4);
 	    this.seed = seed;
+	    initParameters();
 	    this.parameters[0] = octaves;
 	    noiseSamplers = new DoubleBinaryOperator[octaves];
 	    this.noiseType = type;
 
 	    createSamplers(true, type);
+    }
+
+    private void initParameters(){
+        parameters[1] = 1.0;
+        parameters[2] = 2.0;
+        parameters[3] = 0.5;
     }
 
     private void createSamplers(boolean regenerate, NoiseType type) {

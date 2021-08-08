@@ -27,8 +27,8 @@ public class Modules {
         return supplier;
     }
 
-    private static Map<String, Supplier<? extends NoiseModule>> nodeRegistry;
-    private static Map<String, Function<? extends GUIModule, GUINoiseModule>> nodeDisplayerRegistry;
+    private static Map<String, Supplier<? extends NoiseModule>> nodeRegistry = new HashMap<>();
+    private static Map<String, Function<? extends GUIModule, GUINoiseModule>> nodeDisplayerRegistry = new HashMap<>();
 
     //toGUIModule should be null if the NoiseModule does not implement GUIModule
     public static <T extends NoiseModule> void registerNode(Supplier<T> nodeSupplier) {
@@ -80,6 +80,7 @@ public class Modules {
 
         // Register Node Suppliers Here (used for deserialisation, to get an instance to call readNBT on)
 	    registerNode(() -> new NoiseSourceModule(NoiseType.PERLIN), m -> new GUINoiseModule(m.getNoiseType().toString(), m, PERLIN_PARAMETERS, NO_INPUTS));
+        registerNode(() -> new BinaryModule(BinaryFunctionType.ADD), m -> new GUINoiseModule(m.getFunctionType().getNbtIdentifier(), m, NO_PARAMETERS, ONE_INPUT));
         registerNode(() -> new Turbulence(null), m -> new GUINoiseModule("Turbulence", m, TURBULENCE_PARAMETERS, ONE_INPUT));
     }
 
@@ -113,8 +114,8 @@ public class Modules {
             tag.putString("type", currentModule.getNodeRegistryName());
 
             CompoundTag properties = new CompoundTag();
-            module.writeNBT(properties, indexLookup);
-            result.put("properties", properties);
+            currentModule.writeNBT(properties, indexLookup);
+            tag.put("properties", properties);
 
             modulesTag.add(tag);
         }
@@ -135,7 +136,7 @@ public class Modules {
         }
 
         for(int i = 0; i < modules.size(); i++){
-            modules.get(i).readNBT(modulesTag.get(i), modules);
+            modules.get(i).readNBT((CompoundTag) modulesTag.get(i).get("properties"), modules);
         }
 
         return modules.get(headIndex);

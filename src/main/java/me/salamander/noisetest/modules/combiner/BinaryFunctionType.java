@@ -1,5 +1,6 @@
 package me.salamander.noisetest.modules.combiner;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.DoubleBinaryOperator;
 
@@ -11,7 +12,7 @@ public enum BinaryFunctionType {
 
     private DoubleBinaryOperator function;
     private String nbtIdentifier;
-    private static Map<String, BinaryFunctionType> functionsMap;
+    private static Map<String, BinaryFunctionType> functionsMap = new HashMap<>();
 
     private BinaryFunctionType(String ID, DoubleBinaryOperator function){
         this.function = function;
