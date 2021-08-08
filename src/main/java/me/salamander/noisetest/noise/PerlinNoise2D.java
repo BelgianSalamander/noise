@@ -63,4 +63,20 @@ public class PerlinNoise2D {
     private static double smoothstep(double n){
         return n * n * n * (n * ( n * 6 - 15) + 10);
     }
+
+    public static final class Billow extends PerlinNoise2D {
+	    public Billow(){
+		    super();
+	    }
+
+	    public Billow(long seed) {
+	    	super(seed);
+	    }
+
+	    @Override
+	    public double sample(double x, double y) {
+		    return Math.abs(super.sample(x, y));
+	    }
+    }
+
 }
