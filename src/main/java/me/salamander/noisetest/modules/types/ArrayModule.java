@@ -40,6 +40,11 @@ public abstract class ArrayModule implements GUIModule {
     }
 
     @Override
+    public NoiseModule getInput(int index) {
+        return inputs[index];
+    }
+
+    @Override
     public void setParameter(int index, double value) {
         parameters[index] = value;
     }

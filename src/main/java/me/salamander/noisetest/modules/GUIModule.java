@@ -4,6 +4,7 @@ package me.salamander.noisetest.modules;
 public interface GUIModule extends NoiseModule{
     int numInputs();
     void setInput(int index, NoiseModule module);
+    NoiseModule getInput(int index);
 
     void setParameter(int index, double value);
     double getParameter(int index);

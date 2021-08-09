@@ -21,12 +21,7 @@ import java.nio.file.Path;
 
 public class NoiseTest {
     public static void main(String[] args){
-        try {
-            serializationTest();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-
+        guiDemo();
     }
 
     public static void serializationTest() throws IOException {

@@ -31,8 +31,8 @@ public class NoiseSourceModule extends ArraySourceModule {
 
     private void initParameters(){
         parameters[1] = 1.0;
-        parameters[2] = 2.0;
-        parameters[3] = 0.5;
+        parameters[2] = 0.5;
+        parameters[3] = 2.0;
     }
 
     private void createSamplers(boolean regenerate, NoiseType type) {

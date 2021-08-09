@@ -35,6 +35,17 @@ public class BinaryModule implements GUIModule {
     }
 
     @Override
+    public NoiseModule getInput(int index) {
+        if(index == 0){
+            return inputOne;
+        }else if(index == 1){
+            return inputTwo;
+        }else{
+            throw new IllegalArgumentException("Index '" + index + "'out of bounds for module with two modules");
+        }
+    }
+
+    @Override
     public void setParameter(int index, double value) {
         throw new IllegalArgumentException("Index out of bounds for module with zero parameters");
     }

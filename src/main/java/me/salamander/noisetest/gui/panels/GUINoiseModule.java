@@ -1,5 +1,6 @@
 package me.salamander.noisetest.gui.panels;
 
+import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.gui.Parameter;
 import me.salamander.noisetest.modules.GUIModule;
@@ -264,5 +265,14 @@ public class GUINoiseModule extends JPanel {
 
     public List<ModulePanel.Connection> getOutputConnections(){
         return outputConnections;
+    }
+
+    public void writeNBT(CompoundTag tag){
+        tag.putInt("x", getX());
+        tag.putInt("y", getY());
+    }
+
+    public void readNBT(CompoundTag tag) {
+        setLocation(tag.getInt("x"), tag.getInt("y"));
     }
 }

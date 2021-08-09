@@ -17,8 +17,9 @@ import java.awt.event.ActionListener;
 import java.util.function.Supplier;
 
 public class NoiseGUI extends JFrame {
-    private ModulePanel modulePanel;
-    private final ParameterPanel parameterPanel;
+    final ModulePanel modulePanel;
+    final ParameterPanel parameterPanel;
+    private ProjectData projectData = new ProjectData();
 
     public NoiseGUI(){
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -60,10 +61,20 @@ public class NoiseGUI extends JFrame {
         // todo make this
         JMenu fileMenu = new JMenu("File");
         JMenuItem open = new JMenuItem("Open Project");
+        open.addActionListener(e -> {
+            ProjectData project = ProjectData.queryLoad(this);
+            if(project != null){
+                projectData = project;
+                parameterPanel.showParameters(null);
+                repaint();
+            }
+        });
         fileMenu.add(open);
         JMenuItem save = new JMenuItem("Save Project");
+        save.addActionListener(e -> projectData.save(this));
         fileMenu.add(save);
         JMenuItem saveAs = new JMenuItem("Save Project As");
+        saveAs.addActionListener(e -> projectData.saveAs(this));
 	    fileMenu.add(saveAs);
         menuBar.add(fileMenu);
 

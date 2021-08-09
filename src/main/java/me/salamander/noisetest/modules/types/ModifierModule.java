@@ -31,6 +31,15 @@ public abstract class ModifierModule implements GUIModule {
     }
 
     @Override
+    public NoiseModule getInput(int index) {
+        if(index == 0){
+            return source;
+        }else{
+            throw new IllegalArgumentException("Index out of bounds for modifier with a single input");
+        }
+    }
+
+    @Override
     public void setParameter(int index, double value) {
         parameters[index] = value;
     }

@@ -1,10 +1,13 @@
 package me.salamander.noisetest.gui.panels;
 
+import io.github.antiquitymc.nbt.CompoundTag;
+import io.github.antiquitymc.nbt.ListTag;
 import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.gui.Parameter;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.modules.GUIModule;
+import me.salamander.noisetest.modules.NoiseModule;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,14 +15,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ModulePanel extends JPanel {
     Random random = new Random();
     List<Connection> activeConnections = new ArrayList<>();
+    private JFileChooser fileChooser = new JFileChooser();
 
     public ModulePanel(){
         setLayout(null);
@@ -182,6 +194,46 @@ public class ModulePanel extends JPanel {
     public void mouseMovement(MouseEvent e) {
         if(creatingConnection)
             repaint();
+    }
+
+    public ListTag<CompoundTag> serializeModules(){
+        List<GUINoiseModule> GUIModules = Arrays.stream(getComponents()).filter(m -> m instanceof GUINoiseModule).map(m -> (GUINoiseModule) m).collect(Collectors.toList());
+        List<NoiseModule> modules = GUIModules.stream().map(m -> m.getNoiseModule()).collect(Collectors.toList());
+        ListTag<CompoundTag> serializedModules = Modules.serializeNodes(modules);
+        for(int i = 0; i < serializedModules.size(); i++){
+            CompoundTag guiInfo = new CompoundTag();
+            GUIModules.get(i).writeNBT(guiInfo);
+            serializedModules.get(i).put("GUIInfo", guiInfo);
+        }
+
+        return serializedModules;
+    }
+
+    public void loadNodes(ListTag<CompoundTag> modules) {
+        removeAll();
+        activeConnections.clear();
+
+        List<GUINoiseModule> newModules = Modules.deserializeNodes(modules).stream().map(m -> Modules.createComponent((GUIModule) m)).collect(Collectors.toList());
+        for(int i = 0; i < newModules.size(); i++){
+            CompoundTag extraData = (CompoundTag) modules.get(i).get("GUIInfo");
+            GUINoiseModule module = newModules.get(i);
+            module.readNBT(extraData);
+            add(module);
+
+            for(int j = 0; j < module.getNoiseModule().numInputs(); j++){
+                NoiseModule connectedTo = module.getNoiseModule().getInput(j);
+                if(connectedTo != null){
+                    for(GUINoiseModule potentialConnection : newModules){
+                        if(potentialConnection.getNoiseModule() == connectedTo){
+                            Connection connection = new Connection(potentialConnection, module, j);
+                            potentialConnection.addOutputConnection(connection);
+                            module.setInputConnection(connection, j);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static record Connection(GUINoiseModule output, GUINoiseModule input, int inputIndex){

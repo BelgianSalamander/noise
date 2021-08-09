@@ -18,6 +18,11 @@ public abstract class SourceModule implements GUIModule {
     }
 
     @Override
+    public NoiseModule getInput(int index) {
+        throw new IllegalArgumentException("Index out of range for input (Source modules don't have any inputs)");
+    }
+
+    @Override
     public final Collection<NoiseModule> getSources() {
         return new ArrayList<>();
     }

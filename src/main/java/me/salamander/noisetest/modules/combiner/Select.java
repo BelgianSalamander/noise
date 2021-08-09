@@ -112,6 +112,20 @@ public class Select implements GUIModule {
     }
 
     @Override
+    public NoiseModule getInput(int index) {
+        switch (index){
+            case 0:
+                return noiseMapOne;
+            case 1:
+                return noiseMapTwo;
+            case 2:
+                return selector;
+            default:
+                throw new IllegalArgumentException("Index out of bounds!");
+        }
+    }
+
+    @Override
     public void setParameter(int index, double value) {
         if(index == 0){
             threshold = value;

@@ -11,10 +11,8 @@ import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.modules.combiner.BinaryModule;
 import me.salamander.noisetest.util.Pair;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -27,16 +25,16 @@ public class Modules {
         return supplier;
     }
 
-    private static Map<String, Supplier<? extends NoiseModule>> nodeRegistry = new HashMap<>();
-    private static Map<String, Function<? extends GUIModule, GUINoiseModule>> nodeDisplayerRegistry = new HashMap<>();
+    private static Map<String, Supplier<NoiseModule>> nodeRegistry = new HashMap<>();
+    private static Map<String, Function<GUIModule, GUINoiseModule>> nodeDisplayerRegistry = new HashMap<>();
 
     //toGUIModule should be null if the NoiseModule does not implement GUIModule
-    public static <T extends NoiseModule> void registerNode(Supplier<T> nodeSupplier) {
+    public static void registerNode(Supplier<NoiseModule> nodeSupplier) {
     	String id = nodeSupplier.get().getNodeRegistryName();
         nodeRegistry.put(id, nodeSupplier);
     }
 
-    public static <T extends GUIModule> void registerNode(Supplier<T> nodeSupplier, Function<T, GUINoiseModule> guiSupplier){
+    public static void registerNode(Supplier<NoiseModule> nodeSupplier, Function<GUIModule, GUINoiseModule> guiSupplier){
         String id = nodeSupplier.get().getNodeRegistryName();
         nodeRegistry.put(id, nodeSupplier);
         nodeDisplayerRegistry.put(id, guiSupplier);
@@ -79,9 +77,18 @@ public class Modules {
         }
 
         // Register Node Suppliers Here (used for deserialisation, to get an instance to call readNBT on)
-	    registerNode(() -> new NoiseSourceModule(NoiseType.PERLIN), m -> new GUINoiseModule(m.getNoiseType().toString(), m, PERLIN_PARAMETERS, NO_INPUTS));
-        registerNode(() -> new BinaryModule(BinaryFunctionType.ADD), m -> new GUINoiseModule(m.getFunctionType().getNbtIdentifier(), m, NO_PARAMETERS, ONE_INPUT));
+	    registerNode(() -> new NoiseSourceModule(NoiseType.PERLIN), m -> new GUINoiseModule(((NoiseSourceModule) m).getNoiseType().toString(), m, PERLIN_PARAMETERS, NO_INPUTS));
+        registerNode(() -> new BinaryModule(BinaryFunctionType.ADD), m -> new GUINoiseModule(((BinaryModule) m).getFunctionType().getNbtIdentifier(), m, NO_PARAMETERS, ONE_INPUT));
         registerNode(() -> new Turbulence(null), m -> new GUINoiseModule("Turbulence", m, TURBULENCE_PARAMETERS, ONE_INPUT));
+    }
+
+    public static GUINoiseModule createComponent(GUIModule module){
+        Function<GUIModule, GUINoiseModule> upgrader = nodeDisplayerRegistry.get(module.getNodeRegistryName());
+        if(upgrader == null){
+            throw new IllegalArgumentException("Cannot convert " + module.getNodeRegistryName() + " to GUINoiseModule! It does not have a registered converter");
+        }
+
+        return upgrader.apply(module);
     }
 
     /* To serialize a module, all the modules that this module relies on are collected, removing duplicates.
@@ -90,45 +97,63 @@ public class Modules {
      */
     public static CompoundTag serializeNode(NoiseModule module){
         CompoundTag result = new CompoundTag();
-        ListTag<CompoundTag> modulesTag = new ListTag<>(TagType.Standard.COMPOUND);
+        result.putString("type", "singleModule");
         Set<NoiseModule> modules = new HashSet<>();
         Stack<NoiseModule> toProcess = new Stack<>();
         toProcess.push(module);
 
         while(!toProcess.isEmpty()){
             NoiseModule top = toProcess.pop();
-            modules.add(top);
-            toProcess.addAll(top.getSources());
+            if(modules.add(top)) {
+                toProcess.addAll(top.getSources());
+            }
         }
 
         List<NoiseModule> modulesList = new ArrayList<>(modules);
 
-        IdentityHashMap<NoiseModule, Integer> indexLookup = new IdentityHashMap<>();
-        for(int i = 0; i < modulesList.size(); i++){
-            indexLookup.put(modulesList.get(i), i);
-        }
-
-        for(int i = 0; i < modulesList.size(); i++){
-            CompoundTag tag = new CompoundTag();
-            NoiseModule currentModule = modulesList.get(i);
-            tag.putString("type", currentModule.getNodeRegistryName());
-
-            CompoundTag properties = new CompoundTag();
-            currentModule.writeNBT(properties, indexLookup);
-            tag.put("properties", properties);
-
-            modulesTag.add(tag);
-        }
+        ListTag<CompoundTag> modulesTag = serializeNodes(modulesList);
 
         result.put("modules", modulesTag);
-        result.putInt("head", indexLookup.get(module));
+        result.putInt("head", modulesList.indexOf(module));
 
         return result;
     }
+
+    //All nodes that need to be serialized should be
+    public static ListTag<CompoundTag> serializeNodes(Collection<NoiseModule> nodes){
+        return serializeNodes(nodes.toArray(NoiseModule[]::new));
+    }
+    public static ListTag<CompoundTag> serializeNodes(NoiseModule[] nodes){
+        ListTag<CompoundTag> nodeList = new ListTag<>(TagType.Standard.COMPOUND);
+        List<NoiseModule> moduleList = new ArrayList<>(Arrays.asList(nodes));
+
+        IdentityHashMap<NoiseModule, Integer> indices = new IdentityHashMap<>();
+
+        for(int i = 0; i < moduleList.size(); i++){
+            indices.put(moduleList.get(i), i);
+        }
+
+        for(NoiseModule module : nodes){
+            CompoundTag singleModule = new CompoundTag();
+            singleModule.putString("type", module.getNodeRegistryName());
+            CompoundTag properties = new CompoundTag();
+            module.writeNBT(properties, indices);
+            singleModule.put("properties", properties);
+            nodeList.add(singleModule);
+        }
+
+        return nodeList;
+    }
+
     public static NoiseModule deserializeNode(CompoundTag tag){
         int headIndex = tag.getInt("head");
         ListTag<CompoundTag> modulesTag = (ListTag<CompoundTag>) tag.get("modules", TagType.Standard.LIST);
 
+        List<NoiseModule> modules = deserializeNodes(modulesTag);
+
+        return modules.get(headIndex);
+    }
+    public static List<NoiseModule> deserializeNodes(ListTag<CompoundTag> modulesTag){
         List<NoiseModule> modules = new ArrayList<>(modulesTag.size());
         for(int i = 0; i < modulesTag.size(); i++){
             NoiseModule module = nodeRegistry.get(modulesTag.get(i).getString("type")).get();
@@ -139,12 +164,12 @@ public class Modules {
             modules.get(i).readNBT((CompoundTag) modulesTag.get(i).get("properties"), modules);
         }
 
-        return modules.get(headIndex);
+        return modules;
     }
 
     public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new GUINoiseModule("Perlin", new NoiseSourceModule(NoiseType.PERLIN), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE, () -> new GUINoiseModule("Simplex", new NoiseSourceModule(NoiseType.SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> OPENSIMPLEX = register("OpenSimplex", SOURCE, () -> new GUINoiseModule("OpenSimplex", new NoiseSourceModule(NoiseType.OPEN_SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> OPEN_SIMPLEX = register("OpenSimplex", SOURCE, () -> new GUINoiseModule("OpenSimplex", new NoiseSourceModule(NoiseType.OPEN_SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new GUINoiseModule("Billow", new NoiseSourceModule(NoiseType.BILLOW), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new GUINoiseModule("Ridge", new Ridge(), PERLIN_PARAMETERS, NO_INPUTS));
     public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new GUINoiseModule("Checkerboard", new CheckerBoard(), FREQUENCY_ONLY, NO_INPUTS));
