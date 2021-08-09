@@ -2,6 +2,7 @@ package me.salamander.noisetest.gui;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.NbtDeserializer;
 import io.github.antiquitymc.nbt.NbtIo;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
@@ -14,6 +15,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class NoiseGUI extends JFrame {
@@ -21,8 +27,18 @@ public class NoiseGUI extends JFrame {
     final ParameterPanel parameterPanel;
     private ProjectData projectData = new ProjectData();
 
+    private static Path dataPath = Path.of(System.getProperty("user.home"), "noise.dat");
+
     public NoiseGUI(){
+        loadData();
+
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveData();
+            }
+        });
 	    FlatLightLaf.install();
 
 	    setLayout(new GridBagLayout());
@@ -93,5 +109,44 @@ public class NoiseGUI extends JFrame {
 
     public GUINoiseModule getSelected() {
         return parameterPanel.getSelectedComponent();
+    }
+
+    private void saveData(){
+        CompoundTag data = new CompoundTag();
+        data.putString("currentDir", ProjectData.getDirectory());
+
+        if(!Files.exists(dataPath)){
+            try {
+                Files.createFile(dataPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(dataPath.toFile().getAbsolutePath());
+            data.write(new DataOutputStream(outputStream));
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+
+    private void loadData(){
+        if(!Files.exists(dataPath)) return;
+
+        CompoundTag data = null;
+        try {
+            FileInputStream is = new FileInputStream(dataPath.toFile().getAbsolutePath());
+            data = CompoundTag.read(new DataInputStream(is));
+            is.close();
+        }catch (IOException e){
+            e.printStackTrace();
+            return;
+        }
+
+        ProjectData.setDirectory(data.getString("currentDir"));
     }
 }

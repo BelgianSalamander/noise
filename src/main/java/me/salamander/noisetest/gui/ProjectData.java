@@ -4,6 +4,7 @@ import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.ListTag;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,11 +13,19 @@ public class ProjectData {
     private static final JFileChooser fileChooser = new JFileChooser();
     private String pathToSave = null;
 
-    public ProjectData(){}
+    public ProjectData(){ }
 
     public void save(NoiseGUI gui){
         if(pathToSave == null) saveAs(gui);
         else saveToPath(pathToSave, gui);
+    }
+
+    public static String getDirectory(){
+        return fileChooser.getCurrentDirectory().getAbsolutePath();
+    }
+
+    public static void setDirectory(String absolutePath){
+        fileChooser.setCurrentDirectory(new File(absolutePath));
     }
 
     public void saveAs(NoiseGUI gui){
@@ -88,5 +97,19 @@ public class ProjectData {
         }catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    static {
+        fileChooser.setFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File f) {
+                return f.getPath().endsWith(".sn") || f.isDirectory();
+            }
+
+            @Override
+            public String getDescription() {
+                return "*.sn";
+            }
+        });
     }
 }

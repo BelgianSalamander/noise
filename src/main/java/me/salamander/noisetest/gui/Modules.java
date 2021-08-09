@@ -20,9 +20,10 @@ import static me.salamander.noisetest.gui.ModuleCategory.*;
 
 public class Modules {
     public static List<Pair<ModuleCategory, List<Pair<String, Supplier<GUINoiseModule>>>>> categories = new ArrayList<>();
-    public static Supplier<GUINoiseModule> register(String name, ModuleCategory category, Supplier<GUINoiseModule> supplier){
-        categories.get(category.ordinal()).getSecond().add(new Pair<>(name, supplier));
-        return supplier;
+    public static Supplier<GUINoiseModule> register(String name, ModuleCategory category, Supplier<GUIModule> supplier){
+        Supplier<GUINoiseModule> GUISupplier = () -> createComponent(supplier.get());
+        categories.get(category.ordinal()).getSecond().add(new Pair<>(name, GUISupplier));
+        return GUISupplier;
     }
 
     private static Map<String, Supplier<NoiseModule>> nodeRegistry = new HashMap<>();
@@ -78,8 +79,16 @@ public class Modules {
 
         // Register Node Suppliers Here (used for deserialisation, to get an instance to call readNBT on)
 	    registerNode(() -> new NoiseSourceModule(NoiseType.PERLIN), m -> new GUINoiseModule(((NoiseSourceModule) m).getNoiseType().toString(), m, PERLIN_PARAMETERS, NO_INPUTS));
-        registerNode(() -> new BinaryModule(BinaryFunctionType.ADD), m -> new GUINoiseModule(((BinaryModule) m).getFunctionType().getNbtIdentifier(), m, NO_PARAMETERS, ONE_INPUT));
+        registerNode(() -> new Ridge(), m -> new GUINoiseModule("Ridge", m, PERLIN_PARAMETERS, NO_INPUTS));
+        registerNode(() -> new CheckerBoard(), m -> new GUINoiseModule("Checkerboard", m, FREQUENCY_ONLY, NO_INPUTS));
+        registerNode(() -> new Const(), m -> new GUINoiseModule("Const", m, CONST_PARAMETERS, NO_INPUTS));
+        registerNode(() -> new Incoherent(), m -> new GUINoiseModule("Incoherent", m, NO_PARAMETERS, NO_INPUTS));
+
+        registerNode(() -> new BinaryModule(BinaryFunctionType.ADD), m -> new GUINoiseModule(((BinaryModule) m).getFunctionType().getNbtIdentifier(), m, NO_PARAMETERS, TWO_INPUTS));
+        registerNode(() -> new Select(null, null, null), m -> new GUINoiseModule("Select", m, SELECT_PARAMETERS, SELECT_INPUTS));
+
         registerNode(() -> new Turbulence(null), m -> new GUINoiseModule("Turbulence", m, TURBULENCE_PARAMETERS, ONE_INPUT));
+        registerNode(() -> new Voronoi(), m -> new GUINoiseModule("Voronoi", m, VORONOI_PARAMETERS, ONE_INPUT));
     }
 
     public static GUINoiseModule createComponent(GUIModule module){
@@ -167,21 +176,21 @@ public class Modules {
         return modules;
     }
 
-    public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new GUINoiseModule("Perlin", new NoiseSourceModule(NoiseType.PERLIN), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE, () -> new GUINoiseModule("Simplex", new NoiseSourceModule(NoiseType.SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> OPEN_SIMPLEX = register("OpenSimplex", SOURCE, () -> new GUINoiseModule("OpenSimplex", new NoiseSourceModule(NoiseType.OPEN_SIMPLEX), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new GUINoiseModule("Billow", new NoiseSourceModule(NoiseType.BILLOW), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new GUINoiseModule("Ridge", new Ridge(), PERLIN_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new GUINoiseModule("Checkerboard", new CheckerBoard(), FREQUENCY_ONLY, NO_INPUTS));
-    public static Supplier<GUINoiseModule> CONST = register("Const", SOURCE, () -> new GUINoiseModule("Const", new Const(), CONST_PARAMETERS, NO_INPUTS));
-    public static Supplier<GUINoiseModule> INCOHERENT = register("Incoherent", SOURCE, () -> new GUINoiseModule("Incoherent", new Incoherent(), NO_PARAMETERS, NO_INPUTS));
+    public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new NoiseSourceModule(NoiseType.PERLIN));
+    public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE,() -> new NoiseSourceModule(NoiseType.SIMPLEX));
+    public static Supplier<GUINoiseModule> OPEN_SIMPLEX = register("OpenSimplex", SOURCE, () -> new NoiseSourceModule(NoiseType.OPEN_SIMPLEX));
+    public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new NoiseSourceModule(NoiseType.BILLOW));
+    public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new Ridge());
+    public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new CheckerBoard());
+    public static Supplier<GUINoiseModule> CONST = register("Const", SOURCE, () -> new Const());
+    public static Supplier<GUINoiseModule> INCOHERENT = register("Incoherent", SOURCE, () -> new Incoherent());
 
-    public static Supplier<GUINoiseModule> ADD = register("Add", COMBINER, () -> new GUINoiseModule("Add", new BinaryModule(BinaryFunctionType.ADD), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> MULTIPLY = register("Multiply", COMBINER, () -> new GUINoiseModule("Multiply", new BinaryModule(BinaryFunctionType.MULTIPLY), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> MAX = register("Max", COMBINER, () -> new GUINoiseModule("Max", new BinaryModule(BinaryFunctionType.MAX), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> MIN = register("Min", COMBINER, () -> new GUINoiseModule("Min", new BinaryModule(BinaryFunctionType.MIN), NO_PARAMETERS, TWO_INPUTS));
-    public static Supplier<GUINoiseModule> SELECT = register("Select", COMBINER, () -> new GUINoiseModule("Select", new Select(null, null, null), SELECT_PARAMETERS, SELECT_INPUTS));
+    public static Supplier<GUINoiseModule> ADD = register("Add", COMBINER, () -> new BinaryModule(BinaryFunctionType.ADD));
+    public static Supplier<GUINoiseModule> MULTIPLY = register("Multiply", COMBINER, () -> new BinaryModule(BinaryFunctionType.MULTIPLY));
+    public static Supplier<GUINoiseModule> MAX = register("Max", COMBINER, () -> new BinaryModule(BinaryFunctionType.MAX));
+    public static Supplier<GUINoiseModule> MIN = register("Min", COMBINER, () -> new BinaryModule(BinaryFunctionType.MIN));
+    public static Supplier<GUINoiseModule> SELECT = register("Select", COMBINER, () -> new Select(null, null, null));
 
-    public static Supplier<GUINoiseModule> TURBULENCE = register("Turbulence", MODIFIER, () -> new GUINoiseModule("Turbulence", new Turbulence(null), TURBULENCE_PARAMETERS, ONE_INPUT));
-    public static Supplier<GUINoiseModule> VORONOI = register("Voronoi", MODIFIER, () -> new GUINoiseModule("Voronoi", new Voronoi(), VORONOI_PARAMETERS, ONE_INPUT));
+    public static Supplier<GUINoiseModule> TURBULENCE = register("Turbulence", MODIFIER, () -> new Turbulence(null));
+    public static Supplier<GUINoiseModule> VORONOI = register("Voronoi", MODIFIER, () -> new Voronoi());
 }

@@ -228,6 +228,7 @@ public class ModulePanel extends JPanel {
                             Connection connection = new Connection(potentialConnection, module, j);
                             potentialConnection.addOutputConnection(connection);
                             module.setInputConnection(connection, j);
+                            activeConnections.add(connection);
                             break;
                         }
                     }
