@@ -158,6 +158,10 @@ public final class VoronoiSampler {
 		seed += x;
 		seed *= 375462423 * seed + 672456235;
 		seed += y;
+		seed *= 375462423 * seed + 672456235;
+		seed += x;
+		seed *= 375462423 * seed + 672456235;
+		seed += y;
 
 		return seed & mask;
 	}
