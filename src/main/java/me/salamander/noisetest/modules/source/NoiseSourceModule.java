@@ -1,7 +1,10 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.FunctionRegistry;
+import me.salamander.noisetest.glsl.GLSLCompilable;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.ArraySourceModule;
 
 import java.util.IdentityHashMap;
@@ -9,7 +12,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.DoubleBinaryOperator;
 
-public class NoiseSourceModule extends ArraySourceModule {
+public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilable {
     private long seed;
     private DoubleBinaryOperator[] noiseSamplers;
     private NoiseType noiseType;
@@ -112,7 +115,7 @@ public class NoiseSourceModule extends ArraySourceModule {
     }
 
     @Override
-    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+    public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         super.readNBT(tag, sourceLookup);
 
         seed = tag.getLong("seed");
@@ -122,7 +125,7 @@ public class NoiseSourceModule extends ArraySourceModule {
     }
 
     @Override
-    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+    public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         super.writeNBT(tag, indexLookup);
         tag.putString("type", this.noiseType.toString());
         tag.putLong("seed", seed);
@@ -135,5 +138,20 @@ public class NoiseSourceModule extends ArraySourceModule {
 
     public NoiseType getNoiseType() {
         return noiseType;
+    }
+
+    //TODO: Make it use info from the NoiseType
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return "samplePerlin(" + vec2Name + ", " + seedName + ", " + parameters[1] + ", " + parameters[2] + ", " + parameters[3] + ", " + ((int) parameters[0]) + ")";
+    }
+
+    private static final FunctionInfo[] requires = new FunctionInfo[]{
+            FunctionRegistry.getFunction("samplePerlin")
+    };
+
+    @Override
+    public FunctionInfo[] requiredMethods() {
+        return requires;
     }
 }

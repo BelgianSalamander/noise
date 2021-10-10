@@ -2,7 +2,7 @@ package me.salamander.noisetest.modules.combiner;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.source.Const;
 
 import java.util.ArrayList;
@@ -11,17 +11,17 @@ import java.util.IdentityHashMap;
 import java.util.List;
 
 public class Select implements GUIModule {
-    private NoiseModule noiseMapOne, noiseMapTwo, selector;
+    private SerializableNoiseModule noiseMapOne, noiseMapTwo, selector;
     private double edgeFalloff = 0.0;
     private double threshold = 0;
 
-    public Select(NoiseModule noiseMapOne, NoiseModule noiseMapTwo, NoiseModule selector){
+    public Select(SerializableNoiseModule noiseMapOne, SerializableNoiseModule noiseMapTwo, SerializableNoiseModule selector){
         this.noiseMapOne = noiseMapOne;
         this.noiseMapTwo = noiseMapTwo;
         this.selector = selector;
     }
 
-    public Select(NoiseModule noiseMapOne, NoiseModule noiseMapTwo, NoiseModule selector, double edgeFalloff, double threshold){
+    public Select(SerializableNoiseModule noiseMapOne, SerializableNoiseModule noiseMapTwo, SerializableNoiseModule selector, double edgeFalloff, double threshold){
         this(noiseMapOne, noiseMapTwo, selector);
         this.edgeFalloff = edgeFalloff;
         this.threshold = threshold;
@@ -29,25 +29,25 @@ public class Select implements GUIModule {
 
     @Override
     public double sample(double x, double y) {
-        final double selectorValue = NoiseModule.safeSample(selector, x, y);
+        final double selectorValue = SerializableNoiseModule.safeSample(selector, x, y);
 
         if(edgeFalloff > 0.0){
             if(selectorValue < threshold - edgeFalloff){
-                return NoiseModule.safeSample(noiseMapOne, x, y);
+                return SerializableNoiseModule.safeSample(noiseMapOne, x, y);
             }else if(selectorValue < threshold + edgeFalloff){
                 return cubicInterpolation(
-                        NoiseModule.safeSample(noiseMapOne, x, y),
-                        NoiseModule.safeSample(noiseMapTwo, x, y),
+                        SerializableNoiseModule.safeSample(noiseMapOne, x, y),
+                        SerializableNoiseModule.safeSample(noiseMapTwo, x, y),
                         (selectorValue - threshold + edgeFalloff) / (2 * edgeFalloff)
                 );
             }else{
-                return NoiseModule.safeSample(noiseMapTwo, x, y);
+                return SerializableNoiseModule.safeSample(noiseMapTwo, x, y);
             }
         }else{
             if(selectorValue < threshold){
-                return NoiseModule.safeSample(noiseMapOne, x, y);
+                return SerializableNoiseModule.safeSample(noiseMapOne, x, y);
             }else{
-                return NoiseModule.safeSample(noiseMapTwo, x, y);
+                return SerializableNoiseModule.safeSample(noiseMapTwo, x, y);
             }
         }
     }
@@ -56,15 +56,15 @@ public class Select implements GUIModule {
         return new Select(new Const(lowValue), new Const(highValue), selector, edgeFalloff, threshold);
     }
 
-    public void setNoiseMapOne(NoiseModule noiseMapOne) {
+    public void setNoiseMapOne(SerializableNoiseModule noiseMapOne) {
         this.noiseMapOne = noiseMapOne;
     }
 
-    public void setNoiseMapTwo(NoiseModule noiseMapTwo) {
+    public void setNoiseMapTwo(SerializableNoiseModule noiseMapTwo) {
         this.noiseMapTwo = noiseMapTwo;
     }
 
-    public void setSelector(NoiseModule selector) {
+    public void setSelector(SerializableNoiseModule selector) {
         this.selector = selector;
     }
 
@@ -95,7 +95,7 @@ public class Select implements GUIModule {
     }
 
     @Override
-    public void setInput(int index, NoiseModule module) {
+    public void setInput(int index, SerializableNoiseModule module) {
         switch (index){
             case 0:
                 noiseMapOne = module;
@@ -112,7 +112,7 @@ public class Select implements GUIModule {
     }
 
     @Override
-    public NoiseModule getInput(int index) {
+    public SerializableNoiseModule getInput(int index) {
         switch (index){
             case 0:
                 return noiseMapOne;
@@ -148,8 +148,8 @@ public class Select implements GUIModule {
     }
 
     @Override
-    public Collection<NoiseModule> getSources() {
-        List<NoiseModule> sources =  new ArrayList<>();
+    public Collection<SerializableNoiseModule> getSources() {
+        List<SerializableNoiseModule> sources =  new ArrayList<>();
         sources.add(selector);
         sources.add(noiseMapOne);
         sources.add(noiseMapTwo);
@@ -157,7 +157,7 @@ public class Select implements GUIModule {
     }
 
     @Override
-    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+    public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         edgeFalloff = tag.getDouble("edgeFalloff");
         threshold = tag.getDouble("threshold");
 
@@ -175,7 +175,7 @@ public class Select implements GUIModule {
     }
 
     @Override
-    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+    public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         tag.putDouble("edgeFalloff", edgeFalloff);
         tag.putDouble("threshold", threshold);
 

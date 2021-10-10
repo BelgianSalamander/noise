@@ -2,7 +2,7 @@ package me.salamander.noisetest.modules.types;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.LongArrayTag;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -27,7 +27,7 @@ public abstract class ArraySourceModule extends SourceModule{
 
 
 	@Override
-	public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+	public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
 		System.arraycopy(
 				Arrays.stream(((LongArrayTag)tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray(),
 				0,
@@ -38,7 +38,7 @@ public abstract class ArraySourceModule extends SourceModule{
 	}
 
 	@Override
-	public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+	public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
 		long[] data = Arrays.stream(this.parameters).mapToLong(Double::doubleToLongBits).toArray();
 		tag.put("parameters", new LongArrayTag(data));
 	}

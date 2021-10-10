@@ -2,14 +2,13 @@ package me.salamander.noisetest.modules.types;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.LongArrayTag;
-import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 
 import java.util.*;
 
 public abstract class ModifierModule implements GUIModule {
-    protected NoiseModule source;
+    protected SerializableNoiseModule source;
     protected final double[] parameters;
 
     protected ModifierModule(int numParameters){
@@ -22,7 +21,7 @@ public abstract class ModifierModule implements GUIModule {
     }
 
     @Override
-    public void setInput(int index, NoiseModule module) {
+    public void setInput(int index, SerializableNoiseModule module) {
         if(index == 0){
             source = module;
         }else{
@@ -31,7 +30,7 @@ public abstract class ModifierModule implements GUIModule {
     }
 
     @Override
-    public NoiseModule getInput(int index) {
+    public SerializableNoiseModule getInput(int index) {
         if(index == 0){
             return source;
         }else{
@@ -56,14 +55,14 @@ public abstract class ModifierModule implements GUIModule {
     public void setSeed(long s){source.setSeed(s * 46237 ^ 42534);};
 
     @Override
-    public Collection<NoiseModule> getSources() {
-        Collection<NoiseModule> sources = new ArrayList<>();
+    public Collection<SerializableNoiseModule> getSources() {
+        Collection<SerializableNoiseModule> sources = new ArrayList<>();
         sources.add(source);
         return sources;
     }
 
     @Override
-    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+    public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         if(tag.containsKey("source")){
             source = sourceLookup.get(tag.getInt("source"));
         }
@@ -75,7 +74,7 @@ public abstract class ModifierModule implements GUIModule {
 	}
 
     @Override
-    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+    public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         if(source != null){
             tag.putInt("source", indexLookup.get(source));
         }

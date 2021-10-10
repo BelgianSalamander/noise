@@ -1,8 +1,7 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
-import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.SourceModule;
 
 import java.util.IdentityHashMap;
@@ -49,12 +48,12 @@ public class CheckerBoard extends SourceModule {
     }
 
     @Override
-    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+    public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         frequency = tag.getDouble("frequency");
     }
 
     @Override
-    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+    public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         tag.putDouble("frequency", frequency);
     }
 

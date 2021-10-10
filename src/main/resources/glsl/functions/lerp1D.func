@@ -1,0 +1,6 @@
+lerp
+float
+(float f0, float f1, float t)
+float lerp(float f0, float f1, float t){
+    return (1 - t) * f0 + t * f1;
+}

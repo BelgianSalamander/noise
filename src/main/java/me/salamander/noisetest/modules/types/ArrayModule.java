@@ -2,27 +2,25 @@ package me.salamander.noisetest.modules.types;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.IntArrayTag;
-import io.github.antiquitymc.nbt.ListTag;
 import io.github.antiquitymc.nbt.LongArrayTag;
-import me.salamander.noisetest.gui.Modules;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public abstract class ArrayModule implements GUIModule {
-    protected final NoiseModule[] inputs;
+public abstract class ArrayModule implements GUIModule{
+    protected final SerializableNoiseModule[] inputs;
     protected final double[] parameters;
 
     protected final int numInputs, numParameters;
 
     //Creates the arrays that hold the inputs and parameters
     protected ArrayModule(int numInputs, int numParameters){
-        inputs = new NoiseModule[numInputs];
+        inputs = new SerializableNoiseModule[numInputs];
         parameters = new double[numParameters];
 
         this.numInputs = numInputs;
@@ -35,12 +33,12 @@ public abstract class ArrayModule implements GUIModule {
     }
 
     @Override
-    public void setInput(int index, NoiseModule module) {
+    public void setInput(int index, SerializableNoiseModule module) {
         inputs[index] = module;
     }
 
     @Override
-    public NoiseModule getInput(int index) {
+    public SerializableNoiseModule getInput(int index) {
         return inputs[index];
     }
 
@@ -61,7 +59,7 @@ public abstract class ArrayModule implements GUIModule {
     public abstract void setSeed(long s);
 
 	@Override
-	public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+	public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
 		if (this.inputs.length > 0) {
 			tag.put("sources", new IntArrayTag(Arrays.stream(inputs).mapToInt(indexLookup::get).toArray()));
 		}
@@ -71,7 +69,7 @@ public abstract class ArrayModule implements GUIModule {
 	}
 
 	@Override
-	public void readNBT(CompoundTag tag, List<NoiseModule> moduleLookup) {
+	public void readNBT(CompoundTag tag, List<SerializableNoiseModule> moduleLookup) {
 		if (tag.containsKey("sources")) {
 			IntArrayTag sources = (IntArrayTag) tag.get("sources");
 
@@ -96,7 +94,7 @@ public abstract class ArrayModule implements GUIModule {
 	}
 
     @Override
-    public Collection<NoiseModule> getSources() {
+    public Collection<SerializableNoiseModule> getSources() {
         return Arrays.asList(inputs);
     }
 }

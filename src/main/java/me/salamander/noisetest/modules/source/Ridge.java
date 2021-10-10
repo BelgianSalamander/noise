@@ -1,8 +1,7 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
-import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.SourceModule;
 import me.salamander.noisetest.noise.PerlinNoise2D;
 
@@ -139,7 +138,7 @@ public class Ridge extends SourceModule {
     }
 
     @Override
-    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+    public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         seed = tag.getLong("seed");
         octaves = tag.getInt("octaves");
         frequency = tag.getDouble("frequency");
@@ -148,7 +147,7 @@ public class Ridge extends SourceModule {
     }
 
     @Override
-    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+    public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         tag.putLong("seed", seed);
         tag.putInt("octaves", octaves);
         tag.putDouble("frequency", frequency);

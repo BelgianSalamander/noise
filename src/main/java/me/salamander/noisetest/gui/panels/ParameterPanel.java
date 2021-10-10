@@ -1,12 +1,10 @@
 package me.salamander.noisetest.gui.panels;
 
-import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
 import me.salamander.noisetest.gui.ColorSamplers;
 import me.salamander.noisetest.gui.Parameter;
 import me.salamander.noisetest.gui.util.GUIHelper;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
 

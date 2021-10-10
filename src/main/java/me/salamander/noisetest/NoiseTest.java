@@ -2,27 +2,84 @@ package me.salamander.noisetest;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.color.ColorGradient;
+import me.salamander.noisetest.glsl.FunctionRegistry;
+import me.salamander.noisetest.glsl.GLSLCompilable;
+import me.salamander.noisetest.glsl.GLSLTranspiler;
 import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.gui.components.GradientEditor;
-import me.salamander.noisetest.gui.util.GUIHelper;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.combiner.BinaryFunctionType;
 import me.salamander.noisetest.modules.combiner.BinaryModule;
 import me.salamander.noisetest.modules.combiner.Select;
 import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
+import me.salamander.noisetest.render.api.ComputeShader;
+import me.salamander.noisetest.render.api.Window;
+import org.joml.Vector2f;
+import org.lwjgl.system.MemoryUtil;
 
 import javax.swing.*;
 import java.io.*;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.FloatBuffer;
+import java.nio.charset.StandardCharsets;
+
+import static org.lwjgl.opengl.GL45.*;
 
 public class NoiseTest {
     public static void main(String[] args){
-        guiDemo();
+        try {
+            glslTest();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void glslTest() throws IOException {
+        FileOutputStream fout = new FileOutputStream("run/out.glsl");
+
+        GLSLCompilable compilable = new NoiseSourceModule(NoiseType.PERLIN);
+
+        String shaderSource = GLSLTranspiler.compileModule(compilable);
+        fout.write(shaderSource.getBytes(StandardCharsets.UTF_8));
+        fout.close();
+
+        //Create context. Don't have any impls for headless context
+        Window window = new Window("Context", 100, 100);
+
+        ComputeShader shader = new ComputeShader(shaderSource);
+        shader.bind();
+
+        shader.setUniformUnsignedInt("baseSeed", 69);
+        shader.setUniform("startPos", new Vector2f(0, 0));
+        shader.setUniform("step", 0.01f);
+
+        int image = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, image);
+
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, 512, 512);
+        glBindImageTexture(0, image, 0, false, 0, GL_READ_WRITE, GL_R32F);
+
+        shader.run(512 / 32, 512 / 32, 1);
+
+        FloatBuffer heightmapBuffer = MemoryUtil.memAllocFloat(512 * 512);
+        glGetTextureImage(GL_TEXTURE_2D, image, 0, GL_R32F, heightmapBuffer);
+
+        double[][] heightmap = new double[512][512];
+        for(int y = 0; y < 512; y++){
+            for(int x = 0; x < 512; x++){
+                heightmap[x][y] = heightmapBuffer.get();
+            }
+        }
+
+        HeightMapRenderer renderer = new HeightMapRenderer(512, 512);
+        renderer.setHeightScale(20);
+        renderer.setDefaultSampler(ColorGradient.TERRAIN);
+
+        renderer.addHeightmap("generated", heightmap);
+
+        renderer.renderAll();
     }
 
     public static void serializationTest() throws IOException {
@@ -51,7 +108,7 @@ public class NoiseTest {
         DataInput dataInput = new DataInputStream(inputStream);
 
         CompoundTag tag = CompoundTag.read(dataInput);
-        NoiseModule deserialized = Modules.deserializeNode(tag);
+        SerializableNoiseModule deserialized = Modules.deserializeNode(tag);
         inputStream.close();
     }
 
@@ -69,13 +126,13 @@ public class NoiseTest {
     }
 
     private static void renderDemo(){
-        NoiseModule baseTerrain = new NoiseSourceModule(NoiseType.PERLIN);
+        SerializableNoiseModule baseTerrain = new NoiseSourceModule(NoiseType.PERLIN);
         Ridge mountainTerrain = new Ridge();
         Select selector = new Select(baseTerrain, mountainTerrain, baseTerrain);
         selector.setThreshold(0.4);
         selector.setEdgeFalloff(0.2);
 
-        NoiseModule ocean = new Const(0.0f);
+        SerializableNoiseModule ocean = new Const(0.0f);
         Select head = new Select(ocean, baseTerrain, baseTerrain);
         head.setEdgeFalloff(0.25);
 

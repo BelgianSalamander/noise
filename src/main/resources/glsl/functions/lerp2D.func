@@ -1,0 +1,8 @@
+lerp
+float
+(float f00, float f01, float f10, float f11, float tx, float ty)
+Requires 1
+lerp1D
+float lerp(float f00, float f01, float f10, float f11, float tx, float ty){
+    return lerp(lerp(f00, f10, tx), lerp(f01, f11, tx), ty);
+}

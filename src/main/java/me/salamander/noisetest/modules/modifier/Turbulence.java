@@ -1,7 +1,7 @@
 package me.salamander.noisetest.modules.modifier;
 
 import io.github.antiquitymc.nbt.CompoundTag;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.source.NoiseSourceModule;
 import me.salamander.noisetest.modules.source.NoiseType;
 import me.salamander.noisetest.modules.types.ModifierModule;
@@ -15,12 +15,12 @@ public class Turbulence extends ModifierModule {
 
     private static final int TURBULENCE_POWER_INDEX = 0, TURBULENCE_FREQUENCY_INDEX = 1;
 
-    public Turbulence(NoiseModule source){
+    public Turbulence(SerializableNoiseModule source){
         this(source, (new Random()).nextLong());
         this.source = source;
     }
 
-    public Turbulence(NoiseModule source, long seed){
+    public Turbulence(SerializableNoiseModule source, long seed){
         super(2);
         initParameters();
         xTurbulence = new NoiseSourceModule(3, seed + 3, NoiseType.PERLIN);
@@ -28,12 +28,12 @@ public class Turbulence extends ModifierModule {
         this.source = source;
     }
 
-    public Turbulence(NoiseModule source, double turbulencePower){
+    public Turbulence(SerializableNoiseModule source, double turbulencePower){
         this(source);
         parameters[TURBULENCE_POWER_INDEX] = turbulencePower;
     }
 
-    public Turbulence(NoiseModule source, long seed, double turbulencePower){
+    public Turbulence(SerializableNoiseModule source, long seed, double turbulencePower){
         this(source, seed);
         parameters[TURBULENCE_POWER_INDEX] = turbulencePower;
     }
@@ -58,7 +58,7 @@ public class Turbulence extends ModifierModule {
     }
 
     @Override
-    public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+    public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         super.readNBT(tag, sourceLookup);
 
         setFrequency(parameters[TURBULENCE_FREQUENCY_INDEX]);
@@ -67,7 +67,7 @@ public class Turbulence extends ModifierModule {
     }
 
     @Override
-    public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+    public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         parameters[TURBULENCE_FREQUENCY_INDEX] = xTurbulence.getFrequency();
         super.writeNBT(tag, indexLookup);
 

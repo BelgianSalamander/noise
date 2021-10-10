@@ -1,7 +1,7 @@
 package me.salamander.noisetest.modules.modifier;
 
 import io.github.antiquitymc.nbt.CompoundTag;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.ModifierModule;
 import me.salamander.noisetest.noise.Vec2;
 import me.salamander.noisetest.noise.VoronoiSampler;
@@ -48,14 +48,14 @@ public class Voronoi extends ModifierModule {
 	}
 
 	@Override
-	public void readNBT(CompoundTag tag, List<NoiseModule> sourceLookup) {
+	public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
 		super.readNBT(tag, sourceLookup);
 
 		voronoiSeed = tag.getInt("seed");
 	}
 
 	@Override
-	public void writeNBT(CompoundTag tag, IdentityHashMap<NoiseModule, Integer> indexLookup) {
+	public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
 		super.writeNBT(tag, indexLookup);
 
 		tag.putInt("seed", voronoiSeed);

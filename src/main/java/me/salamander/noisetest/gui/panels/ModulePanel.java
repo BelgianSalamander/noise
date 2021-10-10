@@ -4,10 +4,8 @@ import io.github.antiquitymc.nbt.CompoundTag;
 import io.github.antiquitymc.nbt.ListTag;
 import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.gui.NoiseGUI;
-import me.salamander.noisetest.gui.Parameter;
-import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,12 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -198,7 +190,7 @@ public class ModulePanel extends JPanel {
 
     public ListTag<CompoundTag> serializeModules(){
         List<GUINoiseModule> GUIModules = Arrays.stream(getComponents()).filter(m -> m instanceof GUINoiseModule).map(m -> (GUINoiseModule) m).collect(Collectors.toList());
-        List<NoiseModule> modules = GUIModules.stream().map(m -> m.getNoiseModule()).collect(Collectors.toList());
+        List<SerializableNoiseModule> modules = GUIModules.stream().map(m -> m.getNoiseModule()).collect(Collectors.toList());
         ListTag<CompoundTag> serializedModules = Modules.serializeNodes(modules);
         for(int i = 0; i < serializedModules.size(); i++){
             CompoundTag guiInfo = new CompoundTag();
@@ -221,7 +213,7 @@ public class ModulePanel extends JPanel {
             add(module);
 
             for(int j = 0; j < module.getNoiseModule().numInputs(); j++){
-                NoiseModule connectedTo = module.getNoiseModule().getInput(j);
+                SerializableNoiseModule connectedTo = module.getNoiseModule().getInput(j);
                 if(connectedTo != null){
                     for(GUINoiseModule potentialConnection : newModules){
                         if(potentialConnection.getNoiseModule() == connectedTo){

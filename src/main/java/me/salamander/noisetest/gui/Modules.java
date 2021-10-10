@@ -3,7 +3,7 @@ package me.salamander.noisetest.gui;
 import io.github.antiquitymc.nbt.*;
 import me.salamander.noisetest.gui.panels.GUINoiseModule;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.combiner.*;
 import me.salamander.noisetest.modules.combiner.BinaryFunctionType;
 import me.salamander.noisetest.modules.modifier.Turbulence;
@@ -26,16 +26,16 @@ public class Modules {
         return GUISupplier;
     }
 
-    private static Map<String, Supplier<NoiseModule>> nodeRegistry = new HashMap<>();
+    private static Map<String, Supplier<SerializableNoiseModule>> nodeRegistry = new HashMap<>();
     private static Map<String, Function<GUIModule, GUINoiseModule>> nodeDisplayerRegistry = new HashMap<>();
 
     //toGUIModule should be null if the NoiseModule does not implement GUIModule
-    public static void registerNode(Supplier<NoiseModule> nodeSupplier) {
+    public static void registerNode(Supplier<SerializableNoiseModule> nodeSupplier) {
     	String id = nodeSupplier.get().getNodeRegistryName();
         nodeRegistry.put(id, nodeSupplier);
     }
 
-    public static void registerNode(Supplier<NoiseModule> nodeSupplier, Function<GUIModule, GUINoiseModule> guiSupplier){
+    public static void registerNode(Supplier<SerializableNoiseModule> nodeSupplier, Function<GUIModule, GUINoiseModule> guiSupplier){
         String id = nodeSupplier.get().getNodeRegistryName();
         nodeRegistry.put(id, nodeSupplier);
         nodeDisplayerRegistry.put(id, guiSupplier);
@@ -104,21 +104,21 @@ public class Modules {
      * Then, each of them write their NBT and to write sources, instead of writing the whole node, they write
      * the index.
      */
-    public static CompoundTag serializeNode(NoiseModule module){
+    public static CompoundTag serializeNode(SerializableNoiseModule module){
         CompoundTag result = new CompoundTag();
         result.putString("type", "singleModule");
-        Set<NoiseModule> modules = new HashSet<>();
-        Stack<NoiseModule> toProcess = new Stack<>();
+        Set<SerializableNoiseModule> modules = new HashSet<>();
+        Stack<SerializableNoiseModule> toProcess = new Stack<>();
         toProcess.push(module);
 
         while(!toProcess.isEmpty()){
-            NoiseModule top = toProcess.pop();
+            SerializableNoiseModule top = toProcess.pop();
             if(modules.add(top)) {
                 toProcess.addAll(top.getSources());
             }
         }
 
-        List<NoiseModule> modulesList = new ArrayList<>(modules);
+        List<SerializableNoiseModule> modulesList = new ArrayList<>(modules);
 
         ListTag<CompoundTag> modulesTag = serializeNodes(modulesList);
 
@@ -129,20 +129,20 @@ public class Modules {
     }
 
     //All nodes that need to be serialized should be
-    public static ListTag<CompoundTag> serializeNodes(Collection<NoiseModule> nodes){
-        return serializeNodes(nodes.toArray(NoiseModule[]::new));
+    public static ListTag<CompoundTag> serializeNodes(Collection<SerializableNoiseModule> nodes){
+        return serializeNodes(nodes.toArray(SerializableNoiseModule[]::new));
     }
-    public static ListTag<CompoundTag> serializeNodes(NoiseModule[] nodes){
+    public static ListTag<CompoundTag> serializeNodes(SerializableNoiseModule[] nodes){
         ListTag<CompoundTag> nodeList = new ListTag<>(TagType.Standard.COMPOUND);
-        List<NoiseModule> moduleList = new ArrayList<>(Arrays.asList(nodes));
+        List<SerializableNoiseModule> moduleList = new ArrayList<>(Arrays.asList(nodes));
 
-        IdentityHashMap<NoiseModule, Integer> indices = new IdentityHashMap<>();
+        IdentityHashMap<SerializableNoiseModule, Integer> indices = new IdentityHashMap<>();
 
         for(int i = 0; i < moduleList.size(); i++){
             indices.put(moduleList.get(i), i);
         }
 
-        for(NoiseModule module : nodes){
+        for(SerializableNoiseModule module : nodes){
             CompoundTag singleModule = new CompoundTag();
             singleModule.putString("type", module.getNodeRegistryName());
             CompoundTag properties = new CompoundTag();
@@ -154,18 +154,18 @@ public class Modules {
         return nodeList;
     }
 
-    public static NoiseModule deserializeNode(CompoundTag tag){
+    public static SerializableNoiseModule deserializeNode(CompoundTag tag){
         int headIndex = tag.getInt("head");
         ListTag<CompoundTag> modulesTag = (ListTag<CompoundTag>) tag.get("modules", TagType.Standard.LIST);
 
-        List<NoiseModule> modules = deserializeNodes(modulesTag);
+        List<SerializableNoiseModule> modules = deserializeNodes(modulesTag);
 
         return modules.get(headIndex);
     }
-    public static List<NoiseModule> deserializeNodes(ListTag<CompoundTag> modulesTag){
-        List<NoiseModule> modules = new ArrayList<>(modulesTag.size());
+    public static List<SerializableNoiseModule> deserializeNodes(ListTag<CompoundTag> modulesTag){
+        List<SerializableNoiseModule> modules = new ArrayList<>(modulesTag.size());
         for(int i = 0; i < modulesTag.size(); i++){
-            NoiseModule module = nodeRegistry.get(modulesTag.get(i).getString("type")).get();
+            SerializableNoiseModule module = nodeRegistry.get(modulesTag.get(i).getString("type")).get();
             modules.add(module);
         }
 

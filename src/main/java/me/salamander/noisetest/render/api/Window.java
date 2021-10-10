@@ -27,6 +27,7 @@ public class Window {
     }
 
     private void init(){
+        GLUtil.init();
         windowHandle = glfwCreateWindow(width, height, title, 0, 0);
         if(windowHandle == 0){
             throw new IllegalStateException("Could not create window '" + title + "'");

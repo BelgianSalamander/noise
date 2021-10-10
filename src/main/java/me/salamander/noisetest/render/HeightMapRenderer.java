@@ -1,19 +1,12 @@
 package me.salamander.noisetest.render;
 
-import me.salamander.noisetest.NoiseTest;
 import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.render.api.*;
 import me.salamander.noisetest.render.api.Window;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.system.MemoryUtil;
 
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.*;
 
 import static org.lwjgl.opengl.GL45.*;
@@ -121,12 +114,16 @@ public class HeightMapRenderer {
         addBuffer(name, buffer);
     }
 
-    public void addHeightmap(String name, NoiseModule module, float heightScale, ColorSampler sampler, float step){
+    public void addHeightmap(String name, double[][] heightmap){
+        addHeightmap(name, RenderHelper.createBufferFromHeightmap(heightmap, heightScale, defaultSampler));
+    }
+
+    public void addHeightmap(String name, SerializableNoiseModule module, float heightScale, ColorSampler sampler, float step){
         double[][] heightMap = RenderHelper.generateNoise(module, width, height, step);
         addBuffer(name, RenderHelper.createBufferFromHeightmap(heightMap, heightScale, sampler));
     }
 
-    public void addHeightmap(String name, NoiseModule module){
+    public void addHeightmap(String name, SerializableNoiseModule module){
         addHeightmap(name, module, heightScale, defaultSampler, defaultStep);
     }
 

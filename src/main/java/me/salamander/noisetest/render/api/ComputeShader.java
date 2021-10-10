@@ -2,6 +2,7 @@ package me.salamander.noisetest.render.api;
 
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 
@@ -10,29 +11,24 @@ import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL45.*;
 
-public class ShaderProgram implements Cleaner.Cleanable {
+public class ComputeShader implements Cleaner.Cleanable {
     private int program;
-    private int vertexShader, fragmentShader;
-    private boolean linked = false;
 
-    public ShaderProgram(String vertexSource, String fragmentSource){
-        this(vertexSource, fragmentSource, true);
-    }
+    public ComputeShader(String source){
+        int[] invocationsMax = new int[1];
 
-    public ShaderProgram(String vertexSource, String fragmentSource, boolean link){
+        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, invocationsMax);
+        System.out.println("Max Invocations X: " + invocationsMax[0]);
+
+        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, invocationsMax);
+        System.out.println("Max Invocations Y: " + invocationsMax[0]);
+
+        glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, invocationsMax);
+        System.out.println("Max Invocations Z: " + invocationsMax[0]);
+
         program = glCreateProgram();
 
-        vertexShader = compileAndAttachShader(program, vertexSource, GL_VERTEX_SHADER);
-        fragmentShader = compileAndAttachShader(program, fragmentSource, GL_FRAGMENT_SHADER);
-
-        if(link) link();
-    }
-
-    public void link(){
-        if(linked){
-            System.out.println("[WARNING] Program already linked but link() has been called");
-            return;
-        }
+        int shader = ShaderProgram.compileAndAttachShader(program, source, GL_COMPUTE_SHADER);
 
         glLinkProgram(program);
 
@@ -40,32 +36,13 @@ public class ShaderProgram implements Cleaner.Cleanable {
             throw new IllegalStateException("Could not link program: " + glGetProgramInfoLog(program, 4096));
         }
 
-        glDetachShader(program, vertexShader);
-        glDetachShader(program, fragmentShader);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        linked = true;
+        glDetachShader(program, shader);
+        glDeleteShader(shader);
     }
 
-     public static int compileAndAttachShader(int program, String source, int type){
-        int shader = glCreateShader(type);
-
-        if(shader == 0){
-            throw new IllegalStateException("Could not create shader");
-        }
-
-        glShaderSource(shader, source);
-        glCompileShader(shader);
-
-        if(glGetShaderi(shader, GL_COMPILE_STATUS) == 0){
-            throw new IllegalStateException("Could not compile '" + GLUtil.getValue(type) + "' :\n" + glGetShaderInfoLog(shader, 1 << 16));
-        }
-
-        glAttachShader(program, shader);
-
-        return shader;
+    public void run(int numGroupsX, int numGroupsY, int numGroupsZ){
+        bind();
+        glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
     }
 
     public int getUniformLocation(String name){
@@ -115,11 +92,35 @@ public class ShaderProgram implements Cleaner.Cleanable {
         glDeleteProgram(program);
     }
 
-    public void bind(){
-        glUseProgram(program);
+    public void setUniformUnsignedInt(String name, int i) {
+        setUniformUnsignedInt(getUniformLocation(name), i);
     }
 
-    public int getHandle(){
-        return program;
+    public void setUniformUnsignedInt(int location, int i){
+        glUniform1ui(location, i);
+    }
+
+    public void setUniform(String name, Vector2f value) {
+        setUniform(getUniformLocation(name), value);
+    }
+
+    private void setUniform(int uniformLocation, Vector2f value) {
+        try(MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer fb = stack.mallocFloat(2);
+            value.get(fb);
+            glUniform2fv(uniformLocation, fb);
+        }
+    }
+
+    public void setUniform(String name, float value) {
+        setUniform(getUniformLocation(name), value);
+    }
+
+    private void setUniform(int uniformLocation, float value) {
+        glUniform1f(uniformLocation, value);
+    }
+
+    public void bind() {
+        glUseProgram(program);
     }
 }

@@ -4,13 +4,11 @@ import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.gui.Parameter;
 import me.salamander.noisetest.modules.GUIModule;
-import me.salamander.noisetest.modules.NoiseModule;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;

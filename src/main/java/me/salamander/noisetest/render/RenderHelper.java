@@ -1,14 +1,12 @@
 package me.salamander.noisetest.render;
 
 import me.salamander.noisetest.color.ColorSampler;
-import me.salamander.noisetest.modules.NoiseModule;
+import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.render.api.BufferObject;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.awt.*;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL45.*;
 
@@ -144,7 +142,7 @@ public class RenderHelper {
     }
 
     @NotNull
-    public static double[][] generateNoise(@NotNull NoiseModule module, int width, int height, double step){
+    public static double[][] generateNoise(@NotNull SerializableNoiseModule module, int width, int height, double step){
         double[][] out = new double[width][height];
         for(int x = 0; x < width; x++){
             for(int y = 0; y < height; y++){
