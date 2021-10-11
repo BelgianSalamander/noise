@@ -48,14 +48,12 @@ public class ComputeShader implements Cleaner.Cleanable {
     public int getUniformLocation(String name){
         int uniformLocation = glGetUniformLocation(program, name);
 
-        if(uniformLocation < 0){
-            throw new IllegalStateException("Could not get uniform '" + name + "'");
-        }
-
         return uniformLocation;
     }
 
     public void setUniform(int location, Matrix4f value){
+        if(location < 0) return;
+        
         try(MemoryStack stack = MemoryStack.stackPush()){
             FloatBuffer fb = stack.mallocFloat(16);
             value.get(fb);
@@ -63,6 +61,8 @@ public class ComputeShader implements Cleaner.Cleanable {
         }
     }
     public void setUniform(int location, Matrix3f value){
+        if(location < 0) return;
+        
         try(MemoryStack stack = MemoryStack.stackPush()){
             FloatBuffer fb = stack.mallocFloat(9);
             value.get(fb);
@@ -70,6 +70,8 @@ public class ComputeShader implements Cleaner.Cleanable {
         }
     }
     public void setUniform(int location, Vector3f value){
+        if(location < 0) return;
+        
         try(MemoryStack stack = MemoryStack.stackPush()){
             FloatBuffer fb = stack.mallocFloat(3);
             value.get(fb);
@@ -77,6 +79,8 @@ public class ComputeShader implements Cleaner.Cleanable {
         }
     }
     public void setUniform(int location, boolean value){
+        if(location < 0) return;
+        
         glUniform1i(location, value ? 1 : 0);
     }
 
@@ -97,6 +101,8 @@ public class ComputeShader implements Cleaner.Cleanable {
     }
 
     public void setUniformUnsignedInt(int location, int i){
+        if(location < 0) return;
+        
         glUniform1ui(location, i);
     }
 
@@ -105,6 +111,8 @@ public class ComputeShader implements Cleaner.Cleanable {
     }
 
     private void setUniform(int uniformLocation, Vector2f value) {
+        if(uniformLocation < 0) return;
+        
         try(MemoryStack stack = MemoryStack.stackPush()){
             FloatBuffer fb = stack.mallocFloat(2);
             value.get(fb);
@@ -117,6 +125,8 @@ public class ComputeShader implements Cleaner.Cleanable {
     }
 
     private void setUniform(int uniformLocation, float value) {
+        if(uniformLocation < 0) return;
+        
         glUniform1f(uniformLocation, value);
     }
 

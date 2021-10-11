@@ -1,15 +1,15 @@
-samplePerlin
+sampleBillow
 float
 (vec2 pos, int seed, float frequency, float persistence, float lacunarity, int numOctaves)
 Requires 1
 samplePerlinOctave
-float samplePerlin(vec2 pos, int seed, float frequency, float persistence, float lacunarity, int numOctaves){
+float sampleBillow(vec2 pos, int seed, float frequency, float persistence, float lacunarity, int numOctaves){
     float total = 0;
     float actualPersistence = 1;
     float actualFrequency = frequency;
 
     for(int i = 0; i < numOctaves; i++){
-        total += actualPersistence * samplePerlinOctave(pos * actualFrequency, seed);
+        total += actualPersistence * abs(samplePerlinOctave(pos * actualFrequency, seed));
         seed *= 122609317;
         actualPersistence *= persistence;
         actualFrequency *= lacunarity;

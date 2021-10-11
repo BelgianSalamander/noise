@@ -71,4 +71,12 @@ public class Vec2 {
     public double lengthSquared(){
         return x * x + y * y;
     }
+
+    @Override
+    public String toString() {
+        return "Vec2{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
 }

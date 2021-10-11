@@ -1,24 +1,28 @@
 package me.salamander.noisetest.modules.combiner;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.*;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.source.Const;
+import me.salamander.noisetest.util.Util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
-public class Select implements GUIModule {
+public class Select implements GUIModule, GLSLCompilable {
     private SerializableNoiseModule noiseMapOne, noiseMapTwo, selector;
     private double edgeFalloff = 0.0;
     private double threshold = 0;
+
+    private final SelectFunction func;
 
     public Select(SerializableNoiseModule noiseMapOne, SerializableNoiseModule noiseMapTwo, SerializableNoiseModule selector){
         this.noiseMapOne = noiseMapOne;
         this.noiseMapTwo = noiseMapTwo;
         this.selector = selector;
+
+        requires.add(func = new SelectFunction());
     }
 
     public Select(SerializableNoiseModule noiseMapOne, SerializableNoiseModule noiseMapTwo, SerializableNoiseModule selector, double edgeFalloff, double threshold){
@@ -198,4 +202,93 @@ public class Select implements GUIModule {
     }
 
 
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return func.name() + "(" + vec2Name + ", " + seedName + ")";
+    }
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        return requires;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Select select = (Select) o;
+        return Double.compare(select.edgeFalloff, edgeFalloff) == 0 && Double.compare(select.threshold, threshold) == 0 && Objects.equals(noiseMapOne, select.noiseMapOne) && Objects.equals(noiseMapTwo, select.noiseMapTwo) && Objects.equals(selector, select.selector) && Objects.equals(requires, select.requires);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(noiseMapOne, noiseMapTwo, selector, edgeFalloff, threshold, requires);
+    }
+
+    private final Set<FunctionInfo> requires = new HashSet<>();
+
+    private static final FormattableText caseOne;
+    private static final FormattableText caseTwo;
+
+    private final class SelectFunction implements FunctionInfo{
+        @Override
+        public String name() {
+            return "select_" + Math.abs(Select.this.hashCode());
+        }
+
+        @Override
+        public String generateCode() {
+            if(noiseMapOne instanceof GLSLCompilable compileOne && noiseMapTwo instanceof GLSLCompilable compileTwo && selector instanceof GLSLCompilable compileSelector){
+                Map<String, Object> lookup = new HashMap<>();
+
+                lookup.put("threshold", threshold);
+                lookup.put("falloff", edgeFalloff);
+
+                lookup.put("callOne", compileOne.glslExpression("pos", "seed"));
+                lookup.put("callTwo", compileTwo.glslExpression("pos", "seed"));
+                lookup.put("selectorCall", compileSelector.glslExpression("pos", "seed"));
+
+                lookup.put("name", name());
+
+                if(edgeFalloff <= 0.0){
+                    return caseOne.evaluate(lookup);
+                }else{
+                    return caseTwo.evaluate(lookup);
+                }
+            }else{
+                throw new NotCompilableException();
+            }
+        }
+
+        @Override
+        public String forwardDeclaration() {
+            return "float " + name() + "(vec2 pos, int seed)";
+        }
+
+        @Override
+        public Set<FunctionInfo> requiredFunctions() {
+            if(noiseMapOne instanceof GLSLCompilable compileOne && noiseMapTwo instanceof GLSLCompilable compileTwo && selector instanceof GLSLCompilable compileSelector){
+                Set<FunctionInfo> combined = new HashSet<>(compileOne.requiredFunctions());
+                combined.addAll(compileTwo.requiredFunctions());
+                combined.addAll(compileSelector.requiredFunctions());
+
+                if(edgeFalloff > 0){
+                    combined.add(FunctionRegistry.getFunction("cubicInterpolation"));
+                }
+
+                return combined;
+            }else{
+                throw new NotCompilableException();
+            }
+        }
+    }
+
+    static {
+        try {
+            caseOne = new FormattableText(Util.loadResource("/glsl/extra/select1.func"));
+            caseTwo = new FormattableText(Util.loadResource("/glsl/extra/select2.func"));
+        }catch (IOException e){
+            throw new IllegalStateException("Couldn't load functions", e);
+        }
+    }
 }

@@ -1,0 +1,32 @@
+sampleRidge
+float
+(vec2 pos, int seed, float frequency, float persistence, float lacunarity, int numOctaves)
+Requires 1
+samplePerlinOctave
+float sampleRidge(vec2 pos, int seed, float frequency, float persistence, float lacunarity, int numOctaves){
+    float total = 0;
+    float actualPersistence = 1;
+    float actualFrequency = frequency;
+
+    float weight = 1.0;
+
+    for(int i = 0; i < numOctaves; i++){
+        float signal = samplePerlinOctave(pos * actualFrequency, seed);
+
+        signal = 1 - abs(signal);
+        signal *= signal * weight;
+
+        weight = signal * 2.0;
+
+        if(weight > 1.0) weight = 1.0;
+        else if(weight < 0.0) weight = 0.0;
+
+        total += signal * actualPersistence;
+
+        seed *= 122609317;
+        actualPersistence *= persistence;
+        actualFrequency *= lacunarity;
+    }
+
+    return total * 1.25 - 1.0;
+}

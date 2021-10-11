@@ -1,0 +1,84 @@
+sampleOpenSimplexOctave
+float
+(vec2 pos, int seed)
+Requires 3
+getVec
+lerp2D
+smoothstep
+//K.jpg's OpenSimplex 2, smooth variant ("SuperSimplex")
+
+struct LatticePoint2D{
+    ivec2 sv;
+    vec2 d;
+};
+
+LatticePoint2D latticeLookup[32] = LatticePoint2D[32](
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(-1, 0), vec2(0.788675134594813, -0.211324865405187)),
+	LatticePoint2D(ivec2(0, -1), vec2(-0.211324865405187, 0.788675134594813)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(0, 1), vec2(0.211324865405187, -0.788675134594813)),
+	LatticePoint2D(ivec2(1, 0), vec2(-0.788675134594813, 0.211324865405187)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(1, 0), vec2(-0.788675134594813, 0.211324865405187)),
+	LatticePoint2D(ivec2(0, -1), vec2(-0.211324865405187, 0.788675134594813)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(2, 1), vec2(-1.366025403784439, -0.36602540378443904)),
+	LatticePoint2D(ivec2(1, 0), vec2(-0.788675134594813, 0.211324865405187)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(-1, 0), vec2(0.788675134594813, -0.211324865405187)),
+	LatticePoint2D(ivec2(0, 1), vec2(0.211324865405187, -0.788675134594813)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(0, 1), vec2(0.211324865405187, -0.788675134594813)),
+	LatticePoint2D(ivec2(1, 2), vec2(-0.36602540378443904, -1.366025403784439)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(1, 0), vec2(-0.788675134594813, 0.211324865405187)),
+	LatticePoint2D(ivec2(0, 1), vec2(0.211324865405187, -0.788675134594813)),
+	LatticePoint2D(ivec2(0, 0), vec2(0.0, 0.0)),
+	LatticePoint2D(ivec2(1, 1), vec2(-0.577350269189626, -0.577350269189626)),
+	LatticePoint2D(ivec2(2, 1), vec2(-1.366025403784439, -0.36602540378443904)),
+	LatticePoint2D(ivec2(1, 2), vec2(-0.36602540378443904, -1.366025403784439))
+);
+
+float sampleOpenSimplexOctave(vec2 pos, int seed){
+    float s = 0.366025403784439 * (pos.x + pos.y);
+
+    vec2 poss = pos + s;
+
+    float value = 0;
+
+    vec2 possb = floor(poss);
+    vec2 possi = poss - possb;
+
+    int a = int(possi.x + possi.y);
+    int index = (a << 2) |
+                    int(possi.x - possi.y / 2 + 1 - a / 2.0) << 3 |
+                    int(possi.y - possi.x / 2 + 1 - a / 2.0) << 4;
+
+    float ssi = (possi.x + possi.y) * -0.211324865405187;
+    vec2 posi = possi + ssi;
+
+    for(int i = 0; i < 4; i++){
+        LatticePoint2D c = latticeLookup[index + i];
+
+        vec2 d = posi + c.d;
+        float attn = 2.0 / 3.0 - dot(d, d);
+        if(attn <= 0) continue;
+
+        vec2 grad = getVec(possb + c.sv, seed);
+        float extrapolation = dot(grad, d);
+
+//For some reason when I add the attn^4 it looks stupid
+        //attn *= attn;
+        value += /*attn **/ attn * extrapolation;
+    }
+
+    return value;
+}

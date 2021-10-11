@@ -1,0 +1,7 @@
+cubicInterpolation
+float
+(float f0, float f1, float t)
+float cubicInterpolation(float f0, float f1, float t){
+    t = t * t * (3 - 2 * t);
+    return f0 * (1 - t) + f1 * t;
+}

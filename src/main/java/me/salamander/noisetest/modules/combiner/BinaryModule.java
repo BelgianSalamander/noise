@@ -1,15 +1,15 @@
 package me.salamander.noisetest.modules.combiner;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.GLSLCompilable;
+import me.salamander.noisetest.glsl.NotCompilableException;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.List;
+import java.util.*;
 
-public class BinaryModule implements GUIModule {
+public class BinaryModule implements GUIModule, GLSLCompilable {
     private BinaryFunctionType functionType;
 
     protected SerializableNoiseModule inputOne, inputTwo;
@@ -113,5 +113,25 @@ public class BinaryModule implements GUIModule {
 
     public BinaryFunctionType getFunctionType() {
         return functionType;
+    }
+
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        if(inputOne instanceof GLSLCompilable sourceOne && inputTwo instanceof GLSLCompilable sourceTwo){
+            return functionType.getGLSLExpression(sourceOne.glslExpression(vec2Name, seedName), sourceTwo.glslExpression(vec2Name, seedName + " + 37"));
+        }else{
+            throw new NotCompilableException("One of the arguments of BinaryModule can not be compiled");
+        }
+    }
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        if(inputOne instanceof GLSLCompilable sourceOne && inputTwo instanceof GLSLCompilable sourceTwo){
+            Set<FunctionInfo> combined = new HashSet<>(sourceOne.requiredFunctions());
+            combined.addAll(sourceTwo.requiredFunctions());
+            return combined;
+        }else{
+            throw new NotCompilableException("One of the arguments of BinaryModule can not be compiled");
+        }
     }
 }

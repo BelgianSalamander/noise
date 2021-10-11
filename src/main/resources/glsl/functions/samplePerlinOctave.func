@@ -1,17 +1,17 @@
 samplePerlinOctave
 float
-(vec2 pos, uint seed)
+(vec2 pos, int seed)
 Requires 3
 getVec
 lerp2D
 smoothstep
 //Code Begin
-float samplePerlinOctave(vec2 pos, uint seed){
-    float lowX = floor(pos.x);
-    float lowY = floor(pos.y);
+float samplePerlinOctave(vec2 pos, int seed){
+    int lowX = int(floor(pos.x));
+    int lowY = int(floor(pos.y));
 
-    float highX = lowX + 1;
-    float highY = lowY + 1;
+    int highX = lowX + 1;
+    int highY = lowY + 1;
 
     vec2 cornerOneOffset = vec2(lowX - pos.x, lowY - pos.y);
     vec2 cornerTwoOffset = vec2(lowX - pos.x, highY - pos.y);

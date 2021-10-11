@@ -1,6 +1,6 @@
 getVec
 vec2
-(vec2 pos, uint seed)
+(vec2 pos, int seed)
 //Gradient list
 vec2 gradients[24] = vec2[24](
   vec2( 0.130526192220052,  0.99144486137381),
@@ -29,9 +29,10 @@ vec2 gradients[24] = vec2[24](
   vec2(-0.130526192220052,  0.99144486137381)
 );
 
-vec2 getVec(vec2 pos, uint seed){
-    seed ^= floatBitsToUint(pos.x) * 3456093529;
-    seed ^= floatBitsToUint(pos.y) * 2190470101;
+vec2 getVec(vec2 pos, int seed){
+    int seedCopy = seed;
+   seedCopy ^= floatBitsToInt(pos.x) * 1316110667;
+   seedCopy ^= floatBitsToInt(pos.y) * 1213414981;
 
-    return gradients[seed % 24];
+   return gradients[abs(seedCopy) % 24];
 }

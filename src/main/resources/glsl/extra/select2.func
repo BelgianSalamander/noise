@@ -1,0 +1,11 @@
+float {name}(vec2 pos, int seed){
+    float value = {selectorCall};
+
+    if(value < {threshold} - {falloff}){
+        return {callOne};
+    }else if(value < {threshold} + {falloff}){
+        return cubicInterpolation({callOne}, {callTwo}, (value - {threshold} + {falloff}) / (2 * {falloff}));
+    }else{
+        return {callTwo};
+    }
+}

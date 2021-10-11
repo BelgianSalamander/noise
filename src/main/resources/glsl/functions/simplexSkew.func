@@ -1,0 +1,6 @@
+simplexSkew
+vec2
+(vec2)
+vec2 simplexSkew(vec2 pos){
+    return pos + ((pos.x + pos.y) * (0.5 * (sqrt(3) - 1)));
+}

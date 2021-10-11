@@ -4,9 +4,9 @@ import java.util.Random;
 
 public class PerlinNoise2D {
     private final int GRAD_LENGTH = 1024;
+    private final Vec2[] gradients = new Vec2[GRAD_LENGTH];
 
     private final Random random;
-    private final Vec2[] gradients = new Vec2[GRAD_LENGTH];
 
     public PerlinNoise2D(){
         random = new Random();
@@ -78,5 +78,4 @@ public class PerlinNoise2D {
 		    return Math.abs(super.sample(x, y));
 	    }
     }
-
 }

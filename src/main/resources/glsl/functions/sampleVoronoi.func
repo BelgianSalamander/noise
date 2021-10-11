@@ -1,0 +1,33 @@
+sampleVoronoi
+vec2
+(vec2 pos, int seed, float relaxation)
+Requires 1
+getVec
+vec2 sampleVoronoi(vec2 pos, int seed, float relaxation){
+    float unrelaxation = 1.0 - relaxation;
+
+    vec2 base = floor(pos);
+
+    vec2 closest;
+    float minimumDistance = 100000.0;
+
+    for(int xo = -1; xo <= 1; xo++){
+        float gridX = base.x + xo;
+
+        for(int yo = -1; yo <= 1; yo++){
+            float gridY = base.y + yo;
+
+            vec2 gridPos = vec2(gridX, gridY);
+
+            vec2 jitteredPoint = gridPos + (relaxation * 0.5 + unrelaxation * getVec(gridPos, seed));
+            float distance = dot(jitteredPoint - pos, jitteredPoint - pos);
+
+            if(distance < minimumDistance){
+                minimumDistance = distance;
+                closest = jitteredPoint;
+            }
+        }
+    }
+
+    return closest;
+}

@@ -1,30 +1,39 @@
 package me.salamander.noisetest.modules.modifier;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.FormattableText;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.source.NoiseSourceModule;
 import me.salamander.noisetest.modules.source.NoiseType;
 import me.salamander.noisetest.modules.types.ModifierModule;
+import me.salamander.noisetest.util.Util;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Random;
+import java.io.IOException;
+import java.util.*;
 
-public class Turbulence extends ModifierModule {
+public class Turbulence extends ModifierModule implements GLSLCompilable {
     private final NoiseSourceModule xTurbulence, yTurbulence;
 
     private static final int TURBULENCE_POWER_INDEX = 0, TURBULENCE_FREQUENCY_INDEX = 1;
+    private static final FormattableText functionCode;
+
+    private final Function function = new Function();
+    private final Set<FunctionInfo> required = new HashSet<>();
 
     public Turbulence(SerializableNoiseModule source){
         this(source, (new Random()).nextLong());
         this.source = source;
+
+        required.add(function);
     }
 
     public Turbulence(SerializableNoiseModule source, long seed){
         super(2);
         initParameters();
-        xTurbulence = new NoiseSourceModule(3, seed + 3, NoiseType.PERLIN);
-        yTurbulence = new NoiseSourceModule(3, seed * 4723537 ^ 4264, NoiseType.PERLIN);
+        xTurbulence = new NoiseSourceModule(3, (int) seed + 3, NoiseType.PERLIN);
+        yTurbulence = new NoiseSourceModule(3, (int) seed * 4723537 ^ 4264, NoiseType.PERLIN);
         this.source = source;
     }
 
@@ -96,4 +105,80 @@ public class Turbulence extends ModifierModule {
 	public String getNodeRegistryName() {
 		return "Turbulence";
 	}
+
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return function.name() + "(" + vec2Name + ", " + seedName + ")";
+    }
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        return required;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Turbulence that = (Turbulence) o;
+        return Objects.equals(xTurbulence, that.xTurbulence) && Objects.equals(yTurbulence, that.yTurbulence) && Objects.equals(source, that.source);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(xTurbulence, yTurbulence, source);
+    }
+
+    private final class Function implements FunctionInfo{
+
+        @Override
+        public String name() {
+            return "turbulence_" + Math.abs(Turbulence.this.hashCode());
+        }
+
+        @Override
+        public String generateCode() {
+            if(source instanceof GLSLCompilable compilable){
+                Map<String, Object> lookup = new HashMap<>();
+
+                lookup.put("name", name());
+
+                lookup.put("turbulencePower", parameters[TURBULENCE_POWER_INDEX]);
+
+                lookup.put("sampleX", xTurbulence.glslExpression("sampleX", "seed"));
+                lookup.put("sampleY", yTurbulence.glslExpression("sampleY", "seed * 968177961"));
+
+                lookup.put("sample", compilable.glslExpression("distortedPos", "seed + 60874159"));
+
+                return functionCode.evaluate(lookup);
+            }else{
+                throw new IllegalStateException("Can't compile turbulence source");
+            }
+        }
+
+        @Override
+        public String forwardDeclaration() {
+            return "float " + name() + " (vec2, int)";
+        }
+
+        @Override
+        public Set<FunctionInfo> requiredFunctions() {
+            if(source instanceof GLSLCompilable compilable){
+                Set<FunctionInfo> combined = new HashSet<>(xTurbulence.requiredFunctions());
+                combined.addAll(yTurbulence.requiredFunctions());
+                combined.addAll(compilable.requiredFunctions());
+                return combined;
+            }else{
+                throw new IllegalStateException("Can't compile turbulence source");
+            }
+        }
+    }
+
+    static {
+        try{
+            functionCode = new FormattableText(Util.loadResource("/glsl/extra/turbulence.func"));
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not load function");
+        }
+    }
 }

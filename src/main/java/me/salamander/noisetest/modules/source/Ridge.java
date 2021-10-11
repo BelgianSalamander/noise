@@ -1,15 +1,16 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.FunctionRegistry;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.SourceModule;
 import me.salamander.noisetest.noise.PerlinNoise2D;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-public class Ridge extends SourceModule {
+public class Ridge extends SourceModule implements GLSLCompilable {
     private long seed;
     private PerlinNoise2D[] perlinSamplers;
     private int octaves;
@@ -45,7 +46,7 @@ public class Ridge extends SourceModule {
         Random random = new Random(seed);
 
         for(int i = 0; i < octaves; i++){
-            perlinSamplers[i] = new PerlinNoise2D(random.nextLong());
+            perlinSamplers[i] = new PerlinNoise2D(random.nextInt());
         }
     }
 
@@ -158,5 +159,20 @@ public class Ridge extends SourceModule {
     @Override
     public String getNodeRegistryName() {
         return "Ridge";
+    }
+
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return "sampleRidge(" + vec2Name + ", " + seedName + ", " + frequency + ", " + persistence + ", " + lacunarity + ", " + octaves + ")";
+    }
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        return required;
+    }
+
+    private static final Set<FunctionInfo> required = new HashSet<>();
+    static{
+        required.add(FunctionRegistry.getFunction("sampleRidge"));
     }
 }

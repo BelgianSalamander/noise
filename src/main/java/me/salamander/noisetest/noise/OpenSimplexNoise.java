@@ -14,6 +14,12 @@ package me.salamander.noisetest.noise;
  * documentation above each, for more info.
  */
 public class OpenSimplexNoise {
+	public static void main(String[] args) {
+		for(LatticePoint2D point: LOOKUP_2D){
+			System.out.println("\tLatticePoint2D(ivec2(" + point.xsv + ", " + point.ysv + "), vec2(" + point.dx + ", " + point.dy + "))");
+		}
+	}
+
 	private static final int PSIZE = 2048;
 	private static final int PMASK = 2047;
 

@@ -12,7 +12,10 @@ import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.combiner.BinaryFunctionType;
 import me.salamander.noisetest.modules.combiner.BinaryModule;
 import me.salamander.noisetest.modules.combiner.Select;
+import me.salamander.noisetest.modules.modifier.Turbulence;
+import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
+import me.salamander.noisetest.noise.PerlinNoise2D;
 import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
 import me.salamander.noisetest.render.api.ComputeShader;
@@ -39,9 +42,18 @@ public class NoiseTest {
     public static void glslTest() throws IOException {
         FileOutputStream fout = new FileOutputStream("run/out.glsl");
 
-        GLSLCompilable compilable = new NoiseSourceModule(NoiseType.PERLIN);
+        CheckerBoard module = new CheckerBoard();
+        Ridge other = new Ridge();
+        NoiseSourceModule selector = new NoiseSourceModule(NoiseType.SIMPLEX);
 
-        String shaderSource = GLSLTranspiler.compileModule(compilable);
+        Select select = new Select(module, other, selector);
+        select.setEdgeFalloff(0.1);
+
+        Turbulence turbulence = new Turbulence(select);
+        Voronoi voronoi = new Voronoi(17847874);
+        voronoi.setInput(0, other);
+
+        String shaderSource = GLSLTranspiler.compileModule(voronoi);
         fout.write(shaderSource.getBytes(StandardCharsets.UTF_8));
         fout.close();
 
@@ -51,33 +63,43 @@ public class NoiseTest {
         ComputeShader shader = new ComputeShader(shaderSource);
         shader.bind();
 
-        shader.setUniformUnsignedInt("baseSeed", 69);
+        shader.setUniformUnsignedInt("baseSeed", 56);
+        System.out.println("Base Seed: " + 56);
         shader.setUniform("startPos", new Vector2f(0, 0));
         shader.setUniform("step", 0.01f);
+        shader.setUniformUnsignedInt("width", 512);
 
-        int image = glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, image);
+        //Create SSBO (height data)
+        int ssbo = glGenBuffers();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, 512 * 512 * 4 * 4, GL_DYNAMIC_READ);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
 
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, 512, 512);
-        glBindImageTexture(0, image, 0, false, 0, GL_READ_WRITE, GL_R32F);
-
+        long startTime = System.currentTimeMillis();
         shader.run(512 / 32, 512 / 32, 1);
 
-        FloatBuffer heightmapBuffer = MemoryUtil.memAllocFloat(512 * 512);
-        glGetTextureImage(GL_TEXTURE_2D, image, 0, GL_R32F, heightmapBuffer);
+        FloatBuffer heightmapBuffer = MemoryUtil.memAllocFloat(512 * 512 * 4);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, heightmapBuffer);
+
+        System.out.println("Generated heightmap in " + (System.currentTimeMillis() - startTime) + " ms");
 
         double[][] heightmap = new double[512][512];
         for(int y = 0; y < 512; y++){
             for(int x = 0; x < 512; x++){
                 heightmap[x][y] = heightmapBuffer.get();
+                heightmapBuffer.get();
+                heightmapBuffer.get();
+                heightmapBuffer.get();
             }
         }
 
+
         HeightMapRenderer renderer = new HeightMapRenderer(512, 512);
         renderer.setHeightScale(20);
-        renderer.setDefaultSampler(ColorGradient.TERRAIN);
+        renderer.setDefaultSampler(ColorGradient.DEFAULT);
 
-        renderer.addHeightmap("generated", heightmap);
+        renderer.addHeightmap("glsl", heightmap);
+        renderer.addHeightmap("cpu", RenderHelper.generateNoise(select, 512, 512, 0.01f));
 
         renderer.renderAll();
     }
@@ -127,21 +149,14 @@ public class NoiseTest {
 
     private static void renderDemo(){
         SerializableNoiseModule baseTerrain = new NoiseSourceModule(NoiseType.PERLIN);
-        Ridge mountainTerrain = new Ridge();
-        Select selector = new Select(baseTerrain, mountainTerrain, baseTerrain);
-        selector.setThreshold(0.4);
-        selector.setEdgeFalloff(0.2);
-
-        SerializableNoiseModule ocean = new Const(0.0f);
-        Select head = new Select(ocean, baseTerrain, baseTerrain);
-        head.setEdgeFalloff(0.25);
+        baseTerrain.setSeed(69);
 
         HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
         renderer.setDefaultStep(0.01f);
         renderer.setHeightScale(40.0f);
         renderer.setDefaultSampler(ColorGradient.TERRAIN);
 
-        double[][] map = RenderHelper.generateNoise(head, 500, 500, 0.01);
+        double[][] map = RenderHelper.generateNoise(baseTerrain, 500, 500, 0.01);
 
         renderer.addHeightmap("terrain", RenderHelper.createBufferFromHeightmap(map, 40.0f, ColorGradient.TERRAIN));
         renderer.renderAll();

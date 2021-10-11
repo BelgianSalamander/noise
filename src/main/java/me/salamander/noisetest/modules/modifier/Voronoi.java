@@ -1,16 +1,18 @@
 package me.salamander.noisetest.modules.modifier;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.FunctionRegistry;
+import me.salamander.noisetest.glsl.GLSLCompilable;
+import me.salamander.noisetest.glsl.NotCompilableException;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.ModifierModule;
 import me.salamander.noisetest.noise.Vec2;
 import me.salamander.noisetest.noise.VoronoiSampler;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-public class Voronoi extends ModifierModule {
+public class Voronoi extends ModifierModule implements GLSLCompilable {
 	private int voronoiSeed;
 
 	public Voronoi(){
@@ -59,5 +61,30 @@ public class Voronoi extends ModifierModule {
 		super.writeNBT(tag, indexLookup);
 
 		tag.putInt("seed", voronoiSeed);
+	}
+
+	@Override
+	public String glslExpression(String vec2Name, String seedName) {
+		if(source instanceof GLSLCompilable compilable){
+			return compilable.glslExpression("(sampleVoronoi(" + vec2Name + " * " + (1 / parameters[0]) + ", " + seedName + ", " + parameters[1] + ") * " + parameters[0] + ")","(" + seedName + " - 42816623)");
+		}else{
+			throw new IllegalStateException("Voronoi source can not be compiled");
+		}
+	}
+
+	@Override
+	public Set<FunctionInfo> requiredFunctions() {
+		if(source instanceof GLSLCompilable compilable) {
+			Set<FunctionInfo> combined = new HashSet<>(compilable.requiredFunctions());
+			combined.addAll(required);
+			return combined;
+		}else{
+			throw new NotCompilableException("Can't compile voronoi source");
+		}
+	}
+
+	private static final Set<FunctionInfo> required = new HashSet<>();
+	static {
+		required.add(FunctionRegistry.getFunction("sampleVoronoi"));
 	}
 }

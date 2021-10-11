@@ -1,0 +1,48 @@
+sampleSimplexOctave
+float
+(vec2 pos, int seed)
+Requires 5
+getVec
+lerp2D
+smoothstep
+simplexSkew
+simplexUnskew
+float R_SQUARED = 0.5;
+
+float sampleSimplexOctave(vec2 pos, int seed){
+    vec2 skewed = simplexSkew(pos);
+
+    vec2 floored = floor(skewed);
+    vec2 fraction = fract(skewed);
+
+    vec2 cornerOne = floored;
+    vec2 cornerTwo, cornerThree;
+
+    if(fraction.x > fraction.y){
+        cornerTwo = floored + vec2(1, 0);
+        cornerThree = cornerTwo + vec2(0, 1);
+    }else{
+        cornerTwo = floored + vec2(0, 1);
+        cornerThree = cornerTwo + vec2(1, 0);
+    }
+
+    vec2 cornerOneUnskewed = simplexUnskew(cornerOne);
+    vec2 cornerTwoUnskewed = simplexUnskew(cornerTwo);
+    vec2 cornerThreeUnskewed = simplexUnskew(cornerThree);
+
+    vec2 cornerOneGradient = getVec(cornerOne, seed);
+    vec2 cornerTwoGradient = getVec(cornerTwo, seed);
+    vec2 cornerThreeGradient = getVec(cornerThree, seed);
+
+    vec2 cornerOneDisplacement = pos - cornerOneUnskewed;
+    vec2 cornerTwoDisplacement = pos - cornerTwoUnskewed;
+    vec2 cornerThreeDisplacement = pos - cornerThreeUnskewed;
+
+    float total = 0;
+
+    total += pow(max(0, R_SQUARED - dot(cornerOneDisplacement, cornerOneDisplacement)), 1) * dot(cornerOneGradient, cornerOneDisplacement);
+    total += pow(max(0, R_SQUARED - dot(cornerTwoDisplacement, cornerTwoDisplacement)), 1) * dot(cornerTwoGradient, cornerTwoDisplacement);
+    total += pow(max(0, R_SQUARED - dot(cornerThreeDisplacement, cornerThreeDisplacement)), 1) * dot(cornerThreeGradient, cornerThreeDisplacement);
+
+    return total;
+}

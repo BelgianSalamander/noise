@@ -1,0 +1,6 @@
+simplexUnskew
+vec2
+(vec2)
+vec2 simplexUnskew(vec2 pos){
+    return pos - ((pos.x + pos.y) * 0.5 * (1 - 1 / sqrt(3)));
+}

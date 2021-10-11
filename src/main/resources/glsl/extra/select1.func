@@ -1,0 +1,9 @@
+float {name}(vec2 pos, int seed){
+    float value = {selectorCall};
+
+    if(value < {threshold}){
+        return {callOne};
+    }else{
+        return {callTwo};
+    }
+}

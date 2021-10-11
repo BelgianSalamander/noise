@@ -1,13 +1,18 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.FunctionRegistry;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.SourceModule;
 
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
-public class CheckerBoard extends SourceModule {
+public class CheckerBoard extends SourceModule implements GLSLCompilable {
     private double frequency = 1.0;
 
     public CheckerBoard(){}
@@ -60,5 +65,21 @@ public class CheckerBoard extends SourceModule {
     @Override
     public String getNodeRegistryName() {
         return "Checkerboard";
+    }
+
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return "checkerboard(" + vec2Name + ", " + frequency + ")";
+    }
+
+    private static final Set<FunctionInfo> requires = new HashSet<>();
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        return requires;
+    }
+
+    static {
+        requires.add(FunctionRegistry.getFunction("checkerboard"));
     }
 }

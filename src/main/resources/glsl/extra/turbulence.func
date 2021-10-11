@@ -1,0 +1,8 @@
+float {name}(vec2 pos, int seed){
+    vec2 sampleX = vec2(pos.x + (12148.0 / 65536.0), pos.y + (56346.0 / 65536.0));
+    vec2 sampleY = vec2(pos.x + (23436.0 / 65536.0), pos.y + (43765.0 / 65536.0));
+
+    vec2 distortedPos = vec2(pos.x + {sampleX} * {turbulencePower}, pos.y + {sampleY} * {turbulencePower});
+
+    return {sample};
+}

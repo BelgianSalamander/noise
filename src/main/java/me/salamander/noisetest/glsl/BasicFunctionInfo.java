@@ -1,8 +1,6 @@
 package me.salamander.noisetest.glsl;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class BasicFunctionInfo implements FunctionInfo {
     private final String name;
@@ -12,7 +10,7 @@ public class BasicFunctionInfo implements FunctionInfo {
     private final FormattableText code;
 
     private final String[] requiredFunctions;
-    private final FunctionInfo[] resolvedRequiredFunctions;
+    private final Set<FunctionInfo> resolvedRequiredFunctions;
     boolean areResolved = false;
 
     /**
@@ -39,14 +37,14 @@ public class BasicFunctionInfo implements FunctionInfo {
             int requires = Integer.parseInt(requiresInfo.split(" ")[1]);
 
             requiredFunctions = new String[requires];
-            resolvedRequiredFunctions = new FunctionInfo[requires];
+            resolvedRequiredFunctions = new HashSet<>();
 
             for (int i = 0; i < requires; i++) {
                 requiredFunctions[i] = scanner.nextLine().strip();
             }
         }else{
             requiredFunctions = new String[0];
-            resolvedRequiredFunctions = new FunctionInfo[0];
+            resolvedRequiredFunctions = new HashSet<>();
         }
 
         StringBuilder code = new StringBuilder(isRequires ? "" : requiresInfo + "\n");
@@ -75,7 +73,7 @@ public class BasicFunctionInfo implements FunctionInfo {
     }
 
     @Override
-    public FunctionInfo[] requiredFunctions() {
+    public Set<FunctionInfo> requiredFunctions() {
         resolve();
         return resolvedRequiredFunctions;
     }
@@ -84,8 +82,8 @@ public class BasicFunctionInfo implements FunctionInfo {
         if(areResolved) return;
         areResolved = true;
 
-        for(int i = 0; i < requiredFunctions.length; i++){
-            resolvedRequiredFunctions[i] = FunctionRegistry.getFunction(requiredFunctions[i]);
+        for (String requiredFunction : requiredFunctions) {
+            resolvedRequiredFunctions.add(FunctionRegistry.getFunction(requiredFunction));
         }
     }
 }

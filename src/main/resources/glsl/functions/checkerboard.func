@@ -1,0 +1,6 @@
+checkerboard
+float
+(vec2, float)
+float checkerboard(vec2 pos, float frequency){
+    return int(floor(pos.x * frequency) + floor(pos.y * frequency)) % 2 < 1 ? -1 : 1;
+}

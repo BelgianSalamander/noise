@@ -1,6 +1,10 @@
 package me.salamander.noisetest.noise;
 
+import me.salamander.noisetest.util.Pair;
+
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 //This in NOT OpenSimplex. It is 2D Simplex which is NOT patented
@@ -40,13 +44,12 @@ public class SimplexNoise2D {
             floored.x++;
             result[1] = floored.copy();
             floored.y++;
-            result[2] = floored;
         }else{
             floored.y++;
             result[1] = floored.copy();
             floored.x++;
-            result[2] = floored;
         }
+        result[2] = floored;
 
         return result;
     }

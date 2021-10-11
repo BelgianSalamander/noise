@@ -1,13 +1,17 @@
 package me.salamander.noisetest.modules.source;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import me.salamander.noisetest.glsl.FunctionInfo;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.SourceModule;
 
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
-public class Const extends SourceModule {
+public class Const extends SourceModule implements GLSLCompilable {
     private double value = 0;
 
     public Const(){}
@@ -56,5 +60,15 @@ public class Const extends SourceModule {
     @Override
     public String getNodeRegistryName() {
         return "Const";
+    }
+
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return String.valueOf(value);
+    }
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        return new HashSet<>(0);
     }
 }

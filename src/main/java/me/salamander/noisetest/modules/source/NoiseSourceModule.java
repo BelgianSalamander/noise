@@ -7,21 +7,19 @@ import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.ArraySourceModule;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.function.DoubleBinaryOperator;
 
 public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilable {
-    private long seed;
+    private int seed;
     private DoubleBinaryOperator[] noiseSamplers;
     private NoiseType noiseType;
 
     public NoiseSourceModule(NoiseType type) {
-        this(6, new Random().nextLong(), type);
+        this(6, new Random().nextInt(), type);
     }
 
-    public NoiseSourceModule(int octaves, long seed, NoiseType type) {
+    public NoiseSourceModule(int octaves, int seed, NoiseType type) {
     	super(4);
 	    this.seed = seed;
 	    initParameters();
@@ -40,6 +38,7 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
 
     private void createSamplers(boolean regenerate, NoiseType type) {
     	int octaves = (int)parameters[0];
+    	int seed = this.seed;
 
         DoubleBinaryOperator[] newSamplers = new DoubleBinaryOperator[octaves];
         Random random = new Random(seed);
@@ -55,7 +54,8 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
             }
 
             if(!usedPrevious) {
-                newSamplers[i] = type.apply(random.nextLong());
+                newSamplers[i] = type.apply(seed);
+                seed *= 122609317;
             }
         }
 
@@ -77,7 +77,7 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
 
     @Override
     public void setSeed(long s) {
-        this.seed = s;
+        this.seed = (int) s;
         createSamplers(true, this.noiseType);
     }
 
@@ -118,7 +118,7 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
     public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         super.readNBT(tag, sourceLookup);
 
-        seed = tag.getLong("seed");
+        seed = (int) tag.getLong("seed");
 
         noiseType = NoiseType.fromString(tag.getString("type"));
         createSamplers(true, noiseType);
@@ -143,15 +143,12 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
     //TODO: Make it use info from the NoiseType
     @Override
     public String glslExpression(String vec2Name, String seedName) {
-        return "samplePerlin(" + vec2Name + ", " + seedName + ", " + parameters[1] + ", " + parameters[2] + ", " + parameters[3] + ", " + ((int) parameters[0]) + ")";
+        return noiseType.glslCall(vec2Name, seedName, parameters);
+        //return "samplePerlin(" + vec2Name + ", " + seedName + ", " + parameters[1] + ", " + parameters[2] + ", " + parameters[3] + ", " + ((int) parameters[0]) + ")";
     }
 
-    private static final FunctionInfo[] requires = new FunctionInfo[]{
-            FunctionRegistry.getFunction("samplePerlin")
-    };
-
     @Override
-    public FunctionInfo[] requiredMethods() {
-        return requires;
+    public Set<FunctionInfo> requiredFunctions() {
+        return noiseType.required();
     }
 }

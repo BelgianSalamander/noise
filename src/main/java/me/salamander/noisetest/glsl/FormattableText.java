@@ -19,7 +19,7 @@ public class FormattableText {
 
         while(currentIndex < template.length()){
             while (currentIndex < template.length()){
-                if(template.charAt(currentIndex) == '$'){
+                if(template.charAt(currentIndex) == '{'){
                     break;
                 }
                 currentIndex++;
@@ -31,12 +31,29 @@ public class FormattableText {
 
             if(currentIndex >= template.length()) break;
 
-            if(template.charAt(currentIndex) == '$'){
+            if(template.charAt(currentIndex) == '{'){
+                boolean exited = false;
                 while (currentIndex < template.length()){
-                    if(template.charAt(currentIndex) == '}'){
+                    char c = template.charAt(currentIndex);
+                    if(!Character.isAlphabetic(c) && c != '{' && c != '}'){
+                        while (currentIndex < template.length()){
+                            if(template.charAt(currentIndex) == '{'){
+                                break;
+                            }
+                            currentIndex++;
+                        }
+                        exited = true;
+                        break;
+                    }else if(c == '}'){
                         break;
                     }
                     currentIndex++;
+                }
+
+                if(exited){
+                    components.add(new TextComponent(template.substring(startIndex, currentIndex)));
+                    startIndex = currentIndex;
+                    continue;
                 }
 
                 if(template.charAt(currentIndex) == '}'){

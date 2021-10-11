@@ -1,5 +1,7 @@
 package me.salamander.noisetest.glsl;
 
+import java.util.Set;
+
 public interface FunctionInfo {
     /**
      * Get the name of this method
@@ -24,5 +26,5 @@ public interface FunctionInfo {
      * If two methods are the same, it is required their that they are the SAME object (i.e that methodOne == methodTwo)
      * @return An array of MethodInfo
      */
-    FunctionInfo[] requiredFunctions();
+    Set<FunctionInfo> requiredFunctions();
 }
