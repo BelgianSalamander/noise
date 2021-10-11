@@ -174,6 +174,11 @@ public class Turbulence extends ModifierModule implements GLSLCompilable {
         }
     }
 
+    @Override
+    public long getSeed() {
+        return source == null ? 0 : source.getSeed();
+    }
+
     static {
         try{
             functionCode = new FormattableText(Util.loadResource("/glsl/extra/turbulence.func"));

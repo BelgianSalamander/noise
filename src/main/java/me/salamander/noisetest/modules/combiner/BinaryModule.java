@@ -134,4 +134,15 @@ public class BinaryModule implements GUIModule, GLSLCompilable {
             throw new NotCompilableException("One of the arguments of BinaryModule can not be compiled");
         }
     }
+
+    @Override
+    public long getSeed() {
+        if(inputOne == null && inputTwo == null){
+            return 0;
+        }else if(inputOne != null){
+            return inputOne.getSeed();
+        }else{
+            return inputTwo.getSeed();
+        }
+    }
 }

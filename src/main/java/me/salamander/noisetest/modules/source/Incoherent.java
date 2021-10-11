@@ -63,4 +63,9 @@ public class Incoherent extends SourceModule implements GLSLCompilable {
     public Set<FunctionInfo> requiredFunctions() {
         return new HashSet<>();
     }
+
+    @Override
+    public long getSeed() {
+        return seed;
+    }
 }

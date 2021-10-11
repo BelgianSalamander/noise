@@ -175,4 +175,9 @@ public class Ridge extends SourceModule implements GLSLCompilable {
     static{
         required.add(FunctionRegistry.getFunction("sampleRidge"));
     }
+
+    @Override
+    public long getSeed() {
+        return seed;
+    }
 }

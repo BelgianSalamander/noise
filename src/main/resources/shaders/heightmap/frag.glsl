@@ -2,6 +2,7 @@
 
 in vec4 fragColor;
 in vec3 fragNormal;
+in vec3 pos;
 
 layout(location = 0) out vec4 color;
 

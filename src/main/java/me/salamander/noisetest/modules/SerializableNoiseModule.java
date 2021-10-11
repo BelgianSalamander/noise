@@ -1,7 +1,6 @@
 package me.salamander.noisetest.modules;
 
 import io.github.antiquitymc.nbt.CompoundTag;
-import me.salamander.noisetest.modules.types.NoiseModule;
 
 import java.util.Collection;
 import java.util.IdentityHashMap;

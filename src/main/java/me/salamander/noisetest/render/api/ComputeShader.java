@@ -43,6 +43,8 @@ public class ComputeShader implements Cleaner.Cleanable {
     public void run(int numGroupsX, int numGroupsY, int numGroupsZ){
         bind();
         glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
+
+        System.out.println("Running " + (numGroupsX * numGroupsY * numGroupsZ) + " work groups!");
     }
 
     public int getUniformLocation(String name){
@@ -124,13 +126,27 @@ public class ComputeShader implements Cleaner.Cleanable {
         setUniform(getUniformLocation(name), value);
     }
 
+    public void setUniform(String name, int value){
+        setUniform(getUniformLocation(name), value);
+    }
+
     private void setUniform(int uniformLocation, float value) {
         if(uniformLocation < 0) return;
         
         glUniform1f(uniformLocation, value);
     }
 
+    private void setUniform(int uniformLocation, int value) {
+        if(uniformLocation < 0) return;
+
+        glUniform1i(uniformLocation, value);
+    }
+
     public void bind() {
         glUseProgram(program);
+    }
+
+    public int getHandle() {
+        return program;
     }
 }

@@ -2,6 +2,7 @@ package me.salamander.noisetest.render.api;
 
 import java.lang.ref.Cleaner;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL45.*;
 
@@ -30,6 +31,11 @@ public class BufferObject implements Cleaner.Cleanable {
         glBufferData(bindingPoint, data, usage);
     }
 
+    public void data(int bindingPoint, FloatBuffer data, int usage){
+        bind(bindingPoint);
+        glBufferData(bindingPoint, data, usage);
+    }
+
     public void subData(int bindingPoint, FloatBuffer data, long offset){
         bind(bindingPoint);
         glBufferSubData(bindingPoint, offset, data);
@@ -42,5 +48,15 @@ public class BufferObject implements Cleaner.Cleanable {
     @Override
     public void clean() {
         glDeleteBuffers(bufferHandle);
+    }
+
+    public void data(int bindingPoint, IntBuffer data, int usage) {
+        bind(bindingPoint);
+        glBufferData(bindingPoint, data, usage);
+    }
+
+    public void readInto(int bindingPoint, FloatBuffer buffer) {
+        bind(bindingPoint);
+        glGetBufferSubData(bindingPoint, 0, buffer);
     }
 }

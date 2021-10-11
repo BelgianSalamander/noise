@@ -1,5 +1,10 @@
 package me.salamander.noisetest.glsl;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,22 +53,52 @@ public class GLSLTranspiler {
     }
 
     private static final String HEADER = """
-           #version 450 core
-           
-           uniform int baseSeed;
-           uniform uint width;
-           uniform vec2 startPos;
-           uniform float step;
-           
-           layout(std430, binding = 3) buffer HeightData {
-             vec4 data[];
-           } heightData;
-           
-           layout(local_size_x = 32, local_size_y = 32) in;
-           """;
+            #version 450 core
+                       
+            uniform int baseSeed;
+            uniform uint width;
+            uniform vec2 startPos;
+            uniform float step;
+                       
+            struct DataPoint{
+                vec3 normal;
+                vec3 color;
+                float height;
+            };
+                       
+            layout(std430, binding = 3) buffer HeightData {
+              DataPoint data[];
+            } data;
+                       
+            layout(local_size_x = 32, local_size_y = 32) in;
+            """;
 
     private static final String TAIL = """
             \tuint index = gl_GlobalInvocationID.y * width + gl_GlobalInvocationID.x;
-            \theightData.data[index] = vec4(value, 1, 1, 1);
+            \tdata.data[index].height = value;
             """;
+
+    public static String compileModule(GLSLCompilable compilable, String path) {
+        Path saveIn = Path.of("/").relativize(Path.of(path));
+
+        String source = compileModule(compilable);
+
+        try{
+            if(!Files.exists(saveIn)){
+                saveIn.getParent().toFile().mkdirs();
+                Files.createFile(saveIn);
+            }
+
+            FileOutputStream fout = new FileOutputStream(saveIn.toAbsolutePath().toString());
+            fout.write(source.getBytes(StandardCharsets.UTF_8));
+            fout.close();
+
+            System.out.println("Saved shader source to " + saveIn.toAbsolutePath());
+        }catch (IOException e){
+            System.out.println("Couldn't save shader source");
+            e.printStackTrace();
+        }
+
+        return source;
+    }
 }

@@ -1,6 +1,6 @@
 package me.salamander.noisetest.glsl;
 
-import me.salamander.noisetest.modules.types.NoiseModule;
+import me.salamander.noisetest.modules.NoiseModule;
 
 import java.util.Set;
 

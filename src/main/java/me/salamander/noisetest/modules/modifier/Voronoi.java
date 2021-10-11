@@ -64,6 +64,11 @@ public class Voronoi extends ModifierModule implements GLSLCompilable {
 	}
 
 	@Override
+	public long getSeed() {
+		return source != null ? source.getSeed() : 0;
+	}
+
+	@Override
 	public String glslExpression(String vec2Name, String seedName) {
 		if(source instanceof GLSLCompilable compilable){
 			return compilable.glslExpression("(sampleVoronoi(" + vec2Name + " * " + (1 / parameters[0]) + ", " + seedName + ", " + parameters[1] + ") * " + parameters[0] + ")","(" + seedName + " - 42816623)");

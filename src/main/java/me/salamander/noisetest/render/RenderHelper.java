@@ -1,21 +1,95 @@
 package me.salamander.noisetest.render;
 
+import me.salamander.noisetest.NoiseTest;
+import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
+import me.salamander.noisetest.glsl.GLSLCompilable;
+import me.salamander.noisetest.glsl.GLSLTranspiler;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.render.api.BufferObject;
+import me.salamander.noisetest.render.api.ComputeShader;
+import me.salamander.noisetest.render.api.Window;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.awt.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.lwjgl.opengl.GL45.*;
 
 public class RenderHelper {
+    private static ComputeShader normalProgram;
+
     public static BufferObject createBufferFromHeightmap(double[][] heightmap, float heightScale, ColorSampler sampler){
         float[] data = createBufferDataFromHeightmap(heightmap, heightScale, sampler);
         BufferObject buffer = new BufferObject();
         buffer.data(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW);
         return buffer;
+    }
+
+    public static BufferObject createBufferOnGPU(GLSLCompilable noiseModule, int width, int height, float heightScale, ColorGradient sampler){
+        //Step One: create GLSL program for noiseModule
+
+        String source = GLSLTranspiler.compileModule(noiseModule);
+
+        try {
+            FileOutputStream fout = new FileOutputStream("run/out.glsl");
+            fout.write(source.getBytes(StandardCharsets.UTF_8));
+            fout.close();
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not create FileOutputStream", e);
+        }
+
+        ComputeShader noiseProgram = new ComputeShader(source);
+
+        //Create buffer for program
+        BufferObject heightmapDataSSBO = new BufferObject();
+        heightmapDataSSBO.allocate(GL_SHADER_STORAGE_BUFFER, 32L * width * height, GL_DYNAMIC_DRAW);
+        heightmapDataSSBO.bindBase(GL_SHADER_STORAGE_BUFFER, 3);
+
+        //Set required uniforms
+        noiseProgram.setUniform("baseSeed", (int) noiseModule.getSeed());
+        noiseProgram.setUniform("startPos", new Vector2f(0, 0));
+        noiseProgram.setUniform("step", 0.01f);
+        noiseProgram.setUniformUnsignedInt("width", width);
+
+        //Run program!
+        noiseProgram.run(width / 32, height / 32, 1);
+
+        //Compute normal data
+        createNormalProgram();
+
+        sampler.toBuffer().bindBase(GL_SHADER_STORAGE_BUFFER, 2);
+
+        noiseProgram.setUniformUnsignedInt("amountPoints", sampler.numPoints());
+        noiseProgram.setUniformUnsignedInt("tileWidth", width);
+        noiseProgram.setUniformUnsignedInt("tileHeight", height);
+        noiseProgram.setUniform("heightScale", heightScale);
+
+        normalProgram.run(width / 32, height / 32, 1);
+
+        return heightmapDataSSBO;
+    }
+
+    private static void createNormalProgram() {
+        if(normalProgram != null) return;
+
+        try {
+            InputStream fin = NoiseTest.class.getResourceAsStream("/shaders/heightmap/normals.glsl");
+
+            String code = new String(fin.readAllBytes(), StandardCharsets.UTF_8);
+
+            fin.close();
+
+            normalProgram = new ComputeShader(code);
+        }catch (IOException e){
+            throw new IllegalStateException("Could not create normal program");
+        }
     }
 
     public static float[] createBufferDataFromHeightmap(double[][] heightmap, float heightScale, ColorSampler sampler){

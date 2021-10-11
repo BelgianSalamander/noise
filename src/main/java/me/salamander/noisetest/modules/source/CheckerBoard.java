@@ -79,6 +79,11 @@ public class CheckerBoard extends SourceModule implements GLSLCompilable {
         return requires;
     }
 
+    @Override
+    public long getSeed() {
+        return 0;
+    }
+
     static {
         requires.add(FunctionRegistry.getFunction("checkerboard"));
     }

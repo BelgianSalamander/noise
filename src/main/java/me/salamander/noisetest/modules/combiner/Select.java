@@ -283,6 +283,11 @@ public class Select implements GUIModule, GLSLCompilable {
         }
     }
 
+    @Override
+    public long getSeed() {
+        return selector == null ? 0 : selector.getSeed();
+    }
+
     static {
         try {
             caseOne = new FormattableText(Util.loadResource("/glsl/extra/select1.func"));

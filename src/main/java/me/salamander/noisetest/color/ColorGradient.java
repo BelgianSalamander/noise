@@ -1,8 +1,13 @@
 package me.salamander.noisetest.color;
 
+import me.salamander.noisetest.render.api.BufferObject;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.opengl.GL45;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +18,7 @@ public class ColorGradient implements ColorSampler {
     public static ColorGradient MOUNTAIN = new ColorGradient();
 
     List<ColorPoint> colorPoints = new ArrayList<>();
+    private BufferObject buffer;
 
     public void addColorPoint(float value, float r, float g, float b){
         colorPoints.add(new ColorPoint(value, new InterpolatableColor(r, g, b)));
@@ -60,6 +66,10 @@ public class ColorGradient implements ColorSampler {
         colorPoints.add(new ColorPoint(n, new InterpolatableColor(color.getRed() / 255.f, color.getGreen() / 255.f, color.getBlue() / 255.f)));
     }
 
+    public int numPoints() {
+        return colorPoints.size();
+    }
+
     private record ColorPoint(float value, InterpolatableColor color) implements Comparable {
 
         public float getValue() {
@@ -92,6 +102,31 @@ public class ColorGradient implements ColorSampler {
         public Color toColor(){
             return new Color(r, g, b);
         }
+    }
+
+    public BufferObject toBuffer(){
+        if(buffer != null) return buffer;
+
+        int floatsNeeded = 4 * colorPoints.size();
+
+        FloatBuffer fb = MemoryUtil.memAllocFloat(floatsNeeded);
+
+        for(ColorPoint point: colorPoints){
+            fb.put(point.color.r);
+            fb.put(point.color.g);
+            fb.put(point.color.b);
+            fb.put(point.value);
+        }
+        fb.flip();
+
+        BufferObject buffer = new BufferObject();
+        buffer.data(GL45.GL_SHADER_STORAGE_BUFFER, fb, GL45.GL_STATIC_READ);
+
+        MemoryUtil.memFree(fb);
+
+        this.buffer = buffer;
+
+        return buffer;
     }
 
     private static float clamp(float f){

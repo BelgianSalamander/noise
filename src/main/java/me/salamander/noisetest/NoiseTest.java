@@ -16,9 +16,11 @@ import me.salamander.noisetest.modules.modifier.Turbulence;
 import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
 import me.salamander.noisetest.noise.PerlinNoise2D;
+import me.salamander.noisetest.render.HeightMapGenerator;
 import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
 import me.salamander.noisetest.render.api.ComputeShader;
+import me.salamander.noisetest.render.api.ShaderProgram;
 import me.salamander.noisetest.render.api.Window;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
@@ -27,33 +29,69 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.FloatBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static org.lwjgl.opengl.GL45.*;
 
 public class NoiseTest {
     public static void main(String[] args){
-        try {
-            glslTest();
-        }catch (IOException e){
-            e.printStackTrace();
+        HeightMapGenerator renderer = new HeightMapGenerator(512, new NoiseSourceModule(NoiseType.PERLIN), ColorGradient.TERRAIN);
+
+        renderer.mainloop();
+    }
+
+    private static void queryBlockInfo() throws IOException{
+        InputStream fin = NoiseTest.class.getResourceAsStream("/shaders/heightmap/normals.glsl");
+
+        String code = new String(fin.readAllBytes(), StandardCharsets.UTF_8);
+
+        fin.close();
+
+        Window window = new Window("Context", 100, 100);
+
+        ComputeShader program = new ComputeShader(code);
+
+        int numSSB = glGetProgramInterfacei(program.getHandle(), GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES);
+        System.out.println(numSSB + " Shader Storage Buffers");
+
+        for(int i = 0; i < numSSB; i++){
+            String name = glGetProgramResourceName(program.getHandle(), GL_SHADER_STORAGE_BLOCK, i);
+            System.out.println("Buffer Name: " + name);
+
+            int resourceIndex = glGetProgramResourceIndex(program.getHandle(), GL_SHADER_STORAGE_BLOCK, name);
+            System.out.println("\tResource Index: " + resourceIndex);
+
+            int[] properties = new int[]{GL_NUM_ACTIVE_VARIABLES};
+            int[] length = new int[1];
+            int[] values = new int[20];
+            glGetProgramResourceiv(program.getHandle(), GL_SHADER_STORAGE_BLOCK, resourceIndex, properties, length, values);
+            int amountVariables = values[0];
+
+            int[] vars = new int[amountVariables];
+            properties[0] = GL_ACTIVE_VARIABLES;
+            glGetProgramResourceiv(program.getHandle(), GL_SHADER_STORAGE_BLOCK, resourceIndex, properties, length, vars);
+
+            System.out.println("\tNum Variables: " + amountVariables);
+            System.out.println("Variable Indices: " + String.join(", ", Arrays.stream(vars).mapToObj(String::valueOf).collect(Collectors.toList())));
+
+            for (int j = 0; j < amountVariables; j++) {
+                properties[0] = GL_OFFSET;
+                glGetProgramResourceiv(program.getHandle(), GL_BUFFER_VARIABLE, vars[j], properties, length, values);
+
+                String variableName = glGetProgramResourceName(program.getHandle(), GL_BUFFER_VARIABLE, vars[j]);
+
+                System.out.println(variableName + " offset = " + values[0]);
+            }
         }
     }
 
     public static void glslTest() throws IOException {
         FileOutputStream fout = new FileOutputStream("run/out.glsl");
 
-        CheckerBoard module = new CheckerBoard();
-        Ridge other = new Ridge();
-        NoiseSourceModule selector = new NoiseSourceModule(NoiseType.SIMPLEX);
+        NoiseSourceModule perlin = new NoiseSourceModule(NoiseType.PERLIN);
 
-        Select select = new Select(module, other, selector);
-        select.setEdgeFalloff(0.1);
-
-        Turbulence turbulence = new Turbulence(select);
-        Voronoi voronoi = new Voronoi(17847874);
-        voronoi.setInput(0, other);
-
-        String shaderSource = GLSLTranspiler.compileModule(voronoi);
+        String shaderSource = GLSLTranspiler.compileModule(perlin);
         fout.write(shaderSource.getBytes(StandardCharsets.UTF_8));
         fout.close();
 
@@ -99,7 +137,7 @@ public class NoiseTest {
         renderer.setDefaultSampler(ColorGradient.DEFAULT);
 
         renderer.addHeightmap("glsl", heightmap);
-        renderer.addHeightmap("cpu", RenderHelper.generateNoise(select, 512, 512, 0.01f));
+        renderer.addHeightmap("cpu", RenderHelper.generateNoise(perlin, 512, 512, 0.01f));
 
         renderer.renderAll();
     }

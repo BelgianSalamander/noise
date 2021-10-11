@@ -71,4 +71,9 @@ public class Const extends SourceModule implements GLSLCompilable {
     public Set<FunctionInfo> requiredFunctions() {
         return new HashSet<>(0);
     }
+
+    @Override
+    public long getSeed() {
+        return 0;
+    }
 }
