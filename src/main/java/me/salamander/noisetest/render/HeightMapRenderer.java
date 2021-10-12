@@ -114,12 +114,12 @@ public class HeightMapRenderer {
         addBuffer(name, buffer);
     }
 
-    public void addHeightmap(String name, double[][] heightmap){
+    public void addHeightmap(String name, float[][] heightmap){
         addHeightmap(name, RenderHelper.createBufferFromHeightmap(heightmap, heightScale, defaultSampler));
     }
 
     public void addHeightmap(String name, NoiseModule module, float heightScale, ColorSampler sampler, float step){
-        double[][] heightMap = RenderHelper.generateNoise(module, width, height, step);
+        float[][] heightMap = RenderHelper.generateNoise(module, width, height, step);
         addBuffer(name, RenderHelper.createBufferFromHeightmap(heightMap, heightScale, sampler));
     }
 
@@ -135,7 +135,7 @@ public class HeightMapRenderer {
         glVertexAttribPointer(2, 3, GL_FLOAT, false, 28, 4);
         glVertexAttribPointer(3, 3, GL_FLOAT, false, 28, 16);
     }
-    public void setHeightmapData(double[][] heightmap, float heightScale, ColorSampler sampler){
+    public void setHeightmapData(float[][] heightmap, float heightScale, ColorSampler sampler){
         BufferObject buffer = RenderHelper.createBufferFromHeightmap(heightmap, heightScale, sampler);
         this.heightScale = heightScale;
 

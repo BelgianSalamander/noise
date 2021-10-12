@@ -16,7 +16,7 @@ public class NormalNormalizerModule extends NormalizerModule{
     }
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         throw new AssertionError("Not Implemented");
     }
 }

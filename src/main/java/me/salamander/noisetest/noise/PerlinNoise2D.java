@@ -18,7 +18,7 @@ public class PerlinNoise2D {
         createGradients();
     }
 
-    public double sample(double x, double y){
+    public float sample(float x, float y){
         int lowX = floor(x);
         int lowY = floor(y);
         int highX = lowX + 1;
@@ -52,15 +52,15 @@ public class PerlinNoise2D {
         return  result < n ? result : result - 1;
     }
 
-    private double lerp(double v00, double v01, double v10, double v11, double tx, double ty){
+    private float lerp(float v00, float v01, float v10, float v11, float tx, float ty){
         return lerp(lerp(v00, v10, tx), lerp(v01, v11, tx), ty);
     }
 
-    private double lerp(double v0, double v1, double t){
+    private float lerp(float v0, float v1, float t){
         return (1 - t) * v0 + t * v1;
     }
 
-    private static double smoothstep(double n){
+    private static float smoothstep(float n){
         return n * n * n * (n * ( n * 6 - 15) + 10);
     }
 
@@ -74,7 +74,7 @@ public class PerlinNoise2D {
 	    }
 
 	    @Override
-	    public double sample(double x, double y) {
+	    public float sample(float x, float y) {
 		    return Math.abs(super.sample(x, y));
 	    }
     }

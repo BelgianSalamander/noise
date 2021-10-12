@@ -28,12 +28,12 @@ public class Voronoi extends ModifierModule implements GLSLCompilable {
 	}
 
 	private void initParameters(){
-		parameters[0] = 0.3;
-		parameters[1] = 0.0;
+		parameters[0] = 0.3f;
+		parameters[1] = 0.0f;
 	}
 
 	@Override
-	public double sample(double x, double y) {
+	public float sample(float x, float y) {
 		Vec2 location = VoronoiSampler.sampleVoronoi(x / parameters[0], y / parameters[0], this.voronoiSeed, parameters[1]);
 		return this.source == null ? 0 : this.source.sample(location.getX() * parameters[0], location.getY() * parameters[0]);
 	}

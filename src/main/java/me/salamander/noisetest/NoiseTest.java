@@ -132,7 +132,7 @@ public class NoiseTest {
 
         System.out.println("Generated heightmap in " + (System.currentTimeMillis() - startTime) + " ms");
 
-        double[][] heightmap = new double[512][512];
+        float[][] heightmap = new float[512][512];
         for(int y = 0; y < 512; y++){
             for(int x = 0; x < 512; x++){
                 heightmap[x][y] = heightmapBuffer.get();
@@ -155,11 +155,11 @@ public class NoiseTest {
 
     public static void serializationTest() throws IOException {
         NoiseSourceModule perlin = new NoiseSourceModule(NoiseType.PERLIN);
-        perlin.setFrequency(0.5);
-        perlin.setLacunarity(3.0);
+        perlin.setFrequency(0.5f);
+        perlin.setLacunarity(3.0f);
 
         NoiseSourceModule openSimplex = new NoiseSourceModule(NoiseType.OPEN_SIMPLEX2S);
-        openSimplex.setPersistence(0.2);
+        openSimplex.setPersistence(0.2f);
 
         BinaryModule combined = new BinaryModule(BinaryFunctionType.MULTIPLY);
         combined.setInput(0, perlin);
@@ -205,7 +205,7 @@ public class NoiseTest {
         renderer.setHeightScale(40.0f);
         renderer.setDefaultSampler(ColorGradient.TERRAIN);
 
-        double[][] map = RenderHelper.generateNoise(baseTerrain, 500, 500, 0.01);
+        float[][] map = RenderHelper.generateNoise(baseTerrain, 500, 500, 0.01f);
 
         renderer.addHeightmap("terrain", RenderHelper.createBufferFromHeightmap(map, 40.0f, ColorGradient.TERRAIN));
         renderer.renderAll();

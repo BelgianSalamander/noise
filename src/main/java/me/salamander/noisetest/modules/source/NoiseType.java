@@ -11,21 +11,21 @@ import me.salamander.noisetest.util.TriFunction;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.DoubleBinaryOperator;
+import me.salamander.noisetest.util.FloatBinaryOperator;
 import java.util.function.LongFunction;
 
-public enum NoiseType implements LongFunction<DoubleBinaryOperator> {
+public enum NoiseType implements LongFunction<FloatBinaryOperator> {
 	PERLIN("Perlin", l -> new PerlinNoise2D(l)::sample, "samplePerlin"),
 	BILLOW("Billow", l -> new PerlinNoise2D.Billow(l)::sample, "sampleBillow"),
 	SIMPLEX("Simplex", l -> new SimplexNoise2D(l)::sample, "sampleSimplex"),
 	OPEN_SIMPLEX2S("OpenSimplex", l -> new OpenSimplexNoise(l)::noise2, "sampleOpenSimplex");
 
 	private final String name;
-	private final LongFunction<DoubleBinaryOperator> noiseFnConstructor;
-	private final TriFunction<String, String, double[], String> callMaker;
+	private final LongFunction<FloatBinaryOperator> noiseFnConstructor;
+	private final TriFunction<String, String, float[], String> callMaker;
 	private final FunctionInfo[] functions;
 
-	NoiseType(String name, LongFunction<DoubleBinaryOperator> noiseFnConstructor) {
+	NoiseType(String name, LongFunction<FloatBinaryOperator> noiseFnConstructor) {
 		this.name = name;
 		this.noiseFnConstructor = noiseFnConstructor;
 		Data.NOISE_TYPE_MAP.put(this.name, this);
@@ -33,7 +33,7 @@ public enum NoiseType implements LongFunction<DoubleBinaryOperator> {
 		this.functions = new FunctionInfo[0];
 	}
 
-	NoiseType(String name, LongFunction<DoubleBinaryOperator> noiseFnConstructor, TriFunction<String, String, double[], String> callMaker, FunctionInfo[] functions) {
+	NoiseType(String name, LongFunction<FloatBinaryOperator> noiseFnConstructor, TriFunction<String, String, float[], String> callMaker, FunctionInfo[] functions) {
 		this.name = name;
 		this.noiseFnConstructor = noiseFnConstructor;
 		Data.NOISE_TYPE_MAP.put(this.name, this);
@@ -41,12 +41,12 @@ public enum NoiseType implements LongFunction<DoubleBinaryOperator> {
 		this.functions = functions;
 	}
 
-	NoiseType(String name, LongFunction<DoubleBinaryOperator> noiseFnConstructor, String function){
+	NoiseType(String name, LongFunction<FloatBinaryOperator> noiseFnConstructor, String function){
 		this(name, noiseFnConstructor, (vec2Name, seedName, parameters) -> function + "(" + vec2Name + ", " + seedName + ", " + parameters[1] + ", " + parameters[2] + ", " + parameters[3] + ", " + ((int) parameters[0]) + ")", new FunctionInfo[]{FunctionRegistry.getFunction(function)});
 	}
 
 	@Override
-	public DoubleBinaryOperator apply(long value) {
+	public FloatBinaryOperator apply(long value) {
 		return this.noiseFnConstructor.apply(value);
 	}
 
@@ -59,7 +59,7 @@ public enum NoiseType implements LongFunction<DoubleBinaryOperator> {
 		return Data.NOISE_TYPE_MAP.get(name);
 	}
 
-	public String glslCall(String vec2Name, String seedName, double[] params){
+	public String glslCall(String vec2Name, String seedName, float[] params){
 		if(callMaker == null){
 			throw new NotCompilableException();
 		}else{

@@ -37,7 +37,7 @@ public class TerraLoader {
             System.out.println("Unknown Noise Type: " + type);
             return new NoiseModule() {
                 @Override
-                public double sample(double x, double y) {
+                public float sample(float x, float y) {
                     return 0;
                 }
 

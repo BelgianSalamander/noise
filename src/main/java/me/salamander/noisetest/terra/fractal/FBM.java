@@ -8,7 +8,7 @@ public class FBM extends FractalModule {
     }
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         float total = 0;
 
         float currentGain = gain;

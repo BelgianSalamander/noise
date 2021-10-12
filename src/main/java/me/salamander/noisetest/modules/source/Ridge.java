@@ -14,9 +14,9 @@ public class Ridge extends SourceModule implements GLSLCompilable {
     private long seed;
     private PerlinNoise2D[] perlinSamplers;
     private int octaves;
-    private double frequency = 1.0;
-    private double persistence = 0.5;
-    private double lacunarity = 2.0;
+    private float frequency = 1.0f;
+    private float persistence = 0.5f;
+    private float lacunarity = 2.0f;
 
     public Ridge(){
         this.seed = (new Random()).nextLong();
@@ -51,39 +51,39 @@ public class Ridge extends SourceModule implements GLSLCompilable {
     }
 
     @Override
-    public double sample(double x, double y) {
-        double total = 0;
+    public float sample(float x, float y) {
+        float total = 0;
 
-        final double offset = 1.0;
-        final double gain = 2.0;
+        final float offset = 1.0f;
+        final float gain = 2.0f;
 
-        double weight = 1.0;
+        float weight = 1.0f;
 
         for(int i = 0; i < octaves; i++) {
-            double signal =  perlinSamplers[i].sample(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
+            float signal =  perlinSamplers[i].sample((float)(x * frequency * Math.pow(lacunarity, i)), (float) (y * frequency * Math.pow(lacunarity, i)));
 
             signal = offset - Math.abs(signal);
             signal *= signal * weight;
 
             weight = signal * gain;
-            if(weight > 1.0) weight = 1.0;
-            else if(weight < 0.0) weight = 0.0;
+            if(weight > 1.0) weight = 1.0f;
+            else if(weight < 0.0) weight = 0.0f;
 
             total += signal * Math.pow(persistence, i);
         }
 
-        return total * 1.25 - 1.0;
+        return total * 1.25f - 1.0f;
     }
 
-    public void setPersistence(double persistence) {
+    public void setPersistence(float persistence) {
         this.persistence = persistence;
     }
 
-    public void setLacunarity(double lacunarity) {
+    public void setLacunarity(float lacunarity) {
         this.lacunarity = lacunarity;
     }
 
-    public void setFrequency(double frequency) {
+    public void setFrequency(float frequency) {
         this.frequency = frequency;
     }
 
@@ -103,7 +103,7 @@ public class Ridge extends SourceModule implements GLSLCompilable {
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         switch (index){
             case 0:
                 setNumOctaves((int) value);
@@ -123,7 +123,7 @@ public class Ridge extends SourceModule implements GLSLCompilable {
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         switch (index){
             case 0:
                 return octaves;
@@ -142,18 +142,18 @@ public class Ridge extends SourceModule implements GLSLCompilable {
     public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
         seed = tag.getLong("seed");
         octaves = tag.getInt("octaves");
-        frequency = tag.getDouble("frequency");
-        persistence = tag.getDouble("persistence");
-        lacunarity = tag.getDouble("lacunarity");
+        frequency = tag.getFloat("frequency");
+        persistence = tag.getFloat("persistence");
+        lacunarity = tag.getFloat("lacunarity");
     }
 
     @Override
     public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
         tag.putLong("seed", seed);
         tag.putInt("octaves", octaves);
-        tag.putDouble("frequency", frequency);
-        tag.putDouble("persistence", persistence);
-        tag.putDouble("lacunarity", lacunarity);
+        tag.putFloat("frequency", frequency);
+        tag.putFloat("persistence", persistence);
+        tag.putFloat("lacunarity", lacunarity);
     }
 
     @Override

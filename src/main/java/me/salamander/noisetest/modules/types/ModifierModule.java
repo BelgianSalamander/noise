@@ -1,6 +1,7 @@
 package me.salamander.noisetest.modules.types;
 
 import io.github.antiquitymc.nbt.CompoundTag;
+import io.github.antiquitymc.nbt.IntArrayTag;
 import io.github.antiquitymc.nbt.LongArrayTag;
 import me.salamander.noisetest.modules.GUIModule;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
@@ -9,10 +10,10 @@ import java.util.*;
 
 public abstract class ModifierModule implements GUIModule {
     protected SerializableNoiseModule source;
-    protected final double[] parameters;
+    protected final float[] parameters;
 
     protected ModifierModule(int numParameters){
-        parameters = new double[numParameters];
+        parameters = new float[numParameters];
     }
 
     @Override
@@ -39,17 +40,14 @@ public abstract class ModifierModule implements GUIModule {
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         parameters[index] = value;
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         return parameters[index];
     }
-
-    @Override
-    public abstract double sample(double x, double y);
 
     @Override //Should set the seed of the source
     public void setSeed(long s){source.setSeed(s * 46237 ^ 42534);};
@@ -67,7 +65,7 @@ public abstract class ModifierModule implements GUIModule {
             source = sourceLookup.get(tag.getInt("source"));
         }
 
-        double[] new_params = Arrays.stream(((LongArrayTag) tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray();
+        Float[] new_params = Arrays.stream(((IntArrayTag) tag.get("parameters")).getValue()).mapToObj(Float::intBitsToFloat).toArray(Float[]::new);
         for(int i = 0; i < new_params.length; i++){
             setParameter(i, new_params[i]);
         }
@@ -79,6 +77,10 @@ public abstract class ModifierModule implements GUIModule {
             tag.putInt("source", indexLookup.get(source));
         }
 
-        tag.put("parameters", new LongArrayTag(Arrays.stream(parameters).mapToLong(Double::doubleToLongBits).toArray()));
+        int[] ints = new int[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            ints[i] = Float.floatToIntBits(parameters[i]);
+        }
+        tag.put("parameters", new IntArrayTag(ints));
     }
 }

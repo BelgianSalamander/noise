@@ -46,18 +46,18 @@ public class BinaryModule implements GUIModule, GLSLCompilable {
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         throw new IllegalArgumentException("Index out of bounds for module with zero parameters");
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         throw new IllegalArgumentException("Index out of bounds for module with zero parameters");
     }
 
     @Override
-    public double sample(double x, double y) {
-        return functionType.getFunction().applyAsDouble(SerializableNoiseModule.safeSample(inputOne, x, y), SerializableNoiseModule.safeSample(inputTwo, x, y));
+    public float sample(float x, float y) {
+        return functionType.getFunction().applyAsFloat(SerializableNoiseModule.safeSample(inputOne, x, y), SerializableNoiseModule.safeSample(inputTwo, x, y));
     }
 
     @Override

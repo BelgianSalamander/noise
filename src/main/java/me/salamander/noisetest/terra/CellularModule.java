@@ -32,7 +32,7 @@ public class CellularModule extends TerraModule {
     }
 
     @Override
-    public double sample(double startX, double startY) {
+    public float sample(float startX, float startY) {
         float x = (float) (startX * frequency);
         float y = (float) (startY * frequency);
 
@@ -54,7 +54,7 @@ public class CellularModule extends TerraModule {
 
                 float jitteredX = gridX + (0.5f * VoronoiSampler.randomfloat(gridX, gridY, seed));
                 float jitteredY = gridY + (0.5f * VoronoiSampler.randomfloat(gridX, gridY, seed + 1));
-                float distance = distanceFunction.distance((float) startX, (float) startY, jitteredX / frequency, jitteredY / frequency);
+                float distance = distanceFunction.distance(startX, startY, jitteredX / frequency, jitteredY / frequency);
 
                 if(distance < bestDistance){
                     distanceThree = distanceTwo;

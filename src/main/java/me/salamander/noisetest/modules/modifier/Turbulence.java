@@ -37,31 +37,31 @@ public class Turbulence extends ModifierModule implements GLSLCompilable {
         this.source = source;
     }
 
-    public Turbulence(SerializableNoiseModule source, double turbulencePower){
+    public Turbulence(SerializableNoiseModule source, float turbulencePower){
         this(source);
         parameters[TURBULENCE_POWER_INDEX] = turbulencePower;
     }
 
-    public Turbulence(SerializableNoiseModule source, long seed, double turbulencePower){
+    public Turbulence(SerializableNoiseModule source, long seed, float turbulencePower){
         this(source, seed);
         parameters[TURBULENCE_POWER_INDEX] = turbulencePower;
     }
 
     private void initParameters(){
-        parameters[TURBULENCE_POWER_INDEX] = 1.0;
+        parameters[TURBULENCE_POWER_INDEX] = 1.0f;
     }
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         if(source == null) return 0;
 
-        final double x0 = x + (12148.0 / 65536.0);
-        final double y0 = y + (56346.0 / 65536.0);
-        final double x1 = x + (23436.0 / 65536.0);
-        final double y1 = y + (43765.0 / 65536.0);
+        final float x0 = x + (12148.0f / 65536.0f);
+        final float y0 = y + (56346.0f / 65536.0f);
+        final float x1 = x + (23436.0f / 65536.0f);
+        final float y1 = y + (43765.0f / 65536.0f);
 
-        final double distortedX = x + xTurbulence.sample(x0, y0) * parameters[TURBULENCE_POWER_INDEX];
-        final double distortedY = y + yTurbulence.sample(x1, y1) * parameters[TURBULENCE_POWER_INDEX];
+        final float distortedX = x + xTurbulence.sample(x0, y0) * parameters[TURBULENCE_POWER_INDEX];
+        final float distortedY = y + yTurbulence.sample(x1, y1) * parameters[TURBULENCE_POWER_INDEX];
 
         return source.sample(distortedX, distortedY);
     }
@@ -84,19 +84,19 @@ public class Turbulence extends ModifierModule implements GLSLCompilable {
         tag.putLong("ySeed", yTurbulence.getSeed());
     }
 
-    public void setFrequency(double frequency){
+    public void setFrequency(float frequency){
         xTurbulence.setFrequency(frequency);
         yTurbulence.setFrequency(frequency);
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         if(index == TURBULENCE_FREQUENCY_INDEX) setFrequency(value);
         else super.setParameter(index, value);
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         if(index == TURBULENCE_FREQUENCY_INDEX) return xTurbulence.getFrequency();
         else return super.getParameter(index);
     }

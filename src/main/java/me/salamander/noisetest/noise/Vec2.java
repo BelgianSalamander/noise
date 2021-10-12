@@ -3,29 +3,29 @@ package me.salamander.noisetest.noise;
 import java.util.Random;
 
 public class Vec2 {
-    double x, y;
+    float x, y;
 
-    public Vec2(double x, double y) {
+    public Vec2(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
     public Vec2(Random random){
-        double angle = random.nextDouble() * 2 * Math.PI;
-        x = Math.cos(angle);
-        y = Math.sin(angle);
+        float angle = (float) (random.nextFloat() * 2 * Math.PI);
+        x = (float) Math.cos(angle);
+        y = (float) Math.sin(angle);
     }
 
-    public double getX() {
+    public float getX() {
         return x;
     }
 
-    public double getY() {
+    public float getY() {
         return y;
     }
 
     public void normalize(){
-        double scale = 1 / length();
+        float scale = 1 / length();
         x *= scale;
         y *= scale;
 
@@ -35,31 +35,31 @@ public class Vec2 {
         return new Vec2(x + other.x, y + other.y);
     }
     public Vec2 sub(Vec2 other){return new Vec2(x - other.x, y - other.y);}
-    public Vec2 add(double scalar){return new Vec2(x + scalar, y + scalar);}
-    public Vec2 sub(double scalar){return new Vec2(x - scalar, y - scalar);}
+    public Vec2 add(float scalar){return new Vec2(x + scalar, y + scalar);}
+    public Vec2 sub(float scalar){return new Vec2(x - scalar, y - scalar);}
     public Vec2 floor(){return new Vec2(floor(x), floor(y));}
 
-    public double dot(Vec2 other){
+    public float dot(Vec2 other){
         return x * other.x + y * other.y;
     }
 
-    public double length(){
-        return Math.sqrt(x * x + y * y);
+    public float length(){
+        return (float) Math.sqrt(x * x + y * y);
     }
 
-    public double sum(){
+    public float sum(){
         return x + y;
     }
 
     public Vec2 fractionalPart(){return new Vec2(fractionalPart(x), fractionalPart(y));}
 
-    public static double fractionalPart(double n){
-        double a = n % 1;
+    public static float fractionalPart(float n){
+        float a = n % 1;
         if(a < 0) a++;
         return a;
     }
 
-    private static int floor(double n){
+    private static int floor(float n){
         int v = (int) n;
         return v > n ? v - 1 : v;
     }
@@ -68,7 +68,7 @@ public class Vec2 {
         return new Vec2(x, y);
     }
 
-    public double lengthSquared(){
+    public float lengthSquared(){
         return x * x + y * y;
     }
 

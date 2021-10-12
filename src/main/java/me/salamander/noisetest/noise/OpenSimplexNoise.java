@@ -56,11 +56,11 @@ public class OpenSimplexNoise {
 	/**
 	 * 2D SuperSimplex noise, standard lattice orientation.
 	 */
-	public double noise2(double x, double y) {
+	public float noise2(float x, float y) {
 
 		// Get points for A2* lattice
-		double s = 0.366025403784439 * (x + y);
-		double xs = x + s, ys = y + s;
+		float s = 0.366025403784439f * (x + y);
+		float xs = x + s, ys = y + s;
 
 		return noise2_Base(xs, ys);
 	}
@@ -70,11 +70,11 @@ public class OpenSimplexNoise {
 	 * Might be better for a 2D sandbox style game, where Y is vertical.
 	 * Probably slightly less optimal for heightmaps or continent maps.
 	 */
-	public double noise2_XBeforeY(double x, double y) {
+	public float noise2_XBeforeY(float x, float y) {
 
 		// Skew transform and rotation baked into one.
-		double xx = x * 0.7071067811865476;
-		double yy = y * 1.224744871380249;
+		float xx = x * 0.7071067811865476f;
+		float yy = y * 1.224744871380249f;
 
 		return noise2_Base(yy + xx, yy - xx);
 	}
@@ -83,12 +83,12 @@ public class OpenSimplexNoise {
 	 * 2D SuperSimplex noise base.
 	 * Lookup table implementation inspired by DigitalShadow.
 	 */
-	private double noise2_Base(double xs, double ys) {
-		double value = 0;
+	private float noise2_Base(float xs, float ys) {
+		float value = 0;
 
 		// Get base points and offsets
 		int xsb = fastFloor(xs), ysb = fastFloor(ys);
-		double xsi = xs - xsb, ysi = ys - ysb;
+		float xsi = xs - xsb, ysi = ys - ysb;
 
 		// Index to point list
 		int a = (int)(xsi + ysi);
@@ -97,20 +97,20 @@ public class OpenSimplexNoise {
 						(int)(xsi - ysi / 2 + 1 - a / 2.0) << 3 |
 						(int)(ysi - xsi / 2 + 1 - a / 2.0) << 4;
 
-		double ssi = (xsi + ysi) * -0.211324865405187;
-		double xi = xsi + ssi, yi = ysi + ssi;
+		float ssi = (xsi + ysi) * -0.211324865405187f;
+		float xi = xsi + ssi, yi = ysi + ssi;
 
 		// Point contributions
 		for (int i = 0; i < 4; i++) {
 			LatticePoint2D c = LOOKUP_2D[index + i];
 
-			double dx = xi + c.dx, dy = yi + c.dy;
-			double attn = 2.0 / 3.0 - dx * dx - dy * dy;
+			float dx = xi + c.dx, dy = yi + c.dy;
+			float attn = 2.0f / 3.0f - dx * dx - dy * dy;
 			if (attn <= 0) continue;
 
 			int pxm = (xsb + c.xsv) & PMASK, pym = (ysb + c.ysv) & PMASK;
 			Grad2 grad = permGrad2[perm[pxm] ^ pym];
-			double extrapolation = grad.dx * dx + grad.dy * dy;
+			float extrapolation = grad.dx * dx + grad.dy * dy;
 
 			attn *= attn;
 			value += attn * attn * extrapolation;
@@ -125,13 +125,13 @@ public class OpenSimplexNoise {
 	 * in light of Forbidden Formulae.
 	 * Use noise3_XYBeforeZ or noise3_XZBeforeY instead, wherever appropriate.
 	 */
-	public double noise3_Classic(double x, double y, double z) {
+	public float noise3_Classic(float x, float y, float z) {
 
 		// Re-orient the cubic lattices via rotation, to produce the expected look on cardinal planar slices.
 		// If texturing objects that don't tend to have cardinal plane faces, you could even remove this.
 		// Orthonormal rotation. Not a skew transform.
-		double r = (2.0 / 3.0) * (x + y + z);
-		double xr = r - x, yr = r - y, zr = r - z;
+		float r = (2.0f / 3.0f) * (x + y + z);
+		float xr = r - x, yr = r - y, zr = r - z;
 
 		// Evaluate both lattices to form a BCC lattice.
 		return noise3_BCC(xr, yr, zr);
@@ -145,15 +145,15 @@ public class OpenSimplexNoise {
 	 * If Z is vertical in world coordinates, call noise3_XYBeforeZ(x, y, Z).
 	 * For a time varied animation, call noise3_XYBeforeZ(x, y, T).
 	 */
-	public double noise3_XYBeforeZ(double x, double y, double z) {
+	public float noise3_XYBeforeZ(float x, float y, float z) {
 
 		// Re-orient the cubic lattices without skewing, to make X and Y triangular like 2D.
 		// Orthonormal rotation. Not a skew transform.
-		double xy = x + y;
-		double s2 = xy * -0.211324865405187;
-		double zz = z * 0.577350269189626;
-		double xr = x + s2 - zz, yr = y + s2 - zz;
-		double zr = xy * 0.577350269189626 + zz;
+		float xy = x + y;
+		float s2 = xy * -0.211324865405187f;
+		float zz = z * 0.577350269189626f;
+		float xr = x + s2 - zz, yr = y + s2 - zz;
+		float zr = xy * 0.577350269189626f + zz;
 
 		// Evaluate both lattices to form a BCC lattice.
 		return noise3_BCC(xr, yr, zr);
@@ -167,15 +167,15 @@ public class OpenSimplexNoise {
 	 * If Z is vertical in world coordinates, call noise3_XZBeforeY(x, Z, y) or use noise3_XYBeforeZ.
 	 * For a time varied animation, call noise3_XZBeforeY(x, T, y) or use noise3_XYBeforeZ.
 	 */
-	public double noise3_XZBeforeY(double x, double y, double z) {
+	public float noise3_XZBeforeY(float x, float y, float z) {
 
 		// Re-orient the cubic lattices without skewing, to make X and Z triangular like 2D.
 		// Orthonormal rotation. Not a skew transform.
-		double xz = x + z;
-		double s2 = xz * -0.211324865405187;
-		double yy = y * 0.577350269189626;
-		double xr = x + s2 - yy; double zr = z + s2 - yy;
-		double yr = xz * 0.577350269189626 + yy;
+		float xz = x + z;
+		float s2 = xz * -0.211324865405187f;
+		float yy = y * 0.577350269189626f;
+		float xr = x + s2 - yy; float zr = z + s2 - yy;
+		float yr = xz * 0.577350269189626f + yy;
 
 		// Evaluate both lattices to form a BCC lattice.
 		return noise3_BCC(xr, yr, zr);
@@ -187,11 +187,11 @@ public class OpenSimplexNoise {
 	 * It was actually faster to narrow down the points in the loop itself,
 	 * than to build up the index with enough info to isolate 8 points.
 	 */
-	private double noise3_BCC(double xr, double yr, double zr) {
+	private float noise3_BCC(float xr, float yr, float zr) {
 
 		// Get base and offsets inside cube of first lattice.
 		int xrb = fastFloor(xr), yrb = fastFloor(yr), zrb = fastFloor(zr);
-		double xri = xr - xrb, yri = yr - yrb, zri = zr - zrb;
+		float xri = xr - xrb, yri = yr - yrb, zri = zr - zrb;
 
 		// Identify which octant of the cube we're in. This determines which cell
 		// in the other cubic lattice we're in, and also narrows down one point on each.
@@ -199,17 +199,17 @@ public class OpenSimplexNoise {
 		int index = (xht << 0) | (yht << 1) | (zht << 2);
 
 		// Point contributions
-		double value = 0;
+		float value = 0;
 		LatticePoint3D c = LOOKUP_3D[index];
 		while (c != null) {
-			double dxr = xri + c.dxr, dyr = yri + c.dyr, dzr = zri + c.dzr;
-			double attn = 0.75 - dxr * dxr - dyr * dyr - dzr * dzr;
+			float dxr = xri + c.dxr, dyr = yri + c.dyr, dzr = zri + c.dzr;
+			float attn = 0.75f - dxr * dxr - dyr * dyr - dzr * dzr;
 			if (attn < 0) {
 				c = c.nextOnFailure;
 			} else {
 				int pxm = (xrb + c.xrv) & PMASK, pym = (yrb + c.yrv) & PMASK, pzm = (zrb + c.zrv) & PMASK;
 				Grad3 grad = permGrad3[perm[perm[pxm] ^ pym] ^ pzm];
-				double extrapolation = grad.dx * dxr + grad.dy * dyr + grad.dz * dzr;
+				float extrapolation = grad.dx * dxr + grad.dy * dyr + grad.dz * dzr;
 
 				attn *= attn;
 				value += attn * attn * extrapolation;
@@ -222,11 +222,11 @@ public class OpenSimplexNoise {
 	/**
 	 * 4D SuperSimplex noise, classic lattice orientation.
 	 */
-	public double noise4_Classic(double x, double y, double z, double w) {
+	public float noise4_Classic(float x, float y, float z, float w) {
 
 		// Get points for A4 lattice
-		double s = 0.309016994374947 * (x + y + z + w);
-		double xs = x + s, ys = y + s, zs = z + s, ws = w + s;
+		float s = 0.309016994374947f * (x + y + z + w);
+		float xs = x + s, ys = y + s, zs = z + s, ws = w + s;
 
 		return noise4_Base(xs, ys, zs, ws);
 	}
@@ -236,11 +236,11 @@ public class OpenSimplexNoise {
 	 * Recommended for 3D terrain, where X and Y (or Z and W) are horizontal.
 	 * Recommended for noise(x, y, sin(time), cos(time)) trick.
 	 */
-	public double noise4_XYBeforeZW(double x, double y, double z, double w) {
+	public float noise4_XYBeforeZW(float x, float y, float z, float w) {
 
-		double s2 = (x + y) * -0.28522513987434876941 + (z + w) * 0.83897065470611435718;
-		double t2 = (z + w) * 0.21939749883706435719 + (x + y) * -0.48214856493302476942;
-		double xs = x + s2, ys = y + s2, zs = z + t2, ws = w + t2;
+		float s2 = (x + y) * -0.28522513987434876941f + (z + w) * 0.83897065470611435718f;
+		float t2 = (z + w) * 0.21939749883706435719f + (x + y) * -0.48214856493302476942f;
+		float xs = x + s2, ys = y + s2, zs = z + t2, ws = w + t2;
 
 		return noise4_Base(xs, ys, zs, ws);
 	}
@@ -249,11 +249,11 @@ public class OpenSimplexNoise {
 	 * 4D SuperSimplex noise, with XZ and YW forming orthogonal triangular-based planes.
 	 * Recommended for 3D terrain, where X and Z (or Y and W) are horizontal.
 	 */
-	public double noise4_XZBeforeYW(double x, double y, double z, double w) {
+	public float noise4_XZBeforeYW(float x, float y, float z, float w) {
 
-		double s2 = (x + z) * -0.28522513987434876941 + (y + w) * 0.83897065470611435718;
-		double t2 = (y + w) * 0.21939749883706435719 + (x + z) * -0.48214856493302476942;
-		double xs = x + s2, ys = y + t2, zs = z + s2, ws = w + t2;
+		float s2 = (x + z) * -0.28522513987434876941f + (y + w) * 0.83897065470611435718f;
+		float t2 = (y + w) * 0.21939749883706435719f + (x + z) * -0.48214856493302476942f;
+		float xs = x + s2, ys = y + t2, zs = z + s2, ws = w + t2;
 
 		return noise4_Base(xs, ys, zs, ws);
 	}
@@ -263,12 +263,12 @@ public class OpenSimplexNoise {
 	 * and W for an extra degree of freedom.
 	 * Recommended for time-varied animations which texture a 3D object (W=time)
 	 */
-	public double noise4_XYZBeforeW(double x, double y, double z, double w) {
+	public float noise4_XYZBeforeW(float x, float y, float z, float w) {
 
-		double xyz = x + y + z;
-		double ww = w * 1.118033988749894;
-		double s2 = xyz * -0.16666666666666666 + ww;
-		double xs = x + s2, ys = y + s2, zs = z + s2, ws = -0.5 * xyz + ww;
+		float xyz = x + y + z;
+		float ww = w * 1.118033988749894f;
+		float s2 = xyz * -0.16666666666666666f + ww;
+		float xs = x + s2, ys = y + s2, zs = z + s2, ws = -0.5f * xyz + ww;
 
 		return noise4_Base(xs, ys, zs, ws);
 	}
@@ -279,16 +279,16 @@ public class OpenSimplexNoise {
 	 * This isn't as elegant or SIMD/GPU/etc. portable as other approaches,
 	 * but it does compete performance-wise with optimized OpenSimplex1.
 	 */
-	private double noise4_Base(double xs, double ys, double zs, double ws) {
-		double value = 0;
+	private float noise4_Base(float xs, float ys, float zs, float ws) {
+		float value = 0;
 
 		// Get base points and offsets
 		int xsb = fastFloor(xs), ysb = fastFloor(ys), zsb = fastFloor(zs), wsb = fastFloor(ws);
-		double xsi = xs - xsb, ysi = ys - ysb, zsi = zs - zsb, wsi = ws - wsb;
+		float xsi = xs - xsb, ysi = ys - ysb, zsi = zs - zsb, wsi = ws - wsb;
 
 		// Unskewed offsets
-		double ssi = (xsi + ysi + zsi + wsi) * -0.138196601125011;
-		double xi = xsi + ssi, yi = ysi + ssi, zi = zsi + ssi, wi = wsi + ssi;
+		float ssi = (xsi + ysi + zsi + wsi) * -0.13819660112501f;
+		float xi = xsi + ssi, yi = ysi + ssi, zi = zsi + ssi, wi = wsi + ssi;
 
 		int index = ((fastFloor(xs * 4) & 3) << 0)
 				| ((fastFloor(ys * 4) & 3) << 2)
@@ -297,15 +297,15 @@ public class OpenSimplexNoise {
 
 		// Point contributions
 		for (LatticePoint4D c : LOOKUP_4D[index]) {
-			double dx = xi + c.dx, dy = yi + c.dy, dz = zi + c.dz, dw = wi + c.dw;
-			double attn = 0.8 - dx * dx - dy * dy - dz * dz - dw * dw;
+			float dx = xi + c.dx, dy = yi + c.dy, dz = zi + c.dz, dw = wi + c.dw;
+			float attn = 0.8f - dx * dx - dy * dy - dz * dz - dw * dw;
 			if (attn > 0) {
 				attn *= attn;
 
 				int pxm = (xsb + c.xsv) & PMASK, pym = (ysb + c.ysv) & PMASK;
 				int pzm = (zsb + c.zsv) & PMASK, pwm = (wsb + c.wsv) & PMASK;
 				Grad4 grad = permGrad4[perm[perm[perm[pxm] ^ pym] ^ pzm] ^ pwm];
-				double extrapolation = grad.dx * dx + grad.dy * dy + grad.dz * dz + grad.dw * dw;
+				float extrapolation = grad.dx * dx + grad.dy * dy + grad.dz * dz + grad.dw * dw;
 
 				value += attn * attn * extrapolation;
 			}
@@ -317,7 +317,7 @@ public class OpenSimplexNoise {
 	 * Utility
 	 */
 
-	private static int fastFloor(double x) {
+	private static int fastFloor(float x) {
 		int xi = (int)x;
 		return x < xi ? xi - 1 : xi;
 	}
@@ -689,31 +689,31 @@ public class OpenSimplexNoise {
 
 	private static class LatticePoint2D {
 		int xsv, ysv;
-		double dx, dy;
+		float dx, dy;
 		public LatticePoint2D(int xsv, int ysv) {
 			this.xsv = xsv; this.ysv = ysv;
-			double ssv = (xsv + ysv) * -0.211324865405187;
+			float ssv = (xsv + ysv) * -0.211324865405187f;
 			this.dx = -xsv - ssv;
 			this.dy = -ysv - ssv;
 		}
 	}
 
 	private static class LatticePoint3D {
-		public double dxr, dyr, dzr;
+		public float dxr, dyr, dzr;
 		public int xrv, yrv, zrv;
 		LatticePoint3D nextOnFailure, nextOnSuccess;
 		public LatticePoint3D(int xrv, int yrv, int zrv, int lattice) {
-			this.dxr = -xrv + lattice * 0.5; this.dyr = -yrv + lattice * 0.5; this.dzr = -zrv + lattice * 0.5;
+			this.dxr = -xrv + lattice * 0.5f; this.dyr = -yrv + lattice * 0.5f; this.dzr = -zrv + lattice * 0.5f;
 			this.xrv = xrv + lattice * 1024; this.yrv = yrv + lattice * 1024; this.zrv = zrv + lattice * 1024;
 		}
 	}
 
 	private static class LatticePoint4D {
 		int xsv, ysv, zsv, wsv;
-		double dx, dy, dz, dw;
+		float dx, dy, dz, dw;
 		public LatticePoint4D(int xsv, int ysv, int zsv, int wsv) {
 			this.xsv = xsv; this.ysv = ysv; this.zsv = zsv; this.wsv = wsv;
-			double ssv = (xsv + ysv + zsv + wsv) * -0.138196601125011;
+			float ssv = (xsv + ysv + zsv + wsv) * -0.138196601125011f;
 			this.dx = -xsv - ssv;
 			this.dy = -ysv - ssv;
 			this.dz = -zsv - ssv;
@@ -726,29 +726,29 @@ public class OpenSimplexNoise {
 	 */
 
 	private static class Grad2 {
-		double dx, dy;
-		public Grad2(double dx, double dy) {
+		float dx, dy;
+		public Grad2(float dx, float dy) {
 			this.dx = dx; this.dy = dy;
 		}
 	}
 
 	private static class Grad3 {
-		double dx, dy, dz;
-		public Grad3(double dx, double dy, double dz) {
+		float dx, dy, dz;
+		public Grad3(float dx, float dy, float dz) {
 			this.dx = dx; this.dy = dy; this.dz = dz;
 		}
 	}
 
 	private static class Grad4 {
-		double dx, dy, dz, dw;
-		public Grad4(double dx, double dy, double dz,  double dw) {
+		float dx, dy, dz, dw;
+		public Grad4(float dx, float dy, float dz,  float dw) {
 			this.dx = dx; this.dy = dy; this.dz = dz; this.dw = dw;
 		}
 	}
 
-	private static final double N2 = 0.05481866495625118;
-	private static final double N3 = 0.2781926117527186;
-	private static final double N4 = 0.11127401889945551;
+	private static final float N2 = 0.05481866495625118f;
+	private static final float N3 = 0.2781926117527186f;
+	private static final float N4 = 0.11127401889945551f;
 	private static final Grad2[] GRADIENTS_2D;
 	private static final Grad3[] GRADIENTS_3D;
 	private static final Grad4[] GRADIENTS_4D;
@@ -756,30 +756,30 @@ public class OpenSimplexNoise {
 
 		GRADIENTS_2D = new Grad2[PSIZE];
 		Grad2[] grad2 = {
-				new Grad2( 0.130526192220052,  0.99144486137381),
-				new Grad2( 0.38268343236509,   0.923879532511287),
-				new Grad2( 0.608761429008721,  0.793353340291235),
-				new Grad2( 0.793353340291235,  0.608761429008721),
-				new Grad2( 0.923879532511287,  0.38268343236509),
-				new Grad2( 0.99144486137381,   0.130526192220051),
-				new Grad2( 0.99144486137381,  -0.130526192220051),
-				new Grad2( 0.923879532511287, -0.38268343236509),
-				new Grad2( 0.793353340291235, -0.60876142900872),
-				new Grad2( 0.608761429008721, -0.793353340291235),
-				new Grad2( 0.38268343236509,  -0.923879532511287),
-				new Grad2( 0.130526192220052, -0.99144486137381),
-				new Grad2(-0.130526192220052, -0.99144486137381),
-				new Grad2(-0.38268343236509,  -0.923879532511287),
-				new Grad2(-0.608761429008721, -0.793353340291235),
-				new Grad2(-0.793353340291235, -0.608761429008721),
-				new Grad2(-0.923879532511287, -0.38268343236509),
-				new Grad2(-0.99144486137381,  -0.130526192220052),
-				new Grad2(-0.99144486137381,   0.130526192220051),
-				new Grad2(-0.923879532511287,  0.38268343236509),
-				new Grad2(-0.793353340291235,  0.608761429008721),
-				new Grad2(-0.608761429008721,  0.793353340291235),
-				new Grad2(-0.38268343236509,   0.923879532511287),
-				new Grad2(-0.130526192220052,  0.99144486137381)
+				new Grad2( 0.130526192220052f,  0.99144486137381f),
+				new Grad2( 0.38268343236509f,   0.923879532511287f),
+				new Grad2( 0.608761429008721f,  0.793353340291235f),
+				new Grad2( 0.793353340291235f,  0.608761429008721f),
+				new Grad2( 0.923879532511287f,  0.38268343236509f),
+				new Grad2( 0.99144486137381f,   0.130526192220051f),
+				new Grad2( 0.99144486137381f,  -0.130526192220051f),
+				new Grad2( 0.923879532511287f, -0.38268343236509f),
+				new Grad2( 0.793353340291235f, -0.60876142900872f),
+				new Grad2( 0.608761429008721f, -0.793353340291235f),
+				new Grad2( 0.38268343236509f,  -0.923879532511287f),
+				new Grad2( 0.130526192220052f, -0.99144486137381f),
+				new Grad2(-0.130526192220052f, -0.99144486137381f),
+				new Grad2(-0.38268343236509f,  -0.923879532511287f),
+				new Grad2(-0.608761429008721f, -0.793353340291235f),
+				new Grad2(-0.793353340291235f, -0.608761429008721f),
+				new Grad2(-0.923879532511287f, -0.38268343236509f),
+				new Grad2(-0.99144486137381f,  -0.130526192220052f),
+				new Grad2(-0.99144486137381f,   0.130526192220051f),
+				new Grad2(-0.923879532511287f,  0.38268343236509f),
+				new Grad2(-0.793353340291235f,  0.608761429008721f),
+				new Grad2(-0.608761429008721f,  0.793353340291235f),
+				new Grad2(-0.38268343236509f,   0.923879532511287f),
+				new Grad2(-0.130526192220052f,  0.99144486137381f)
 		};
 		Grad2[] grad2XBeforeY = new Grad2[grad2.length];
 		for (int i = 0; i < grad2.length; i++) {
@@ -791,54 +791,54 @@ public class OpenSimplexNoise {
 
 		GRADIENTS_3D = new Grad3[PSIZE];
 		Grad3[] grad3 = {
-				new Grad3(-2.22474487139,      -2.22474487139,      -1.0),
-				new Grad3(-2.22474487139,      -2.22474487139,       1.0),
-				new Grad3(-3.0862664687972017, -1.1721513422464978,  0.0),
-				new Grad3(-1.1721513422464978, -3.0862664687972017,  0.0),
-				new Grad3(-2.22474487139,      -1.0,                -2.22474487139),
-				new Grad3(-2.22474487139,       1.0,                -2.22474487139),
-				new Grad3(-1.1721513422464978,  0.0,                -3.0862664687972017),
-				new Grad3(-3.0862664687972017,  0.0,                -1.1721513422464978),
-				new Grad3(-2.22474487139,      -1.0,                 2.22474487139),
-				new Grad3(-2.22474487139,       1.0,                 2.22474487139),
-				new Grad3(-3.0862664687972017,  0.0,                 1.1721513422464978),
-				new Grad3(-1.1721513422464978,  0.0,                 3.0862664687972017),
-				new Grad3(-2.22474487139,       2.22474487139,      -1.0),
-				new Grad3(-2.22474487139,       2.22474487139,       1.0),
-				new Grad3(-1.1721513422464978,  3.0862664687972017,  0.0),
-				new Grad3(-3.0862664687972017,  1.1721513422464978,  0.0),
-				new Grad3(-1.0,                -2.22474487139,      -2.22474487139),
-				new Grad3( 1.0,                -2.22474487139,      -2.22474487139),
-				new Grad3( 0.0,                -3.0862664687972017, -1.1721513422464978),
-				new Grad3( 0.0,                -1.1721513422464978, -3.0862664687972017),
-				new Grad3(-1.0,                -2.22474487139,       2.22474487139),
-				new Grad3( 1.0,                -2.22474487139,       2.22474487139),
-				new Grad3( 0.0,                -1.1721513422464978,  3.0862664687972017),
-				new Grad3( 0.0,                -3.0862664687972017,  1.1721513422464978),
-				new Grad3(-1.0,                 2.22474487139,      -2.22474487139),
-				new Grad3( 1.0,                 2.22474487139,      -2.22474487139),
-				new Grad3( 0.0,                 1.1721513422464978, -3.0862664687972017),
-				new Grad3( 0.0,                 3.0862664687972017, -1.1721513422464978),
-				new Grad3(-1.0,                 2.22474487139,       2.22474487139),
-				new Grad3( 1.0,                 2.22474487139,       2.22474487139),
-				new Grad3( 0.0,                 3.0862664687972017,  1.1721513422464978),
-				new Grad3( 0.0,                 1.1721513422464978,  3.0862664687972017),
-				new Grad3( 2.22474487139,      -2.22474487139,      -1.0),
-				new Grad3( 2.22474487139,      -2.22474487139,       1.0),
-				new Grad3( 1.1721513422464978, -3.0862664687972017,  0.0),
-				new Grad3( 3.0862664687972017, -1.1721513422464978,  0.0),
-				new Grad3( 2.22474487139,      -1.0,                -2.22474487139),
-				new Grad3( 2.22474487139,       1.0,                -2.22474487139),
-				new Grad3( 3.0862664687972017,  0.0,                -1.1721513422464978),
-				new Grad3( 1.1721513422464978,  0.0,                -3.0862664687972017),
-				new Grad3( 2.22474487139,      -1.0,                 2.22474487139),
-				new Grad3( 2.22474487139,       1.0,                 2.22474487139),
-				new Grad3( 1.1721513422464978,  0.0,                 3.0862664687972017),
-				new Grad3( 3.0862664687972017,  0.0,                 1.1721513422464978),
-				new Grad3( 2.22474487139,       2.22474487139,      -1.0),
-				new Grad3( 2.22474487139,       2.22474487139,       1.0),
-				new Grad3( 3.0862664687972017,  1.1721513422464978,  0.0),
-				new Grad3( 1.1721513422464978,  3.0862664687972017,  0.0)
+				new Grad3(-2.22474487139f,      -2.22474487139f,      -1.0f),
+				new Grad3(-2.22474487139f,      -2.22474487139f,       1.0f),
+				new Grad3(-3.0862664687972017f, -1.1721513422464978f,  0.0f),
+				new Grad3(-1.1721513422464978f, -3.0862664687972017f,  0.0f),
+				new Grad3(-2.22474487139f,      -1.0f,                -2.22474487139f),
+				new Grad3(-2.22474487139f,       1.0f,                -2.22474487139f),
+				new Grad3(-1.1721513422464978f,  0.0f,                -3.0862664687972017f),
+				new Grad3(-3.0862664687972017f,  0.0f,                -1.1721513422464978f),
+				new Grad3(-2.22474487139f,      -1.0f,                 2.22474487139f),
+				new Grad3(-2.22474487139f,       1.0f,                 2.22474487139f),
+				new Grad3(-3.0862664687972017f,  0.0f,                 1.1721513422464978f),
+				new Grad3(-1.1721513422464978f,  0.0f,                 3.0862664687972017f),
+				new Grad3(-2.22474487139f,       2.22474487139f,      -1.0f),
+				new Grad3(-2.22474487139f,       2.22474487139f,       1.0f),
+				new Grad3(-1.1721513422464978f,  3.0862664687972017f,  0.0f),
+				new Grad3(-3.0862664687972017f,  1.1721513422464978f,  0.0f),
+				new Grad3(-1.0f,                -2.22474487139f,      -2.22474487139f),
+				new Grad3( 1.0f,                -2.22474487139f,      -2.22474487139f),
+				new Grad3( 0.0f,                -3.0862664687972017f, -1.1721513422464978f),
+				new Grad3( 0.0f,                -1.1721513422464978f, -3.0862664687972017f),
+				new Grad3(-1.0f,                -2.22474487139f,       2.22474487139f),
+				new Grad3( 1.0f,                -2.22474487139f,       2.22474487139f),
+				new Grad3( 0.0f,                -1.1721513422464978f,  3.0862664687972017f),
+				new Grad3( 0.0f,                -3.0862664687972017f,  1.1721513422464978f),
+				new Grad3(-1.0f,                 2.22474487139f,      -2.22474487139f),
+				new Grad3( 1.0f,                 2.22474487139f,      -2.22474487139f),
+				new Grad3( 0.0f,                 1.1721513422464978f, -3.0862664687972017f),
+				new Grad3( 0.0f,                 3.0862664687972017f, -1.1721513422464978f),
+				new Grad3(-1.0f,                 2.22474487139f,       2.22474487139f),
+				new Grad3( 1.0f,                 2.22474487139f,       2.22474487139f),
+				new Grad3( 0.0f,                 3.0862664687972017f,  1.1721513422464978f),
+				new Grad3( 0.0f,                 1.1721513422464978f,  3.0862664687972017f),
+				new Grad3( 2.22474487139f,      -2.22474487139f,      -1.0f),
+				new Grad3( 2.22474487139f,      -2.22474487139f,       1.0f),
+				new Grad3( 1.1721513422464978f, -3.0862664687972017f,  0.0f),
+				new Grad3( 3.0862664687972017f, -1.1721513422464978f,  0.0f),
+				new Grad3( 2.22474487139f,      -1.0f,                -2.22474487139f),
+				new Grad3( 2.22474487139f,       1.0f,                -2.22474487139f),
+				new Grad3( 3.0862664687972017f,  0.0f,                -1.1721513422464978f),
+				new Grad3( 1.1721513422464978f,  0.0f,                -3.0862664687972017f),
+				new Grad3( 2.22474487139f,      -1.0f,                 2.22474487139f),
+				new Grad3( 2.22474487139f,       1.0f,                 2.22474487139f),
+				new Grad3( 1.1721513422464978f,  0.0f,                 3.0862664687972017f),
+				new Grad3( 3.0862664687972017f,  0.0f,                 1.1721513422464978f),
+				new Grad3( 2.22474487139f,       2.22474487139f,      -1.0f),
+				new Grad3( 2.22474487139f,       2.22474487139f,       1.0f),
+				new Grad3( 3.0862664687972017f,  1.1721513422464978f,  0.0f),
+				new Grad3( 1.1721513422464978f,  3.0862664687972017f,  0.0f)
 		};
 		for (int i = 0; i < grad3.length; i++) {
 			grad3[i].dx /= N3; grad3[i].dy /= N3; grad3[i].dz /= N3;
@@ -849,166 +849,166 @@ public class OpenSimplexNoise {
 
 		GRADIENTS_4D = new Grad4[PSIZE];
 		Grad4[] grad4 = {
-				new Grad4(-0.753341017856078,    -0.37968289875261624,  -0.37968289875261624,  -0.37968289875261624),
-				new Grad4(-0.7821684431180708,   -0.4321472685365301,   -0.4321472685365301,    0.12128480194602098),
-				new Grad4(-0.7821684431180708,   -0.4321472685365301,    0.12128480194602098,  -0.4321472685365301),
-				new Grad4(-0.7821684431180708,    0.12128480194602098,  -0.4321472685365301,   -0.4321472685365301),
-				new Grad4(-0.8586508742123365,   -0.508629699630796,     0.044802370851755174,  0.044802370851755174),
-				new Grad4(-0.8586508742123365,    0.044802370851755174, -0.508629699630796,     0.044802370851755174),
-				new Grad4(-0.8586508742123365,    0.044802370851755174,  0.044802370851755174, -0.508629699630796),
-				new Grad4(-0.9982828964265062,   -0.03381941603233842,  -0.03381941603233842,  -0.03381941603233842),
-				new Grad4(-0.37968289875261624,  -0.753341017856078,    -0.37968289875261624,  -0.37968289875261624),
-				new Grad4(-0.4321472685365301,   -0.7821684431180708,   -0.4321472685365301,    0.12128480194602098),
-				new Grad4(-0.4321472685365301,   -0.7821684431180708,    0.12128480194602098,  -0.4321472685365301),
-				new Grad4( 0.12128480194602098,  -0.7821684431180708,   -0.4321472685365301,   -0.4321472685365301),
-				new Grad4(-0.508629699630796,    -0.8586508742123365,    0.044802370851755174,  0.044802370851755174),
-				new Grad4( 0.044802370851755174, -0.8586508742123365,   -0.508629699630796,     0.044802370851755174),
-				new Grad4( 0.044802370851755174, -0.8586508742123365,    0.044802370851755174, -0.508629699630796),
-				new Grad4(-0.03381941603233842,  -0.9982828964265062,   -0.03381941603233842,  -0.03381941603233842),
-				new Grad4(-0.37968289875261624,  -0.37968289875261624,  -0.753341017856078,    -0.37968289875261624),
-				new Grad4(-0.4321472685365301,   -0.4321472685365301,   -0.7821684431180708,    0.12128480194602098),
-				new Grad4(-0.4321472685365301,    0.12128480194602098,  -0.7821684431180708,   -0.4321472685365301),
-				new Grad4( 0.12128480194602098,  -0.4321472685365301,   -0.7821684431180708,   -0.4321472685365301),
-				new Grad4(-0.508629699630796,     0.044802370851755174, -0.8586508742123365,    0.044802370851755174),
-				new Grad4( 0.044802370851755174, -0.508629699630796,    -0.8586508742123365,    0.044802370851755174),
-				new Grad4( 0.044802370851755174,  0.044802370851755174, -0.8586508742123365,   -0.508629699630796),
-				new Grad4(-0.03381941603233842,  -0.03381941603233842,  -0.9982828964265062,   -0.03381941603233842),
-				new Grad4(-0.37968289875261624,  -0.37968289875261624,  -0.37968289875261624,  -0.753341017856078),
-				new Grad4(-0.4321472685365301,   -0.4321472685365301,    0.12128480194602098,  -0.7821684431180708),
-				new Grad4(-0.4321472685365301,    0.12128480194602098,  -0.4321472685365301,   -0.7821684431180708),
-				new Grad4( 0.12128480194602098,  -0.4321472685365301,   -0.4321472685365301,   -0.7821684431180708),
-				new Grad4(-0.508629699630796,     0.044802370851755174,  0.044802370851755174, -0.8586508742123365),
-				new Grad4( 0.044802370851755174, -0.508629699630796,     0.044802370851755174, -0.8586508742123365),
-				new Grad4( 0.044802370851755174,  0.044802370851755174, -0.508629699630796,    -0.8586508742123365),
-				new Grad4(-0.03381941603233842,  -0.03381941603233842,  -0.03381941603233842,  -0.9982828964265062),
-				new Grad4(-0.6740059517812944,   -0.3239847771997537,   -0.3239847771997537,    0.5794684678643381),
-				new Grad4(-0.7504883828755602,   -0.4004672082940195,    0.15296486218853164,   0.5029860367700724),
-				new Grad4(-0.7504883828755602,    0.15296486218853164,  -0.4004672082940195,    0.5029860367700724),
-				new Grad4(-0.8828161875373585,    0.08164729285680945,   0.08164729285680945,   0.4553054119602712),
-				new Grad4(-0.4553054119602712,   -0.08164729285680945,  -0.08164729285680945,   0.8828161875373585),
-				new Grad4(-0.5029860367700724,   -0.15296486218853164,   0.4004672082940195,    0.7504883828755602),
-				new Grad4(-0.5029860367700724,    0.4004672082940195,   -0.15296486218853164,   0.7504883828755602),
-				new Grad4(-0.5794684678643381,    0.3239847771997537,    0.3239847771997537,    0.6740059517812944),
-				new Grad4(-0.3239847771997537,   -0.6740059517812944,   -0.3239847771997537,    0.5794684678643381),
-				new Grad4(-0.4004672082940195,   -0.7504883828755602,    0.15296486218853164,   0.5029860367700724),
-				new Grad4( 0.15296486218853164,  -0.7504883828755602,   -0.4004672082940195,    0.5029860367700724),
-				new Grad4( 0.08164729285680945,  -0.8828161875373585,    0.08164729285680945,   0.4553054119602712),
-				new Grad4(-0.08164729285680945,  -0.4553054119602712,   -0.08164729285680945,   0.8828161875373585),
-				new Grad4(-0.15296486218853164,  -0.5029860367700724,    0.4004672082940195,    0.7504883828755602),
-				new Grad4( 0.4004672082940195,   -0.5029860367700724,   -0.15296486218853164,   0.7504883828755602),
-				new Grad4( 0.3239847771997537,   -0.5794684678643381,    0.3239847771997537,    0.6740059517812944),
-				new Grad4(-0.3239847771997537,   -0.3239847771997537,   -0.6740059517812944,    0.5794684678643381),
-				new Grad4(-0.4004672082940195,    0.15296486218853164,  -0.7504883828755602,    0.5029860367700724),
-				new Grad4( 0.15296486218853164,  -0.4004672082940195,   -0.7504883828755602,    0.5029860367700724),
-				new Grad4( 0.08164729285680945,   0.08164729285680945,  -0.8828161875373585,    0.4553054119602712),
-				new Grad4(-0.08164729285680945,  -0.08164729285680945,  -0.4553054119602712,    0.8828161875373585),
-				new Grad4(-0.15296486218853164,   0.4004672082940195,   -0.5029860367700724,    0.7504883828755602),
-				new Grad4( 0.4004672082940195,   -0.15296486218853164,  -0.5029860367700724,    0.7504883828755602),
-				new Grad4( 0.3239847771997537,    0.3239847771997537,   -0.5794684678643381,    0.6740059517812944),
-				new Grad4(-0.6740059517812944,   -0.3239847771997537,    0.5794684678643381,   -0.3239847771997537),
-				new Grad4(-0.7504883828755602,   -0.4004672082940195,    0.5029860367700724,    0.15296486218853164),
-				new Grad4(-0.7504883828755602,    0.15296486218853164,   0.5029860367700724,   -0.4004672082940195),
-				new Grad4(-0.8828161875373585,    0.08164729285680945,   0.4553054119602712,    0.08164729285680945),
-				new Grad4(-0.4553054119602712,   -0.08164729285680945,   0.8828161875373585,   -0.08164729285680945),
-				new Grad4(-0.5029860367700724,   -0.15296486218853164,   0.7504883828755602,    0.4004672082940195),
-				new Grad4(-0.5029860367700724,    0.4004672082940195,    0.7504883828755602,   -0.15296486218853164),
-				new Grad4(-0.5794684678643381,    0.3239847771997537,    0.6740059517812944,    0.3239847771997537),
-				new Grad4(-0.3239847771997537,   -0.6740059517812944,    0.5794684678643381,   -0.3239847771997537),
-				new Grad4(-0.4004672082940195,   -0.7504883828755602,    0.5029860367700724,    0.15296486218853164),
-				new Grad4( 0.15296486218853164,  -0.7504883828755602,    0.5029860367700724,   -0.4004672082940195),
-				new Grad4( 0.08164729285680945,  -0.8828161875373585,    0.4553054119602712,    0.08164729285680945),
-				new Grad4(-0.08164729285680945,  -0.4553054119602712,    0.8828161875373585,   -0.08164729285680945),
-				new Grad4(-0.15296486218853164,  -0.5029860367700724,    0.7504883828755602,    0.4004672082940195),
-				new Grad4( 0.4004672082940195,   -0.5029860367700724,    0.7504883828755602,   -0.15296486218853164),
-				new Grad4( 0.3239847771997537,   -0.5794684678643381,    0.6740059517812944,    0.3239847771997537),
-				new Grad4(-0.3239847771997537,   -0.3239847771997537,    0.5794684678643381,   -0.6740059517812944),
-				new Grad4(-0.4004672082940195,    0.15296486218853164,   0.5029860367700724,   -0.7504883828755602),
-				new Grad4( 0.15296486218853164,  -0.4004672082940195,    0.5029860367700724,   -0.7504883828755602),
-				new Grad4( 0.08164729285680945,   0.08164729285680945,   0.4553054119602712,   -0.8828161875373585),
-				new Grad4(-0.08164729285680945,  -0.08164729285680945,   0.8828161875373585,   -0.4553054119602712),
-				new Grad4(-0.15296486218853164,   0.4004672082940195,    0.7504883828755602,   -0.5029860367700724),
-				new Grad4( 0.4004672082940195,   -0.15296486218853164,   0.7504883828755602,   -0.5029860367700724),
-				new Grad4( 0.3239847771997537,    0.3239847771997537,    0.6740059517812944,   -0.5794684678643381),
-				new Grad4(-0.6740059517812944,    0.5794684678643381,   -0.3239847771997537,   -0.3239847771997537),
-				new Grad4(-0.7504883828755602,    0.5029860367700724,   -0.4004672082940195,    0.15296486218853164),
-				new Grad4(-0.7504883828755602,    0.5029860367700724,    0.15296486218853164,  -0.4004672082940195),
-				new Grad4(-0.8828161875373585,    0.4553054119602712,    0.08164729285680945,   0.08164729285680945),
-				new Grad4(-0.4553054119602712,    0.8828161875373585,   -0.08164729285680945,  -0.08164729285680945),
-				new Grad4(-0.5029860367700724,    0.7504883828755602,   -0.15296486218853164,   0.4004672082940195),
-				new Grad4(-0.5029860367700724,    0.7504883828755602,    0.4004672082940195,   -0.15296486218853164),
-				new Grad4(-0.5794684678643381,    0.6740059517812944,    0.3239847771997537,    0.3239847771997537),
-				new Grad4(-0.3239847771997537,    0.5794684678643381,   -0.6740059517812944,   -0.3239847771997537),
-				new Grad4(-0.4004672082940195,    0.5029860367700724,   -0.7504883828755602,    0.15296486218853164),
-				new Grad4( 0.15296486218853164,   0.5029860367700724,   -0.7504883828755602,   -0.4004672082940195),
-				new Grad4( 0.08164729285680945,   0.4553054119602712,   -0.8828161875373585,    0.08164729285680945),
-				new Grad4(-0.08164729285680945,   0.8828161875373585,   -0.4553054119602712,   -0.08164729285680945),
-				new Grad4(-0.15296486218853164,   0.7504883828755602,   -0.5029860367700724,    0.4004672082940195),
-				new Grad4( 0.4004672082940195,    0.7504883828755602,   -0.5029860367700724,   -0.15296486218853164),
-				new Grad4( 0.3239847771997537,    0.6740059517812944,   -0.5794684678643381,    0.3239847771997537),
-				new Grad4(-0.3239847771997537,    0.5794684678643381,   -0.3239847771997537,   -0.6740059517812944),
-				new Grad4(-0.4004672082940195,    0.5029860367700724,    0.15296486218853164,  -0.7504883828755602),
-				new Grad4( 0.15296486218853164,   0.5029860367700724,   -0.4004672082940195,   -0.7504883828755602),
-				new Grad4( 0.08164729285680945,   0.4553054119602712,    0.08164729285680945,  -0.8828161875373585),
-				new Grad4(-0.08164729285680945,   0.8828161875373585,   -0.08164729285680945,  -0.4553054119602712),
-				new Grad4(-0.15296486218853164,   0.7504883828755602,    0.4004672082940195,   -0.5029860367700724),
-				new Grad4( 0.4004672082940195,    0.7504883828755602,   -0.15296486218853164,  -0.5029860367700724),
-				new Grad4( 0.3239847771997537,    0.6740059517812944,    0.3239847771997537,   -0.5794684678643381),
-				new Grad4( 0.5794684678643381,   -0.6740059517812944,   -0.3239847771997537,   -0.3239847771997537),
-				new Grad4( 0.5029860367700724,   -0.7504883828755602,   -0.4004672082940195,    0.15296486218853164),
-				new Grad4( 0.5029860367700724,   -0.7504883828755602,    0.15296486218853164,  -0.4004672082940195),
-				new Grad4( 0.4553054119602712,   -0.8828161875373585,    0.08164729285680945,   0.08164729285680945),
-				new Grad4( 0.8828161875373585,   -0.4553054119602712,   -0.08164729285680945,  -0.08164729285680945),
-				new Grad4( 0.7504883828755602,   -0.5029860367700724,   -0.15296486218853164,   0.4004672082940195),
-				new Grad4( 0.7504883828755602,   -0.5029860367700724,    0.4004672082940195,   -0.15296486218853164),
-				new Grad4( 0.6740059517812944,   -0.5794684678643381,    0.3239847771997537,    0.3239847771997537),
-				new Grad4( 0.5794684678643381,   -0.3239847771997537,   -0.6740059517812944,   -0.3239847771997537),
-				new Grad4( 0.5029860367700724,   -0.4004672082940195,   -0.7504883828755602,    0.15296486218853164),
-				new Grad4( 0.5029860367700724,    0.15296486218853164,  -0.7504883828755602,   -0.4004672082940195),
-				new Grad4( 0.4553054119602712,    0.08164729285680945,  -0.8828161875373585,    0.08164729285680945),
-				new Grad4( 0.8828161875373585,   -0.08164729285680945,  -0.4553054119602712,   -0.08164729285680945),
-				new Grad4( 0.7504883828755602,   -0.15296486218853164,  -0.5029860367700724,    0.4004672082940195),
-				new Grad4( 0.7504883828755602,    0.4004672082940195,   -0.5029860367700724,   -0.15296486218853164),
-				new Grad4( 0.6740059517812944,    0.3239847771997537,   -0.5794684678643381,    0.3239847771997537),
-				new Grad4( 0.5794684678643381,   -0.3239847771997537,   -0.3239847771997537,   -0.6740059517812944),
-				new Grad4( 0.5029860367700724,   -0.4004672082940195,    0.15296486218853164,  -0.7504883828755602),
-				new Grad4( 0.5029860367700724,    0.15296486218853164,  -0.4004672082940195,   -0.7504883828755602),
-				new Grad4( 0.4553054119602712,    0.08164729285680945,   0.08164729285680945,  -0.8828161875373585),
-				new Grad4( 0.8828161875373585,   -0.08164729285680945,  -0.08164729285680945,  -0.4553054119602712),
-				new Grad4( 0.7504883828755602,   -0.15296486218853164,   0.4004672082940195,   -0.5029860367700724),
-				new Grad4( 0.7504883828755602,    0.4004672082940195,   -0.15296486218853164,  -0.5029860367700724),
-				new Grad4( 0.6740059517812944,    0.3239847771997537,    0.3239847771997537,   -0.5794684678643381),
-				new Grad4( 0.03381941603233842,   0.03381941603233842,   0.03381941603233842,   0.9982828964265062),
-				new Grad4(-0.044802370851755174, -0.044802370851755174,  0.508629699630796,     0.8586508742123365),
-				new Grad4(-0.044802370851755174,  0.508629699630796,    -0.044802370851755174,  0.8586508742123365),
-				new Grad4(-0.12128480194602098,   0.4321472685365301,    0.4321472685365301,    0.7821684431180708),
-				new Grad4( 0.508629699630796,    -0.044802370851755174, -0.044802370851755174,  0.8586508742123365),
-				new Grad4( 0.4321472685365301,   -0.12128480194602098,   0.4321472685365301,    0.7821684431180708),
-				new Grad4( 0.4321472685365301,    0.4321472685365301,   -0.12128480194602098,   0.7821684431180708),
-				new Grad4( 0.37968289875261624,   0.37968289875261624,   0.37968289875261624,   0.753341017856078),
-				new Grad4( 0.03381941603233842,   0.03381941603233842,   0.9982828964265062,    0.03381941603233842),
-				new Grad4(-0.044802370851755174,  0.044802370851755174,  0.8586508742123365,    0.508629699630796),
-				new Grad4(-0.044802370851755174,  0.508629699630796,     0.8586508742123365,   -0.044802370851755174),
-				new Grad4(-0.12128480194602098,   0.4321472685365301,    0.7821684431180708,    0.4321472685365301),
-				new Grad4( 0.508629699630796,    -0.044802370851755174,  0.8586508742123365,   -0.044802370851755174),
-				new Grad4( 0.4321472685365301,   -0.12128480194602098,   0.7821684431180708,    0.4321472685365301),
-				new Grad4( 0.4321472685365301,    0.4321472685365301,    0.7821684431180708,   -0.12128480194602098),
-				new Grad4( 0.37968289875261624,   0.37968289875261624,   0.753341017856078,     0.37968289875261624),
-				new Grad4( 0.03381941603233842,   0.9982828964265062,    0.03381941603233842,   0.03381941603233842),
-				new Grad4(-0.044802370851755174,  0.8586508742123365,   -0.044802370851755174,  0.508629699630796),
-				new Grad4(-0.044802370851755174,  0.8586508742123365,    0.508629699630796,    -0.044802370851755174),
-				new Grad4(-0.12128480194602098,   0.7821684431180708,    0.4321472685365301,    0.4321472685365301),
-				new Grad4( 0.508629699630796,     0.8586508742123365,   -0.044802370851755174, -0.044802370851755174),
-				new Grad4( 0.4321472685365301,    0.7821684431180708,   -0.12128480194602098,   0.4321472685365301),
-				new Grad4( 0.4321472685365301,    0.7821684431180708,    0.4321472685365301,   -0.12128480194602098),
-				new Grad4( 0.37968289875261624,   0.753341017856078,     0.37968289875261624,   0.37968289875261624),
-				new Grad4( 0.9982828964265062,    0.03381941603233842,   0.03381941603233842,   0.03381941603233842),
-				new Grad4( 0.8586508742123365,   -0.044802370851755174, -0.044802370851755174,  0.508629699630796),
-				new Grad4( 0.8586508742123365,   -0.044802370851755174,  0.508629699630796,    -0.044802370851755174),
-				new Grad4( 0.7821684431180708,   -0.12128480194602098,   0.4321472685365301,    0.4321472685365301),
-				new Grad4( 0.8586508742123365,    0.508629699630796,    -0.044802370851755174, -0.044802370851755174),
-				new Grad4( 0.7821684431180708,    0.4321472685365301,   -0.12128480194602098,   0.4321472685365301),
-				new Grad4( 0.7821684431180708,    0.4321472685365301,    0.4321472685365301,   -0.12128480194602098),
-				new Grad4( 0.753341017856078,     0.37968289875261624,   0.37968289875261624,   0.37968289875261624)
+				new Grad4(-0.753341017856078f,    -0.37968289875261624f,  -0.37968289875261624f,  -0.37968289875261624f),
+				new Grad4(-0.7821684431180708f,   -0.4321472685365301f,   -0.4321472685365301f,    0.12128480194602098f),
+				new Grad4(-0.7821684431180708f,   -0.4321472685365301f,    0.12128480194602098f,  -0.4321472685365301f),
+				new Grad4(-0.7821684431180708f,    0.12128480194602098f,  -0.4321472685365301f,   -0.4321472685365301f),
+				new Grad4(-0.8586508742123365f,   -0.508629699630796f,     0.044802370851755174f,  0.044802370851755174f),
+				new Grad4(-0.8586508742123365f,    0.044802370851755174f, -0.508629699630796f,     0.044802370851755174f),
+				new Grad4(-0.8586508742123365f,    0.044802370851755174f,  0.044802370851755174f, -0.508629699630796f),
+				new Grad4(-0.9982828964265062f,   -0.03381941603233842f,  -0.03381941603233842f,  -0.03381941603233842f),
+				new Grad4(-0.37968289875261624f,  -0.753341017856078f,    -0.37968289875261624f,  -0.37968289875261624f),
+				new Grad4(-0.4321472685365301f,   -0.7821684431180708f,   -0.4321472685365301f,    0.12128480194602098f),
+				new Grad4(-0.4321472685365301f,   -0.7821684431180708f,    0.12128480194602098f,  -0.4321472685365301f),
+				new Grad4( 0.12128480194602098f,  -0.7821684431180708f,   -0.4321472685365301f,   -0.4321472685365301f),
+				new Grad4(-0.508629699630796f,    -0.8586508742123365f,    0.044802370851755174f,  0.044802370851755174f),
+				new Grad4( 0.044802370851755174f, -0.8586508742123365f,   -0.508629699630796f,     0.044802370851755174f),
+				new Grad4( 0.044802370851755174f, -0.8586508742123365f,    0.044802370851755174f, -0.508629699630796f),
+				new Grad4(-0.03381941603233842f,  -0.9982828964265062f,   -0.03381941603233842f,  -0.03381941603233842f),
+				new Grad4(-0.37968289875261624f,  -0.37968289875261624f,  -0.753341017856078f,    -0.37968289875261624f),
+				new Grad4(-0.4321472685365301f,   -0.4321472685365301f,   -0.7821684431180708f,    0.12128480194602098f),
+				new Grad4(-0.4321472685365301f,    0.12128480194602098f,  -0.7821684431180708f,   -0.4321472685365301f),
+				new Grad4( 0.12128480194602098f,  -0.4321472685365301f,   -0.7821684431180708f,   -0.4321472685365301f),
+				new Grad4(-0.508629699630796f,     0.044802370851755174f, -0.8586508742123365f,    0.044802370851755174f),
+				new Grad4( 0.044802370851755174f, -0.508629699630796f,    -0.8586508742123365f,    0.044802370851755174f),
+				new Grad4( 0.044802370851755174f,  0.044802370851755174f, -0.8586508742123365f,   -0.508629699630796f),
+				new Grad4(-0.03381941603233842f,  -0.03381941603233842f,  -0.9982828964265062f,   -0.03381941603233842f),
+				new Grad4(-0.37968289875261624f,  -0.37968289875261624f,  -0.37968289875261624f,  -0.753341017856078f),
+				new Grad4(-0.4321472685365301f,   -0.4321472685365301f,    0.12128480194602098f,  -0.7821684431180708f),
+				new Grad4(-0.4321472685365301f,    0.12128480194602098f,  -0.4321472685365301f,   -0.7821684431180708f),
+				new Grad4( 0.12128480194602098f,  -0.4321472685365301f,   -0.4321472685365301f,   -0.7821684431180708f),
+				new Grad4(-0.508629699630796f,     0.044802370851755174f,  0.044802370851755174f, -0.8586508742123365f),
+				new Grad4( 0.044802370851755174f, -0.508629699630796f,     0.044802370851755174f, -0.8586508742123365f),
+				new Grad4( 0.044802370851755174f,  0.044802370851755174f, -0.508629699630796f,    -0.8586508742123365f),
+				new Grad4(-0.03381941603233842f,  -0.03381941603233842f,  -0.03381941603233842f,  -0.9982828964265062f),
+				new Grad4(-0.6740059517812944f,   -0.3239847771997537f,   -0.3239847771997537f,    0.5794684678643381f),
+				new Grad4(-0.7504883828755602f,   -0.4004672082940195f,    0.15296486218853164f,   0.5029860367700724f),
+				new Grad4(-0.7504883828755602f,    0.15296486218853164f,  -0.4004672082940195f,    0.5029860367700724f),
+				new Grad4(-0.8828161875373585f,    0.08164729285680945f,   0.08164729285680945f,   0.4553054119602712f),
+				new Grad4(-0.4553054119602712f,   -0.08164729285680945f,  -0.08164729285680945f,   0.8828161875373585f),
+				new Grad4(-0.5029860367700724f,   -0.15296486218853164f,   0.4004672082940195f,    0.7504883828755602f),
+				new Grad4(-0.5029860367700724f,    0.4004672082940195f,   -0.15296486218853164f,   0.7504883828755602f),
+				new Grad4(-0.5794684678643381f,    0.3239847771997537f,    0.3239847771997537f,    0.6740059517812944f),
+				new Grad4(-0.3239847771997537f,   -0.6740059517812944f,   -0.3239847771997537f,    0.5794684678643381f),
+				new Grad4(-0.4004672082940195f,   -0.7504883828755602f,    0.15296486218853164f,   0.5029860367700724f),
+				new Grad4( 0.15296486218853164f,  -0.7504883828755602f,   -0.4004672082940195f,    0.5029860367700724f),
+				new Grad4( 0.08164729285680945f,  -0.8828161875373585f,    0.08164729285680945f,   0.4553054119602712f),
+				new Grad4(-0.08164729285680945f,  -0.4553054119602712f,   -0.08164729285680945f,   0.8828161875373585f),
+				new Grad4(-0.15296486218853164f,  -0.5029860367700724f,    0.4004672082940195f,    0.7504883828755602f),
+				new Grad4( 0.4004672082940195f,   -0.5029860367700724f,   -0.15296486218853164f,   0.7504883828755602f),
+				new Grad4( 0.3239847771997537f,   -0.5794684678643381f,    0.3239847771997537f,    0.6740059517812944f),
+				new Grad4(-0.3239847771997537f,   -0.3239847771997537f,   -0.6740059517812944f,    0.5794684678643381f),
+				new Grad4(-0.4004672082940195f,    0.15296486218853164f,  -0.7504883828755602f,    0.5029860367700724f),
+				new Grad4( 0.15296486218853164f,  -0.4004672082940195f,   -0.7504883828755602f,    0.5029860367700724f),
+				new Grad4( 0.08164729285680945f,   0.08164729285680945f,  -0.8828161875373585f,    0.4553054119602712f),
+				new Grad4(-0.08164729285680945f,  -0.08164729285680945f,  -0.4553054119602712f,    0.8828161875373585f),
+				new Grad4(-0.15296486218853164f,   0.4004672082940195f,   -0.5029860367700724f,    0.7504883828755602f),
+				new Grad4( 0.4004672082940195f,   -0.15296486218853164f,  -0.5029860367700724f,    0.7504883828755602f),
+				new Grad4( 0.3239847771997537f,    0.3239847771997537f,   -0.5794684678643381f,    0.6740059517812944f),
+				new Grad4(-0.6740059517812944f,   -0.3239847771997537f,    0.5794684678643381f,   -0.3239847771997537f),
+				new Grad4(-0.7504883828755602f,   -0.4004672082940195f,    0.5029860367700724f,    0.15296486218853164f),
+				new Grad4(-0.7504883828755602f,    0.15296486218853164f,   0.5029860367700724f,   -0.4004672082940195f),
+				new Grad4(-0.8828161875373585f,    0.08164729285680945f,   0.4553054119602712f,    0.08164729285680945f),
+				new Grad4(-0.4553054119602712f,   -0.08164729285680945f,   0.8828161875373585f,   -0.08164729285680945f),
+				new Grad4(-0.5029860367700724f,   -0.15296486218853164f,   0.7504883828755602f,    0.4004672082940195f),
+				new Grad4(-0.5029860367700724f,    0.4004672082940195f,    0.7504883828755602f,   -0.15296486218853164f),
+				new Grad4(-0.5794684678643381f,    0.3239847771997537f,    0.6740059517812944f,    0.3239847771997537f),
+				new Grad4(-0.3239847771997537f,   -0.6740059517812944f,    0.5794684678643381f,   -0.3239847771997537f),
+				new Grad4(-0.4004672082940195f,   -0.7504883828755602f,    0.5029860367700724f,    0.15296486218853164f),
+				new Grad4( 0.15296486218853164f,  -0.7504883828755602f,    0.5029860367700724f,   -0.4004672082940195f),
+				new Grad4( 0.08164729285680945f,  -0.8828161875373585f,    0.4553054119602712f,    0.08164729285680945f),
+				new Grad4(-0.08164729285680945f,  -0.4553054119602712f,    0.8828161875373585f,   -0.08164729285680945f),
+				new Grad4(-0.15296486218853164f,  -0.5029860367700724f,    0.7504883828755602f,    0.4004672082940195f),
+				new Grad4( 0.4004672082940195f,   -0.5029860367700724f,    0.7504883828755602f,   -0.15296486218853164f),
+				new Grad4( 0.3239847771997537f,   -0.5794684678643381f,    0.6740059517812944f,    0.3239847771997537f),
+				new Grad4(-0.3239847771997537f,   -0.3239847771997537f,    0.5794684678643381f,   -0.6740059517812944f),
+				new Grad4(-0.4004672082940195f,    0.15296486218853164f,   0.5029860367700724f,   -0.7504883828755602f),
+				new Grad4( 0.15296486218853164f,  -0.4004672082940195f,    0.5029860367700724f,   -0.7504883828755602f),
+				new Grad4( 0.08164729285680945f,   0.08164729285680945f,   0.4553054119602712f,   -0.8828161875373585f),
+				new Grad4(-0.08164729285680945f,  -0.08164729285680945f,   0.8828161875373585f,   -0.4553054119602712f),
+				new Grad4(-0.15296486218853164f,   0.4004672082940195f,    0.7504883828755602f,   -0.5029860367700724f),
+				new Grad4( 0.4004672082940195f,   -0.15296486218853164f,   0.7504883828755602f,   -0.5029860367700724f),
+				new Grad4( 0.3239847771997537f,    0.3239847771997537f,    0.6740059517812944f,   -0.5794684678643381f),
+				new Grad4(-0.6740059517812944f,    0.5794684678643381f,   -0.3239847771997537f,   -0.3239847771997537f),
+				new Grad4(-0.7504883828755602f,    0.5029860367700724f,   -0.4004672082940195f,    0.15296486218853164f),
+				new Grad4(-0.7504883828755602f,    0.5029860367700724f,    0.15296486218853164f,  -0.4004672082940195f),
+				new Grad4(-0.8828161875373585f,    0.4553054119602712f,    0.08164729285680945f,   0.08164729285680945f),
+				new Grad4(-0.4553054119602712f,    0.8828161875373585f,   -0.08164729285680945f,  -0.08164729285680945f),
+				new Grad4(-0.5029860367700724f,    0.7504883828755602f,   -0.15296486218853164f,   0.4004672082940195f),
+				new Grad4(-0.5029860367700724f,    0.7504883828755602f,    0.4004672082940195f,   -0.15296486218853164f),
+				new Grad4(-0.5794684678643381f,    0.6740059517812944f,    0.3239847771997537f,    0.3239847771997537f),
+				new Grad4(-0.3239847771997537f,    0.5794684678643381f,   -0.6740059517812944f,   -0.3239847771997537f),
+				new Grad4(-0.4004672082940195f,    0.5029860367700724f,   -0.7504883828755602f,    0.15296486218853164f),
+				new Grad4( 0.15296486218853164f,   0.5029860367700724f,   -0.7504883828755602f,   -0.4004672082940195f),
+				new Grad4( 0.08164729285680945f,   0.4553054119602712f,   -0.8828161875373585f,    0.08164729285680945f),
+				new Grad4(-0.08164729285680945f,   0.8828161875373585f,   -0.4553054119602712f,   -0.08164729285680945f),
+				new Grad4(-0.15296486218853164f,   0.7504883828755602f,   -0.5029860367700724f,    0.4004672082940195f),
+				new Grad4( 0.4004672082940195f,    0.7504883828755602f,   -0.5029860367700724f,   -0.15296486218853164f),
+				new Grad4( 0.3239847771997537f,    0.6740059517812944f,   -0.5794684678643381f,    0.3239847771997537f),
+				new Grad4(-0.3239847771997537f,    0.5794684678643381f,   -0.3239847771997537f,   -0.6740059517812944f),
+				new Grad4(-0.4004672082940195f,    0.5029860367700724f,    0.15296486218853164f,  -0.7504883828755602f),
+				new Grad4( 0.15296486218853164f,   0.5029860367700724f,   -0.4004672082940195f,   -0.7504883828755602f),
+				new Grad4( 0.08164729285680945f,   0.4553054119602712f,    0.08164729285680945f,  -0.8828161875373585f),
+				new Grad4(-0.08164729285680945f,   0.8828161875373585f,   -0.08164729285680945f,  -0.4553054119602712f),
+				new Grad4(-0.15296486218853164f,   0.7504883828755602f,    0.4004672082940195f,   -0.5029860367700724f),
+				new Grad4( 0.4004672082940195f,    0.7504883828755602f,   -0.15296486218853164f,  -0.5029860367700724f),
+				new Grad4( 0.3239847771997537f,    0.6740059517812944f,    0.3239847771997537f,   -0.5794684678643381f),
+				new Grad4( 0.5794684678643381f,   -0.6740059517812944f,   -0.3239847771997537f,   -0.3239847771997537f),
+				new Grad4( 0.5029860367700724f,   -0.7504883828755602f,   -0.4004672082940195f,    0.15296486218853164f),
+				new Grad4( 0.5029860367700724f,   -0.7504883828755602f,    0.15296486218853164f,  -0.4004672082940195f),
+				new Grad4( 0.4553054119602712f,   -0.8828161875373585f,    0.08164729285680945f,   0.08164729285680945f),
+				new Grad4( 0.8828161875373585f,   -0.4553054119602712f,   -0.08164729285680945f,  -0.08164729285680945f),
+				new Grad4( 0.7504883828755602f,   -0.5029860367700724f,   -0.15296486218853164f,   0.4004672082940195f),
+				new Grad4( 0.7504883828755602f,   -0.5029860367700724f,    0.4004672082940195f,   -0.15296486218853164f),
+				new Grad4( 0.6740059517812944f,   -0.5794684678643381f,    0.3239847771997537f,    0.3239847771997537f),
+				new Grad4( 0.5794684678643381f,   -0.3239847771997537f,   -0.6740059517812944f,   -0.3239847771997537f),
+				new Grad4( 0.5029860367700724f,   -0.4004672082940195f,   -0.7504883828755602f,    0.15296486218853164f),
+				new Grad4( 0.5029860367700724f,    0.15296486218853164f,  -0.7504883828755602f,   -0.4004672082940195f),
+				new Grad4( 0.4553054119602712f,    0.08164729285680945f,  -0.8828161875373585f,    0.08164729285680945f),
+				new Grad4( 0.8828161875373585f,   -0.08164729285680945f,  -0.4553054119602712f,   -0.08164729285680945f),
+				new Grad4( 0.7504883828755602f,   -0.15296486218853164f,  -0.5029860367700724f,    0.4004672082940195f),
+				new Grad4( 0.7504883828755602f,    0.4004672082940195f,   -0.5029860367700724f,   -0.15296486218853164f),
+				new Grad4( 0.6740059517812944f,    0.3239847771997537f,   -0.5794684678643381f,    0.3239847771997537f),
+				new Grad4( 0.5794684678643381f,   -0.3239847771997537f,   -0.3239847771997537f,   -0.6740059517812944f),
+				new Grad4( 0.5029860367700724f,   -0.4004672082940195f,    0.15296486218853164f,  -0.7504883828755602f),
+				new Grad4( 0.5029860367700724f,    0.15296486218853164f,  -0.4004672082940195f,   -0.7504883828755602f),
+				new Grad4( 0.4553054119602712f,    0.08164729285680945f,   0.08164729285680945f,  -0.8828161875373585f),
+				new Grad4( 0.8828161875373585f,   -0.08164729285680945f,  -0.08164729285680945f,  -0.4553054119602712f),
+				new Grad4( 0.7504883828755602f,   -0.15296486218853164f,   0.4004672082940195f,   -0.5029860367700724f),
+				new Grad4( 0.7504883828755602f,    0.4004672082940195f,   -0.15296486218853164f,  -0.5029860367700724f),
+				new Grad4( 0.6740059517812944f,    0.3239847771997537f,    0.3239847771997537f,   -0.5794684678643381f),
+				new Grad4( 0.03381941603233842f,   0.03381941603233842f,   0.03381941603233842f,   0.9982828964265062f),
+				new Grad4(-0.044802370851755174f, -0.044802370851755174f,  0.508629699630796f,     0.8586508742123365f),
+				new Grad4(-0.044802370851755174f,  0.508629699630796f,    -0.044802370851755174f,  0.8586508742123365f),
+				new Grad4(-0.12128480194602098f,   0.4321472685365301f,    0.4321472685365301f,    0.7821684431180708f),
+				new Grad4( 0.508629699630796f,    -0.044802370851755174f, -0.044802370851755174f,  0.8586508742123365f),
+				new Grad4( 0.4321472685365301f,   -0.12128480194602098f,   0.4321472685365301f,    0.7821684431180708f),
+				new Grad4( 0.4321472685365301f,    0.4321472685365301f,   -0.12128480194602098f,   0.7821684431180708f),
+				new Grad4( 0.37968289875261624f,   0.37968289875261624f,   0.37968289875261624f,   0.753341017856078f),
+				new Grad4( 0.03381941603233842f,   0.03381941603233842f,   0.9982828964265062f,    0.03381941603233842f),
+				new Grad4(-0.044802370851755174f,  0.044802370851755174f,  0.8586508742123365f,    0.508629699630796f),
+				new Grad4(-0.044802370851755174f,  0.508629699630796f,     0.8586508742123365f,   -0.044802370851755174f),
+				new Grad4(-0.12128480194602098f,   0.4321472685365301f,    0.7821684431180708f,    0.4321472685365301f),
+				new Grad4( 0.508629699630796f,    -0.044802370851755174f,  0.8586508742123365f,   -0.044802370851755174f),
+				new Grad4( 0.4321472685365301f,   -0.12128480194602098f,   0.7821684431180708f,    0.4321472685365301f),
+				new Grad4( 0.4321472685365301f,    0.4321472685365301f,    0.7821684431180708f,   -0.12128480194602098f),
+				new Grad4( 0.37968289875261624f,   0.37968289875261624f,   0.753341017856078f,     0.37968289875261624f),
+				new Grad4( 0.03381941603233842f,   0.9982828964265062f,    0.03381941603233842f,   0.03381941603233842f),
+				new Grad4(-0.044802370851755174f,  0.8586508742123365f,   -0.044802370851755174f,  0.508629699630796f),
+				new Grad4(-0.044802370851755174f,  0.8586508742123365f,    0.508629699630796f,    -0.044802370851755174f),
+				new Grad4(-0.12128480194602098f,   0.7821684431180708f,    0.4321472685365301f,    0.4321472685365301f),
+				new Grad4( 0.508629699630796f,     0.8586508742123365f,   -0.044802370851755174f, -0.044802370851755174f),
+				new Grad4( 0.4321472685365301f,    0.7821684431180708f,   -0.12128480194602098f,   0.4321472685365301f),
+				new Grad4( 0.4321472685365301f,    0.7821684431180708f,    0.4321472685365301f,   -0.12128480194602098f),
+				new Grad4( 0.37968289875261624f,   0.753341017856078f,     0.37968289875261624f,   0.37968289875261624f),
+				new Grad4( 0.9982828964265062f,    0.03381941603233842f,   0.03381941603233842f,   0.03381941603233842f),
+				new Grad4( 0.8586508742123365f,   -0.044802370851755174f, -0.044802370851755174f,  0.508629699630796f),
+				new Grad4( 0.8586508742123365f,   -0.044802370851755174f,  0.508629699630796f,    -0.044802370851755174f),
+				new Grad4( 0.7821684431180708f,   -0.12128480194602098f,   0.4321472685365301f,    0.4321472685365301f),
+				new Grad4( 0.8586508742123365f,    0.508629699630796f,    -0.044802370851755174f, -0.044802370851755174f),
+				new Grad4( 0.7821684431180708f,    0.4321472685365301f,   -0.12128480194602098f,   0.4321472685365301f),
+				new Grad4( 0.7821684431180708f,    0.4321472685365301f,    0.4321472685365301f,   -0.12128480194602098f),
+				new Grad4( 0.753341017856078f,     0.37968289875261624f,   0.37968289875261624f,   0.37968289875261624f)
 		};
 		for (int i = 0; i < grad4.length; i++) {
 			grad4[i].dx /= N4; grad4[i].dy /= N4; grad4[i].dz /= N4; grad4[i].dw /= N4;

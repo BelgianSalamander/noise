@@ -6,13 +6,14 @@ import me.salamander.noisetest.glsl.FunctionRegistry;
 import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.types.ArraySourceModule;
+import me.salamander.noisetest.util.FloatBinaryOperator;
 
 import java.util.*;
 import java.util.function.DoubleBinaryOperator;
 
 public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilable {
     private int seed;
-    private DoubleBinaryOperator[] noiseSamplers;
+    private FloatBinaryOperator[] noiseSamplers;
     private NoiseType noiseType;
 
     public NoiseSourceModule(NoiseType type) {
@@ -24,23 +25,23 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
 	    this.seed = seed;
 	    initParameters();
 	    this.parameters[0] = octaves;
-	    noiseSamplers = new DoubleBinaryOperator[octaves];
+	    noiseSamplers = new FloatBinaryOperator[octaves];
 	    this.noiseType = type;
 
 	    createSamplers(true, type);
     }
 
     private void initParameters(){
-        parameters[1] = 1.0;
-        parameters[2] = 0.5;
-        parameters[3] = 2.0;
+        parameters[1] = 1.0f;
+        parameters[2] = 0.5f;
+        parameters[3] = 2.0f;
     }
 
     private void createSamplers(boolean regenerate, NoiseType type) {
     	int octaves = (int)parameters[0];
     	int seed = this.seed;
 
-        DoubleBinaryOperator[] newSamplers = new DoubleBinaryOperator[octaves];
+        FloatBinaryOperator[] newSamplers = new FloatBinaryOperator[octaves];
         Random random = new Random(seed);
 
         for(int i = 0; i < octaves; i++){
@@ -63,15 +64,15 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
     }
 
     @Override
-    public double sample(double x, double y) {
-        double total = 0;
+    public float sample(float x, float y) {
+        float total = 0;
 	    int octaves = (int) parameters[0];
-	    double frequency = parameters[1];
-	    double persistence = parameters[2];
-	    double lacunarity = parameters[3];
+	    float frequency = parameters[1];
+	    float persistence = parameters[2];
+	    float lacunarity = parameters[3];
 
         for(int i = 0; i < octaves; i++)
-            total += Math.pow(persistence, i) * noiseSamplers[i].applyAsDouble(x * frequency * Math.pow(lacunarity, i), y * frequency * Math.pow(lacunarity, i));
+            total += Math.pow(persistence, i) * noiseSamplers[i].applyAsFloat((float) (x * frequency * Math.pow(lacunarity, i)), (float) (y * frequency * Math.pow(lacunarity, i)));
         return total;
     }
 
@@ -85,15 +86,15 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
         return seed;
     }
 
-    public void setPersistence(double persistence) {
+    public void setPersistence(float persistence) {
         this.parameters[2] = persistence;
     }
 
-    public void setLacunarity(double lacunarity) {
+    public void setLacunarity(float lacunarity) {
         this.parameters[3] = lacunarity;
     }
 
-    public void setFrequency(double frequency) {
+    public void setFrequency(float frequency) {
         this.parameters[1] = frequency;
     }
 
@@ -104,13 +105,13 @@ public class NoiseSourceModule extends ArraySourceModule implements GLSLCompilab
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
     	if(index == 0) setNumOctaves((int) value);
         else super.setParameter(index, value);
     }
 
 
-    public double getFrequency() {
+    public float getFrequency() {
         return parameters[1];
     }
 

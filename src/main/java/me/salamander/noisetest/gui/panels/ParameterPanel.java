@@ -179,14 +179,14 @@ public class ParameterPanel extends JPanel {
         if(selected == null) return;
 
         String stepAsText = stepField.getText();
-        double step = 0.01;
+        float step = 0.01f;
         try{
-            step = Double.parseDouble(stepAsText);
+            step = Float.parseFloat(stepAsText);
         }catch(NullPointerException e){}
 
         ColorSampler sampler = ColorSamplers.getSampler((String) samplerSelector.getSelectedItem());
 
-        double[][] heightmap = RenderHelper.generateNoise(selected.getNoiseModule(), 500, 500, step);
+        float[][] heightmap = RenderHelper.generateNoise(selected.getNoiseModule(), 500, 500, step);
         GUIHelper.displayArray(heightmap, sampler);
     }
     private void render(){
@@ -239,7 +239,7 @@ public class ParameterPanel extends JPanel {
 
         @Override
         public void stateChanged(ChangeEvent e) {
-            double value = ((JSlider) e.getSource()).getValue() * parameter.step();
+            float value = ((JSlider) e.getSource()).getValue() * parameter.step();
 
             if (!this.isInt) {
             	value *= 0.1;

@@ -14,14 +14,14 @@ import java.util.List;
 
 public abstract class ArrayModule implements GUIModule{
     protected final SerializableNoiseModule[] inputs;
-    protected final double[] parameters;
+    protected final float[] parameters;
 
     protected final int numInputs, numParameters;
 
     //Creates the arrays that hold the inputs and parameters
     protected ArrayModule(int numInputs, int numParameters){
         inputs = new SerializableNoiseModule[numInputs];
-        parameters = new double[numParameters];
+        parameters = new float[numParameters];
 
         this.numInputs = numInputs;
         this.numParameters = numParameters;
@@ -43,17 +43,17 @@ public abstract class ArrayModule implements GUIModule{
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         parameters[index] = value;
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         return parameters[index];
     }
 
     @Override
-    public abstract double sample(double x, double y);
+    public abstract float sample(float x, float y);
 
     @Override
     public abstract void setSeed(long s);
@@ -64,8 +64,12 @@ public abstract class ArrayModule implements GUIModule{
 			tag.put("sources", new IntArrayTag(Arrays.stream(inputs).mapToInt(indexLookup::get).toArray()));
 		}
 
-		long[] data = Arrays.stream(this.parameters).mapToLong(Double::doubleToLongBits).toArray();
-		tag.put("parameters", new LongArrayTag(data));
+		int[] data = new int[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            data[i] = Float.floatToIntBits(parameters[i]);
+        }
+
+		tag.put("parameters", new IntArrayTag(data));
 	}
 
 	@Override
@@ -83,13 +87,10 @@ public abstract class ArrayModule implements GUIModule{
 		}
 
 		if (tag.containsKey("parameters")) {
-			System.arraycopy(
-					Arrays.stream(((LongArrayTag)tag.get("parameters")).getValue()).mapToDouble(Double::longBitsToDouble).toArray(),
-					0,
-					this.parameters,
-					0,
-					this.parameters.length
-			);
+		    int[] data = ((IntArrayTag) tag.get("parameters")).getValue();
+            for (int i = 0; i < parameters.length; i++) {
+                parameters[i] = Float.intBitsToFloat(data[i]);
+            }
 		}
 	}
 

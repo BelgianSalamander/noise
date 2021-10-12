@@ -11,14 +11,14 @@ public class GUIHelper {
         label.setFont(new Font(label.getFont().getName(), label.getFont().getStyle(), size));
     }
 
-    public static void displayArray(double[][] array, ColorSampler colorSampler){
+    public static void displayArray(float[][] array, ColorSampler colorSampler){
         final int width = array.length;
         final int height = array[0].length;
         final BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = (Graphics2D) img.getGraphics();
         for(int i = 0; i < width; i++){
             for(int j = 0; j < height; j++){
-                double shade = array[i][j];
+                float shade = array[i][j];
                 g.setColor(colorSampler.sample(shade));
                 g.fillRect(i, j, 1, 1);
             }

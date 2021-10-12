@@ -26,7 +26,7 @@ import static org.lwjgl.opengl.GL45.*;
 public class RenderHelper {
     private static ComputeShader normalProgram;
 
-    public static BufferObject createBufferFromHeightmap(double[][] heightmap, float heightScale, ColorSampler sampler){
+    public static BufferObject createBufferFromHeightmap(float[][] heightmap, float heightScale, ColorSampler sampler){
         float[] data = createBufferDataFromHeightmap(heightmap, heightScale, sampler);
         BufferObject buffer = new BufferObject();
         buffer.data(GL_ARRAY_BUFFER, data, GL_STATIC_DRAW);
@@ -93,7 +93,7 @@ public class RenderHelper {
         }
     }
 
-    public static float[] createBufferDataFromHeightmap(double[][] heightmap, float heightScale, ColorSampler sampler){
+    public static float[] createBufferDataFromHeightmap(float[][] heightmap, float heightScale, ColorSampler sampler){
         int width = heightmap.length;
         int height = heightmap[0].length;
         float[] data = new float[width * height * 7];
@@ -172,7 +172,7 @@ public class RenderHelper {
         return data;
     }
 
-    public static float[] createBufferDataFromHeightmap(double[][] heightmap, float heightScale, Color[][] colors){
+    public static float[] createBufferDataFromHeightmap(float[][] heightmap, float heightScale, Color[][] colors){
         if(heightmap.length != colors.length || heightmap[0].length != colors[0].length){
             throw new IllegalArgumentException("Heightmap and colors have different dimension");
         }
@@ -255,8 +255,8 @@ public class RenderHelper {
     }
 
     @NotNull
-    public static double[][] generateNoise(@NotNull NoiseModule module, int width, int height, double step){
-        double[][] out = new double[width][height];
+    public static float[][] generateNoise(@NotNull NoiseModule module, int width, int height, float step){
+        float[][] out = new float[width][height];
         for(int x = 0; x < width; x++){
             for(int y = 0; y < height; y++){
                 out[x][y] = module.sample(x * step,y * step);

@@ -19,7 +19,7 @@ public class DomainWarp extends TerraModule{
     }
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         final float x0 = (float) (x + (12148.0f / 65536.0f));
         final float y0 = (float) (y + (56346.0f / 65536.0f));
         final float x1 = (float) (x + 134 + (23436.0f / 65536.0f));

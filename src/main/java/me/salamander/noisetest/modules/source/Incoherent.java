@@ -19,9 +19,9 @@ public class Incoherent extends SourceModule implements GLSLCompilable {
     public Incoherent(long seed){this.seed = seed;}
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         random.setSeed((long) (x * 357621L + y * 562457L + seed * 625627L));
-        return random.nextDouble() * 2 - 1;
+        return random.nextFloat() * 2 - 1;
     }
 
     @Override
@@ -30,12 +30,12 @@ public class Incoherent extends SourceModule implements GLSLCompilable {
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         throw new IllegalArgumentException("No Parameters!");
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         throw new IllegalArgumentException("No Parameters!");
     }
 

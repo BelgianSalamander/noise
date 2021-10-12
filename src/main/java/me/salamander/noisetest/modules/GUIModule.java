@@ -6,6 +6,6 @@ public interface GUIModule extends SerializableNoiseModule {
     void setInput(int index, SerializableNoiseModule module);
     SerializableNoiseModule getInput(int index);
 
-    void setParameter(int index, double value);
-    double getParameter(int index);
+    void setParameter(int index, float value);
+    float getParameter(int index);
 }

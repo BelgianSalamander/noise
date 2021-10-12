@@ -10,9 +10,9 @@ import java.util.Random;
 //This in NOT OpenSimplex. It is 2D Simplex which is NOT patented
 public class SimplexNoise2D {
     private final int GRAD_LENGTH = 1024;
-    private final double F = 0.5 * (Math.sqrt(3) - 1);
-    private final double G = 0.5 * (1 - 1 / Math.sqrt(3));
-    private final double R_SQUARED = 0.5;
+    private final float F = (float) (0.5 * (Math.sqrt(3) - 1));
+    private final float G = (float) (0.5 * (1 - 1 / Math.sqrt(3)));
+    private final float R_SQUARED = 0.5f;
 
     private final Random random;
     private final Vec2[] gradients = new Vec2[GRAD_LENGTH];
@@ -68,7 +68,7 @@ public class SimplexNoise2D {
         return getGradient((int) pos.x, (int) pos.y);
     }
 
-    public double sample(double x, double y){
+    public float sample(float x, float y){
         Vec2 pos = new Vec2(x, y);
         Vec2 skewedPos = skew(pos);
 
@@ -77,9 +77,9 @@ public class SimplexNoise2D {
         Vec2[] gradients = Arrays.stream(vertices).map(this::getGradient).toArray(Vec2[]::new);
         Vec2[] displacement = Arrays.stream(unskewedVertices).map(vec -> pos.sub(vec)).toArray(Vec2[]::new);
 
-        double total = 0;
+        float total = 0;
         for(int i = 0; i < 3; i++){
-            double distance = Math.max(0, R_SQUARED - displacement[i].lengthSquared());
+            float distance = Math.max(0, R_SQUARED - displacement[i].lengthSquared());
             total += distance * gradients[i].dot(displacement[i]);
         }
 

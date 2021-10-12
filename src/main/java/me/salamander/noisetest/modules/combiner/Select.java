@@ -12,8 +12,8 @@ import java.util.*;
 
 public class Select implements GUIModule, GLSLCompilable {
     private SerializableNoiseModule noiseMapOne, noiseMapTwo, selector;
-    private double edgeFalloff = 0.0;
-    private double threshold = 0;
+    private float edgeFalloff = 0.0f;
+    private float threshold = 0;
 
     private final SelectFunction func;
 
@@ -25,15 +25,15 @@ public class Select implements GUIModule, GLSLCompilable {
         requires.add(func = new SelectFunction());
     }
 
-    public Select(SerializableNoiseModule noiseMapOne, SerializableNoiseModule noiseMapTwo, SerializableNoiseModule selector, double edgeFalloff, double threshold){
+    public Select(SerializableNoiseModule noiseMapOne, SerializableNoiseModule noiseMapTwo, SerializableNoiseModule selector, float edgeFalloff, float threshold){
         this(noiseMapOne, noiseMapTwo, selector);
         this.edgeFalloff = edgeFalloff;
         this.threshold = threshold;
     }
 
     @Override
-    public double sample(double x, double y) {
-        final double selectorValue = SerializableNoiseModule.safeSample(selector, x, y);
+    public float sample(float x, float y) {
+        final float selectorValue = SerializableNoiseModule.safeSample(selector, x, y);
 
         if(edgeFalloff > 0.0){
             if(selectorValue < threshold - edgeFalloff){
@@ -56,7 +56,7 @@ public class Select implements GUIModule, GLSLCompilable {
         }
     }
 
-    public Select getVisualizer(double lowValue, double highValue){
+    public Select getVisualizer(float lowValue, float highValue){
         return new Select(new Const(lowValue), new Const(highValue), selector, edgeFalloff, threshold);
     }
 
@@ -72,15 +72,15 @@ public class Select implements GUIModule, GLSLCompilable {
         this.selector = selector;
     }
 
-    public void setEdgeFalloff(double edgeFalloff) {
+    public void setEdgeFalloff(float edgeFalloff) {
         this.edgeFalloff = edgeFalloff;
     }
 
-    public void setThreshold(double threshold) {
+    public void setThreshold(float threshold) {
         this.threshold = threshold;
     }
 
-    private static double cubicInterpolation(double v0, double v1, double t){
+    private static float cubicInterpolation(float v0, float v1, float t){
         t = t * t * (3 - 2 * t);
         return v0 * (1 - t) + v1 * t;
     }
@@ -130,7 +130,7 @@ public class Select implements GUIModule, GLSLCompilable {
     }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         if(index == 0){
             threshold = value;
         }else if(index == 1){
@@ -141,7 +141,7 @@ public class Select implements GUIModule, GLSLCompilable {
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         if(index == 0){
             return threshold;
         }else if(index == 1){
@@ -162,8 +162,8 @@ public class Select implements GUIModule, GLSLCompilable {
 
     @Override
     public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
-        edgeFalloff = tag.getDouble("edgeFalloff");
-        threshold = tag.getDouble("threshold");
+        edgeFalloff = tag.getFloat("edgeFalloff");
+        threshold = tag.getFloat("threshold");
 
         if(tag.containsKey("inputOne")){
             noiseMapOne = sourceLookup.get(tag.getInt("inputOne"));
@@ -180,8 +180,8 @@ public class Select implements GUIModule, GLSLCompilable {
 
     @Override
     public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
-        tag.putDouble("edgeFalloff", edgeFalloff);
-        tag.putDouble("threshold", threshold);
+        tag.putFloat("edgeFalloff", edgeFalloff);
+        tag.putFloat("threshold", threshold);
 
         if(noiseMapOne != null){
             tag.putInt("inputOne", indexLookup.get(noiseMapOne));

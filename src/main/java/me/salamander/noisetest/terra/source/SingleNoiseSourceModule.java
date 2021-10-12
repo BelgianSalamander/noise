@@ -3,11 +3,12 @@ package me.salamander.noisetest.terra.source;
 import com.fasterxml.jackson.databind.JsonNode;
 import me.salamander.noisetest.modules.source.NoiseType;
 import me.salamander.noisetest.terra.TerraModule;
+import me.salamander.noisetest.util.FloatBinaryOperator;
 
 import java.util.function.DoubleBinaryOperator;
 
 public class SingleNoiseSourceModule extends TerraModule {
-    private DoubleBinaryOperator source;
+    private FloatBinaryOperator source;
     private final NoiseType type;
 
     private int seed;
@@ -20,8 +21,8 @@ public class SingleNoiseSourceModule extends TerraModule {
     }
 
     @Override
-    public double sample(double x, double y) {
-        return source.applyAsDouble(x * frequency, y * frequency);
+    public float sample(float x, float y) {
+        return source.applyAsFloat(x * frequency, y * frequency);
     }
 
     @Override

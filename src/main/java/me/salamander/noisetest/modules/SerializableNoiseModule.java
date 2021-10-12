@@ -9,11 +9,11 @@ import java.util.List;
 public interface SerializableNoiseModule extends NoiseModule {
 
 
-    static double safeSample(SerializableNoiseModule module, double x, double y){
+    static float safeSample(SerializableNoiseModule module, float x, float y){
         if(module != null){
             return module.sample(x,y);
         }else{
-            return 0.0;
+            return 0.0f;
         }
     }
 

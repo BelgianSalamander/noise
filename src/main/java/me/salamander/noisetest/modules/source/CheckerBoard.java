@@ -13,21 +13,21 @@ import java.util.List;
 import java.util.Set;
 
 public class CheckerBoard extends SourceModule implements GLSLCompilable {
-    private double frequency = 1.0;
+    private float frequency = 1.0f;
 
     public CheckerBoard(){}
-    public CheckerBoard(double frequency){this.frequency = frequency;}
+    public CheckerBoard(float frequency){this.frequency = frequency;}
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         return (floor(x * frequency) + floor(y * frequency)) % 2 < 1 ? -1 : 1;
     }
 
-    public void setFrequency(double frequency) {
+    public void setFrequency(float frequency) {
         this.frequency = frequency;
     }
 
-    private int floor(double n){
+    private int floor(float n){
         int value = (int) n;
         return value < n ? value : value - 1;
     }
@@ -36,7 +36,7 @@ public class CheckerBoard extends SourceModule implements GLSLCompilable {
     public void setSeed(long s) {}
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         if(index == 0){
             frequency = value;
         }else {
@@ -45,7 +45,7 @@ public class CheckerBoard extends SourceModule implements GLSLCompilable {
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         if(index == 0){
             return frequency;
         }
@@ -54,7 +54,7 @@ public class CheckerBoard extends SourceModule implements GLSLCompilable {
 
     @Override
     public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
-        frequency = tag.getDouble("frequency");
+        frequency = tag.getFloat("frequency");
     }
 
     @Override

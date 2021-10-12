@@ -43,27 +43,27 @@ public class Modules {
 
     private static Parameter[] PERLIN_PARAMETERS = new Parameter[]{
             new Parameter("Octaves", 0, 1, 10, 1),
-            new Parameter("Frequency", 1, 0.1, 5, 0.1),
-            new Parameter("Persistence", 2, 0.1, 1.0, 0.1),
-            new Parameter("Lacunarity", 3, 1, 5, 0.1)
+            new Parameter("Frequency", 1, 0.1f, 5, 0.1f),
+            new Parameter("Persistence", 2, 0.1f, 1.0f, 0.1f),
+            new Parameter("Lacunarity", 3, 1, 5, 0.1f)
     };
     private static Parameter[] TURBULENCE_PARAMETERS = new Parameter[]{
-            new Parameter("Turbulence Power", 0, 0.1, 5.0, 0.1),
-            new Parameter("Frequency", 1, 0.1, 5.0, 0.1)
+            new Parameter("Turbulence Power", 0, 0.1f, 5.0f, 0.1f),
+            new Parameter("Frequency", 1, 0.1f, 5.0f, 0.1f)
     };
     private static Parameter[] VORONOI_PARAMETERS = new Parameter[]{
-            new Parameter("Size", 0, 0.1, 5.0, 0.1),
-            new Parameter("Relaxation", 1, 0.0, 1.0, 0.1)
+            new Parameter("Size", 0, 0.1f, 5.0f, 0.1f),
+            new Parameter("Relaxation", 1, 0.0f, 1.0f, 0.1f)
     };
     private static Parameter[] SELECT_PARAMETERS = new Parameter[]{
-            new Parameter("Threshold", 0, -1.0, 1.0, 0.1),
-            new Parameter("Edge Falloff", 1, 0.0, 1.0, 0.1)
+            new Parameter("Threshold", 0, -1.0f, 1.0f, 0.1f),
+            new Parameter("Edge Falloff", 1, 0.0f, 1.0f, 0.1f)
     };
     private static Parameter[] CONST_PARAMETERS = new Parameter[]{
-            new Parameter("Value", 0, -1, 1, 0.1)
+            new Parameter("Value", 0, -1, 1, 0.1f)
     };
     private static Parameter[] FREQUENCY_ONLY = new Parameter[]{
-            new Parameter("Frequency", 0, 0.1, 5, 0.1)
+            new Parameter("Frequency", 0, 0.1f, 5, 0.1f)
     };
     private static Parameter[] NO_PARAMETERS = new Parameter[0];
 

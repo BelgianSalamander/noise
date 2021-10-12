@@ -12,17 +12,17 @@ import java.util.List;
 import java.util.Set;
 
 public class Const extends SourceModule implements GLSLCompilable {
-    private double value = 0;
+    private float value = 0;
 
     public Const(){}
-    public Const(double value){this.value = value;}
+    public Const(float value){this.value = value;}
 
     @Override
-    public double sample(double x, double y) {
+    public float sample(float x, float y) {
         return value;
     }
 
-    public void setValue(double value) {
+    public void setValue(float value) {
         this.value = value;
     }
 
@@ -30,7 +30,7 @@ public class Const extends SourceModule implements GLSLCompilable {
     public void setSeed(long s) { }
 
     @Override
-    public void setParameter(int index, double value) {
+    public void setParameter(int index, float value) {
         if(index == 0){
             this.value = value;
         }else{
@@ -39,7 +39,7 @@ public class Const extends SourceModule implements GLSLCompilable {
     }
 
     @Override
-    public double getParameter(int index) {
+    public float getParameter(int index) {
         if(index == 0){
             return value;
         }else{
@@ -49,12 +49,12 @@ public class Const extends SourceModule implements GLSLCompilable {
 
     @Override
     public void readNBT(CompoundTag tag, List<SerializableNoiseModule> sourceLookup) {
-        value = tag.getDouble("value");
+        value = tag.getFloat("value");
     }
 
     @Override
     public void writeNBT(CompoundTag tag, IdentityHashMap<SerializableNoiseModule, Integer> indexLookup) {
-        tag.putDouble("value", value);
+        tag.putFloat("value", value);
     }
 
     @Override
