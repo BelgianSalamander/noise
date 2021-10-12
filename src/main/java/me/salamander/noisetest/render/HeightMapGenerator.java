@@ -38,7 +38,7 @@ public class HeightMapGenerator {
     private final ShaderProgram renderingShader;
     private final int doDiffuseLocation, mvpLocation, lightDirectionLocation;
 
-    private static final int VIEW_DISTANCE = 2;
+    private static final int VIEW_DISTANCE = 1;
 
     public HeightMapGenerator(int tileSize, GLSLCompilable compilable, ColorGradient sampler){
         window = new Window("Noise", 500, 500);

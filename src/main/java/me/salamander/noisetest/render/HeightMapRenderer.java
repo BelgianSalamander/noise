@@ -2,7 +2,7 @@ package me.salamander.noisetest.render;
 
 import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
-import me.salamander.noisetest.modules.SerializableNoiseModule;
+import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.render.api.*;
 import me.salamander.noisetest.render.api.Window;
 import org.joml.Matrix4f;
@@ -118,12 +118,12 @@ public class HeightMapRenderer {
         addHeightmap(name, RenderHelper.createBufferFromHeightmap(heightmap, heightScale, defaultSampler));
     }
 
-    public void addHeightmap(String name, SerializableNoiseModule module, float heightScale, ColorSampler sampler, float step){
+    public void addHeightmap(String name, NoiseModule module, float heightScale, ColorSampler sampler, float step){
         double[][] heightMap = RenderHelper.generateNoise(module, width, height, step);
         addBuffer(name, RenderHelper.createBufferFromHeightmap(heightMap, heightScale, sampler));
     }
 
-    public void addHeightmap(String name, SerializableNoiseModule module){
+    public void addHeightmap(String name, NoiseModule module){
         addHeightmap(name, module, heightScale, defaultSampler, defaultStep);
     }
 

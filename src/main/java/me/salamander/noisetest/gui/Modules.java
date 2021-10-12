@@ -178,7 +178,7 @@ public class Modules {
 
     public static Supplier<GUINoiseModule> PERLIN = register("Perlin", SOURCE,() -> new NoiseSourceModule(NoiseType.PERLIN));
     public static Supplier<GUINoiseModule> SIMPLEX = register("Simplex", SOURCE,() -> new NoiseSourceModule(NoiseType.SIMPLEX));
-    public static Supplier<GUINoiseModule> OPEN_SIMPLEX = register("OpenSimplex", SOURCE, () -> new NoiseSourceModule(NoiseType.OPEN_SIMPLEX));
+    public static Supplier<GUINoiseModule> OPEN_SIMPLEX = register("OpenSimplex", SOURCE, () -> new NoiseSourceModule(NoiseType.OPEN_SIMPLEX2S));
     public static Supplier<GUINoiseModule> BILLOW = register("Billow", SOURCE, () -> new NoiseSourceModule(NoiseType.BILLOW));
     public static Supplier<GUINoiseModule> RIDGE = register("Ridge", SOURCE, () -> new Ridge());
     public static Supplier<GUINoiseModule> CHECKERBOARD = register("Checkerboard", SOURCE, () -> new CheckerBoard());

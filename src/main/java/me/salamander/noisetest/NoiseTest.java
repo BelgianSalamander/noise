@@ -2,26 +2,20 @@ package me.salamander.noisetest;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.color.ColorGradient;
-import me.salamander.noisetest.glsl.FunctionRegistry;
-import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.glsl.GLSLTranspiler;
 import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.gui.NoiseGUI;
 import me.salamander.noisetest.gui.components.GradientEditor;
+import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.combiner.BinaryFunctionType;
 import me.salamander.noisetest.modules.combiner.BinaryModule;
-import me.salamander.noisetest.modules.combiner.Select;
-import me.salamander.noisetest.modules.modifier.Turbulence;
-import me.salamander.noisetest.modules.modifier.Voronoi;
 import me.salamander.noisetest.modules.source.*;
-import me.salamander.noisetest.noise.PerlinNoise2D;
-import me.salamander.noisetest.render.HeightMapGenerator;
 import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
 import me.salamander.noisetest.render.api.ComputeShader;
-import me.salamander.noisetest.render.api.ShaderProgram;
 import me.salamander.noisetest.render.api.Window;
+import me.salamander.noisetest.terra.TerraLoader;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
 
@@ -36,9 +30,26 @@ import static org.lwjgl.opengl.GL45.*;
 
 public class NoiseTest {
     public static void main(String[] args){
-        HeightMapGenerator renderer = new HeightMapGenerator(512, new NoiseSourceModule(NoiseType.PERLIN), ColorGradient.TERRAIN);
+        try {
+            terraTest();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
 
-        renderer.mainloop();
+    private static void terraTest() throws IOException {
+        FileInputStream fin = new FileInputStream("res/noise.yml");
+        NoiseModule noise = TerraLoader.loadTerraNoise(new String(fin.readAllBytes(), StandardCharsets.UTF_8));
+        fin.close();
+
+        HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
+        renderer.setHeightScale(40.0f);
+        renderer.setDefaultSampler(ColorGradient.TERRAIN);
+        renderer.setDefaultStep(1f);
+
+        renderer.addHeightmap("noise", noise);
+
+        renderer.renderAll();
     }
 
     private static void queryBlockInfo() throws IOException{
@@ -147,7 +158,7 @@ public class NoiseTest {
         perlin.setFrequency(0.5);
         perlin.setLacunarity(3.0);
 
-        NoiseSourceModule openSimplex = new NoiseSourceModule(NoiseType.OPEN_SIMPLEX);
+        NoiseSourceModule openSimplex = new NoiseSourceModule(NoiseType.OPEN_SIMPLEX2S);
         openSimplex.setPersistence(0.2);
 
         BinaryModule combined = new BinaryModule(BinaryFunctionType.MULTIPLY);

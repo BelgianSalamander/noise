@@ -18,7 +18,7 @@ public enum NoiseType implements LongFunction<DoubleBinaryOperator> {
 	PERLIN("Perlin", l -> new PerlinNoise2D(l)::sample, "samplePerlin"),
 	BILLOW("Billow", l -> new PerlinNoise2D.Billow(l)::sample, "sampleBillow"),
 	SIMPLEX("Simplex", l -> new SimplexNoise2D(l)::sample, "sampleSimplex"),
-	OPEN_SIMPLEX("OpenSimplex", l -> new OpenSimplexNoise(l)::noise2, "sampleOpenSimplex");
+	OPEN_SIMPLEX2S("OpenSimplex", l -> new OpenSimplexNoise(l)::noise2, "sampleOpenSimplex");
 
 	private final String name;
 	private final LongFunction<DoubleBinaryOperator> noiseFnConstructor;

@@ -5,6 +5,7 @@ import me.salamander.noisetest.color.ColorGradient;
 import me.salamander.noisetest.color.ColorSampler;
 import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.glsl.GLSLTranspiler;
+import me.salamander.noisetest.modules.NoiseModule;
 import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.render.api.BufferObject;
 import me.salamander.noisetest.render.api.ComputeShader;
@@ -129,10 +130,29 @@ public class RenderHelper {
                     vertexNorth = new Vector3f(0, (float) (heightmap[x][y+1] * heightScale - heightAtPoint), 1);
                 }
 
-                Vector3f[] v1 = new Vector3f[]{vertexNorth, vertexEast, vertexSouth, vertexWest};
-                Vector3f[] v2 = new Vector3f[]{vertexEast, vertexSouth, vertexWest, vertexNorth};
+                //Experimental: Diagonal vectors
+                Vector3f vectorNorthEast = null, vectorNorthWest = null, vectorSouthEast = null, vectorSouthWest = null;
 
-                for(int index = 0; index < 4; index++){
+                if(x != 0 && y != 0){
+                    vectorSouthWest = new Vector3f(-1, (float) (heightmap[x-1][y-1] * heightScale - heightAtPoint), -1);
+                }
+
+                if(x != 0 && y != height - 1){
+                    vectorNorthWest = new Vector3f(-1, (float) (heightmap[x-1][y+1] * heightScale - heightAtPoint), 1);
+                }
+
+                if(x != width - 1 && y != 0){
+                    vectorSouthEast = new Vector3f(1, (float) (heightmap[x+1][y-1] * heightScale - heightAtPoint), -1);
+                }
+
+                if(x != width - 1 && y != width - 1){
+                    vectorNorthEast = new Vector3f(1, (float) (heightmap[x+1][y+1] * heightScale - heightAtPoint), 1);
+                }
+
+                Vector3f[] v1 = new Vector3f[]{vertexNorth, vertexEast, vertexSouth, vertexWest, vectorNorthEast, vectorSouthEast, vectorSouthWest, vectorNorthWest};
+                Vector3f[] v2 = new Vector3f[]{vertexEast, vertexSouth, vertexWest, vertexNorth, vectorSouthEast, vectorSouthWest, vectorNorthWest, vectorNorthEast};
+
+                for(int index = 0; index < 8; index++){
                     Vector3f vectorOne = v1[index];
                     Vector3f vectorTwo = v2[index];
 
@@ -193,10 +213,29 @@ public class RenderHelper {
                     vertexNorth = new Vector3f(0, (float) (heightmap[x][y+1] * heightScale - heightAtPoint), 1);
                 }
 
-                Vector3f[] v1 = new Vector3f[]{vertexNorth, vertexEast, vertexSouth, vertexWest};
-                Vector3f[] v2 = new Vector3f[]{vertexEast, vertexSouth, vertexWest, vertexNorth};
+                //Experimental: Diagonal vectors
+                Vector3f vectorNorthEast = null, vectorNorthWest = null, vectorSouthEast = null, vectorSouthWest = null;
 
-                for(int index = 0; index < 4; index++){
+                if(x != 0 && y != 0){
+                    vectorSouthWest = new Vector3f(-1, (float) (heightmap[x-1][y-1] * heightScale - heightAtPoint), -1);
+                }
+
+                if(x != 0 && y != height - 1){
+                    vectorNorthWest = new Vector3f(-1, (float) (heightmap[x-1][y+1] * heightScale - heightAtPoint), 1);
+                }
+
+                if(x != width - 1 && y != 0){
+                    vectorSouthEast = new Vector3f(1, (float) (heightmap[x+1][y-1] * heightScale - heightAtPoint), -1);
+                }
+
+                if(x != width - 1 && y != width - 1){
+                    vectorNorthEast = new Vector3f(1, (float) (heightmap[x+1][y+1] * heightScale - heightAtPoint), 1);
+                }
+
+                Vector3f[] v1 = new Vector3f[]{vertexNorth, vertexEast, vertexSouth, vertexWest, vectorNorthEast, vectorSouthEast, vectorSouthWest, vectorNorthWest};
+                Vector3f[] v2 = new Vector3f[]{vertexEast, vertexSouth, vertexWest, vertexNorth, vectorSouthEast, vectorSouthWest, vectorNorthWest, vectorNorthEast};
+
+                for(int index = 0; index < 8; index++){
                     Vector3f vectorOne = v1[index];
                     Vector3f vectorTwo = v2[index];
 
@@ -216,7 +255,7 @@ public class RenderHelper {
     }
 
     @NotNull
-    public static double[][] generateNoise(@NotNull SerializableNoiseModule module, int width, int height, double step){
+    public static double[][] generateNoise(@NotNull NoiseModule module, int width, int height, double step){
         double[][] out = new double[width][height];
         for(int x = 0; x < width; x++){
             for(int y = 0; y < height; y++){

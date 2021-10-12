@@ -181,4 +181,8 @@ public final class VoronoiSampler {
 	public static double randomdouble(int x, int y, int seed) {
 		return (double) random(x, y, seed, 0xFFFF) / (double) 0xFFFF;
 	}
+
+	public static float randomfloat(int x, int y, int seed) {
+		return (float) random(x, y, seed, 0xFFFF) / (float) 0xFFFF;
+	}
 }
