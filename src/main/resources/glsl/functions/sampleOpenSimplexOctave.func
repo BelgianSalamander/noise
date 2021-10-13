@@ -5,7 +5,7 @@ Requires 3
 getVec
 lerp2D
 smoothstep
-//K.jpg's OpenSimplex 2, smooth variant ("SuperSimplex")
+//K.jpg's OpenSimplex 2, smooth variant ("OpenSimplex2S")
 
 struct LatticePoint2D{
     ivec2 sv;
@@ -75,9 +75,8 @@ float sampleOpenSimplexOctave(vec2 pos, int seed){
         vec2 grad = getVec(possb + c.sv, seed);
         float extrapolation = dot(grad, d);
 
-//For some reason when I add the attn^4 it looks stupid
-        //attn *= attn;
-        value += /*attn **/ attn * extrapolation;
+        attn *= attn;
+        value += attn * attn * extrapolation;
     }
 
     return value;

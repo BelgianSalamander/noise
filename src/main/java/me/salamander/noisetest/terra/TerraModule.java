@@ -1,9 +1,10 @@
 package me.salamander.noisetest.terra;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.modules.NoiseModule;
 
-public abstract class TerraModule implements NoiseModule {
+public abstract class TerraModule implements GLSLCompilable {
     protected final int salt;
     protected final float frequency;
     protected final int dimensions;

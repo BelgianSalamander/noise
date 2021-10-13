@@ -1,7 +1,7 @@
 type: "DOMAINWARP"
 amplitude: 10
 warp:
-  type: "OPENSIMPLEX2S"
+  type: "PERLIN"
   frequency: 0.01
 function:
   type: "FBM"
@@ -10,3 +10,5 @@ function:
     type: "CELLULAR"
     return: "CellValue"
     frequency: 0.01
+    lookup:
+      type: "PERLIN"

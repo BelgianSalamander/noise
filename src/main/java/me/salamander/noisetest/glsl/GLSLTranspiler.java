@@ -45,7 +45,7 @@ public class GLSLTranspiler {
         }
 
         code.append("void main(){\n");
-        code.append("\tfloat value = ").append(compilable.glslExpression("(gl_GlobalInvocationID.xy * step + startPos)", "baseSeed")).append(";\n");
+        code.append("\tfloat value = ").append(compilable.glslExpression("((gl_GlobalInvocationID.xy + offset) * step + startPos)", "baseSeed")).append(";\n");
         code.append(TAIL);
         code.append("}");
 
@@ -58,6 +58,7 @@ public class GLSLTranspiler {
             uniform int baseSeed;
             uniform uint width;
             uniform vec2 startPos;
+            uniform ivec2 offset;
             uniform float step;
                        
             struct DataPoint{
@@ -74,8 +75,10 @@ public class GLSLTranspiler {
             """;
 
     private static final String TAIL = """
-            \tuint index = gl_GlobalInvocationID.y * width + gl_GlobalInvocationID.x;
+            \tuint index = (gl_GlobalInvocationID.y + offset.y) * width + gl_GlobalInvocationID.x + offset.x;
             \tdata.data[index].height = value;
+            \tdata.data[index].color = vec3((value + 1) / 2, (value + 1) / 2, (value + 1) / 2);
+            \tdata.data[index].normal = normalize(vec3(1.0, 2.0, 1.0));
             """;
 
     public static String compileModule(GLSLCompilable compilable, String path) {

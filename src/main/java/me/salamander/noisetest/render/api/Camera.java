@@ -18,9 +18,13 @@ public class Camera {
     private double[] previousPos;
 
     private static final float ROTATION_SPEED = 0.005f;
-    private static final float MOVEMENT_SPEED = 100.0f;
+    private float MOVEMENT_SPEED = 50.0f;
     private static final float MAX_PITCH = (float) (Math.PI * 0.495f);
     private static final float MIN_PITCH = (float) (Math.PI * -0.495f);
+
+    private Vector3f lockedPosition;
+    private Vector3f lockedDirection;
+    private boolean locked;
 
     public Camera(Window window){
         position = new Vector3f(0, 0, 0);
@@ -32,6 +36,10 @@ public class Camera {
         position = new Vector3f(x, y, z);
 
         initialisePreviousPosition(window);
+
+        glfwSetScrollCallback(window.getWindowHandle(), (w, xOffset, yOffset) -> {
+            MOVEMENT_SPEED *= Math.pow(1.1, yOffset);
+        });
     }
 
 
@@ -40,6 +48,19 @@ public class Camera {
     }
 
     public void handleInput(Window window, float dt){
+        if(glfwGetKey(window.getWindowHandle(), GLFW_KEY_Z) == GLFW_PRESS){
+            if(!locked){
+                lockedDirection = new Vector3f(forward);
+                lockedPosition = new Vector3f(position);
+
+                locked = true;
+            }
+        }else{
+            if(locked){
+                locked =false;
+            }
+        }
+
         double[] currentPos = window.getMousePosition();
         double x = currentPos[0];
         double y = currentPos[1];
@@ -99,6 +120,7 @@ public class Camera {
     }
 
     public Vector3f getPosition() {
+        if(locked) return lockedPosition;
         return position;
     }
 
@@ -158,5 +180,10 @@ public class Camera {
 
     public float getPitch() {
         return pitch;
+    }
+
+    public Vector3f getForward() {
+        if(locked) return lockedDirection;
+        return forward;
     }
 }

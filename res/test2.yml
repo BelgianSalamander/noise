@@ -1,6 +1,2 @@
-type: "FBM"
-octaves: 4,
-function:
-  type: "CELLULAR"
-  return: "CellValue"
-  frequency: 0.01
+type: "PERLIN"
+frequency: 0.01

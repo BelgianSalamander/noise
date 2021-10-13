@@ -1,0 +1,39 @@
+float {name}(vec2 pos, int seed){
+    vec2 magnified = pos * {frequency};
+
+    vec2 base = floor(magnified);
+
+    vec2 best;
+    float bestDistance = 1000000000000000.f;
+    float distanceTwo = 1000000000000000.f;
+    float distanceThree = 100000000000000.f;
+
+    for(int xo = -1; xo <= 1; xo++){
+        float gridX = base.x + xo;
+        for(int yo = -1; yo <= 1; yo++){
+             float gridY = base.y + yo;
+
+             vec2 gridPos = vec2(gridX, gridY);
+
+             vec2 jitteredPoint = gridPos + (0.5 * getVec(gridPos, seed));
+             float distance = {distance};
+
+             if(distance < bestDistance){
+                distanceThree = distanceTwo;
+                distanceTwo = bestDistance;
+                bestDistance = distance;
+
+                best = jitteredPoint;
+             }else if(distance < distanceTwo){
+                distanceThree = distanceTwo;
+                distanceTwo = distance;
+             }else if(distance < distanceThree){
+                distanceThree = distance;
+             }
+        }
+    }
+
+    best *= {reverseFrequency};
+
+    return {lookup};
+}

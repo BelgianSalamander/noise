@@ -1,13 +1,11 @@
 package me.salamander.noisetest.render.api;
 
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
+import org.joml.*;
 import org.lwjgl.system.MemoryStack;
 
 import java.lang.ref.Cleaner;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL45.*;
 
@@ -49,6 +47,10 @@ public class ComputeShader implements Cleaner.Cleanable {
 
     public int getUniformLocation(String name){
         int uniformLocation = glGetUniformLocation(program, name);
+
+        if(uniformLocation < 0){
+            System.out.println("Warning: Tried to fetch invalid uniform location ('" + name + "')");
+        }
 
         return uniformLocation;
     }
@@ -130,16 +132,26 @@ public class ComputeShader implements Cleaner.Cleanable {
         setUniform(getUniformLocation(name), value);
     }
 
-    private void setUniform(int uniformLocation, float value) {
+    public void setUniform(int uniformLocation, float value) {
         if(uniformLocation < 0) return;
         
         glUniform1f(uniformLocation, value);
     }
 
-    private void setUniform(int uniformLocation, int value) {
+    public void setUniform(int uniformLocation, int value) {
         if(uniformLocation < 0) return;
 
         glUniform1i(uniformLocation, value);
+    }
+
+    public void setUniform(int uniformLocation, Vector2i value){
+        if(uniformLocation < 0) return;
+
+        try(MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer ib = stack.mallocInt(2);
+            value.get(ib);
+            glUniform2iv(uniformLocation, ib);
+        }
     }
 
     public void bind() {
@@ -148,5 +160,13 @@ public class ComputeShader implements Cleaner.Cleanable {
 
     public int getHandle() {
         return program;
+    }
+
+    public void setUniform(String name, Vector2i value) {
+        setUniform(getUniformLocation(name), value);
+    }
+
+    public void setUniform(String name, boolean b) {
+        setUniform(getUniformLocation(name), b);
     }
 }

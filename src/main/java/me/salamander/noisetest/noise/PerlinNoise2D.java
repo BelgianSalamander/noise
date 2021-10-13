@@ -1,23 +1,31 @@
 package me.salamander.noisetest.noise;
 
+import me.salamander.noisetest.modules.NoiseModule;
+
 import java.util.Random;
 
-public class PerlinNoise2D {
+public class PerlinNoise2D implements NoiseModule {
     private final int GRAD_LENGTH = 1024;
     private final Vec2[] gradients = new Vec2[GRAD_LENGTH];
 
     private final Random random;
 
+    private long seed;
+
     public PerlinNoise2D(){
-        random = new Random();
+        this.seed = new Random().nextLong();
+        random = new Random(seed);
         createGradients();
     }
 
     public PerlinNoise2D(long seed){
         random = new Random(seed);
         createGradients();
+
+        this.seed = seed;
     }
 
+    @Override
     public float sample(float x, float y){
         int lowX = floor(x);
         int lowY = floor(y);
@@ -35,6 +43,19 @@ public class PerlinNoise2D {
         Vec2 cornerFour = getGradient(highX, highY);
 
         return lerp(cornerOne.dot(cornerOneOffset), cornerTwo.dot(cornerTwoOffset), cornerThree.dot(cornerThreeOffset), cornerFour.dot(cornerFourOffset), smoothstep(x - lowX), smoothstep(y - lowY));
+    }
+
+    @Override
+    public long getSeed() {
+        return seed;
+    }
+
+    @Override
+    public void setSeed(long s) {
+        this.seed = s;
+        this.random.setSeed(s);
+
+        createGradients();
     }
 
     private void createGradients(){

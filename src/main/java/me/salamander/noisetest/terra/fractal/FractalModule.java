@@ -6,6 +6,8 @@ import me.salamander.noisetest.terra.TerraLoader;
 import me.salamander.noisetest.terra.TerraModule;
 import me.salamander.noisetest.util.JsonHelper;
 
+import java.util.Objects;
+
 public abstract class FractalModule extends TerraModule {
     protected final int octaves;
     protected final NoiseModule function;
@@ -31,5 +33,18 @@ public abstract class FractalModule extends TerraModule {
     @Override
     public long getSeed() {
         return function.getSeed() - salt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FractalModule that = (FractalModule) o;
+        return octaves == that.octaves && Float.compare(that.gain, gain) == 0 && Float.compare(that.lacunarity, lacunarity) == 0 && Objects.equals(function, that.function);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(octaves, function, gain, lacunarity);
     }
 }

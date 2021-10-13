@@ -1,0 +1,6 @@
+sum
+float
+(vec2 vector)
+float sum(vec2 vector){
+    return vector.x + vector.y;
+}

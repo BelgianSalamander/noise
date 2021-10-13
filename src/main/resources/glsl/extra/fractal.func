@@ -1,0 +1,14 @@
+float {name}(vec2 pos, int seed){
+    float total = 0;
+    float actualPersistence = 1;
+    float actualFrequency = {frequency};
+
+    for(int i = 0; i < {numOctaves}; i++){
+        total += actualPersistence * {sample};
+        seed *= 122609317;
+        actualPersistence *= {persistence};
+        actualFrequency *= {lacunarity};
+    }
+
+    return total;
+}

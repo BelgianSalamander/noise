@@ -1,10 +1,12 @@
 package me.salamander.noisetest.terra.source;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import me.salamander.noisetest.glsl.FunctionInfo;
 import me.salamander.noisetest.modules.source.NoiseType;
 import me.salamander.noisetest.terra.TerraModule;
 import me.salamander.noisetest.util.FloatBinaryOperator;
 
+import java.util.Set;
 import java.util.function.DoubleBinaryOperator;
 
 public class SingleNoiseSourceModule extends TerraModule {
@@ -34,5 +36,15 @@ public class SingleNoiseSourceModule extends TerraModule {
     @Override
     public long getSeed() {
         return seed;
+    }
+
+    @Override
+    public String glslExpression(String vec2Name, String seedName) {
+        return type.glslCall(vec2Name, seedName, new float[]{1, frequency, 1, 1});
+    }
+
+    @Override
+    public Set<FunctionInfo> requiredFunctions() {
+        return type.required();
     }
 }

@@ -2,6 +2,7 @@ package me.salamander.noisetest;
 
 import io.github.antiquitymc.nbt.CompoundTag;
 import me.salamander.noisetest.color.ColorGradient;
+import me.salamander.noisetest.glsl.GLSLCompilable;
 import me.salamander.noisetest.glsl.GLSLTranspiler;
 import me.salamander.noisetest.gui.Modules;
 import me.salamander.noisetest.gui.NoiseGUI;
@@ -11,6 +12,7 @@ import me.salamander.noisetest.modules.SerializableNoiseModule;
 import me.salamander.noisetest.modules.combiner.BinaryFunctionType;
 import me.salamander.noisetest.modules.combiner.BinaryModule;
 import me.salamander.noisetest.modules.source.*;
+import me.salamander.noisetest.render.HeightMapGenerator;
 import me.salamander.noisetest.render.HeightMapRenderer;
 import me.salamander.noisetest.render.RenderHelper;
 import me.salamander.noisetest.render.api.ComputeShader;
@@ -30,26 +32,31 @@ import static org.lwjgl.opengl.GL45.*;
 
 public class NoiseTest {
     public static void main(String[] args){
-        try {
-            terraTest();
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        generatorTest();
+    }
+
+    private static void generatorTest(){
+        HeightMapGenerator generator = new HeightMapGenerator(512, new Ridge(), ColorGradient.TERRAIN);
+        generator.mainloop();
     }
 
     private static void terraTest() throws IOException {
-        FileInputStream fin = new FileInputStream("res/noise.yml");
+        FileInputStream fin = new FileInputStream("res/test2.yml");
         NoiseModule noise = TerraLoader.loadTerraNoise(new String(fin.readAllBytes(), StandardCharsets.UTF_8));
         fin.close();
 
-        HeightMapRenderer renderer = new HeightMapRenderer(500, 500);
-        renderer.setHeightScale(40.0f);
+        HeightMapGenerator generator = new HeightMapGenerator(512, (GLSLCompilable) noise, ColorGradient.DEFAULT);
+        generator.setStep(1.f);
+        generator.mainloop();
+
+        /*HeightMapRenderer renderer = new HeightMapRenderer(512, 512);
+        renderer.setDefaultStep(0.01f);
         renderer.setDefaultSampler(ColorGradient.TERRAIN);
-        renderer.setDefaultStep(1f);
+        renderer.setHeightScale(20.f);
 
-        renderer.addHeightmap("noise", noise);
+        renderer.addHeightmap("cpu", noise);
 
-        renderer.renderAll();
+        renderer.renderAll();*/
     }
 
     private static void queryBlockInfo() throws IOException{

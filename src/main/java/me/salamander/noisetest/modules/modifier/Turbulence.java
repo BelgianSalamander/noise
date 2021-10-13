@@ -17,7 +17,7 @@ public class Turbulence extends ModifierModule implements GLSLCompilable {
     private final NoiseSourceModule xTurbulence, yTurbulence;
 
     private static final int TURBULENCE_POWER_INDEX = 0, TURBULENCE_FREQUENCY_INDEX = 1;
-    private static final FormattableText functionCode;
+    public static final FormattableText functionCode;
 
     private final Function function = new Function();
     private final Set<FunctionInfo> required = new HashSet<>();
