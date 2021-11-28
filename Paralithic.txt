@@ -1,0 +1,1 @@
+This project uses the Paralithic library from https://github.com/PolyhedralDev/Paralithic

@@ -24,6 +24,9 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:2.6.3"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0"
 
+    implementation files('dependencies/Paralithic-0.5.0.jar')
+    implementation "org.ow2.asm:asm:9.2"
+
     implementation "org.joml:joml:1.10.1"
     implementation "com.github.BelgianSalamander:Nbt:1.1.1-bugfix"
     implementation 'com.formdev:flatlaf:1.0'

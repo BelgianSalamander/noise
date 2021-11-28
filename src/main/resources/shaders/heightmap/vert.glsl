@@ -21,9 +21,9 @@ void main(){
 
     float distance = length(pos);
 
-    if(distance > 200){
-        if(distance < 400){
-            diffuseStrength = 1 - (distance - 200) / 200;
+    if(distance > 300){
+        if(distance < 500){
+            diffuseStrength = 1 - (distance - 300) / 200;
         }else{
             diffuseStrength = 0;
         }

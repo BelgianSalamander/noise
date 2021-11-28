@@ -1,2 +1,2 @@
-type: "PERLIN"
-frequency: 0.01
+type: CELLULAR
+frequency: 0.003

@@ -25,5 +25,5 @@ float samplePerlinOctave(vec2 pos, int seed){
         dot(getVec(vec2(highX, highY), seed), cornerFourOffset),
         smoothstep(pos.x - lowX),
         smoothstep(pos.y - lowY)
-    );
+    ) * 1.414213562373095;
 }

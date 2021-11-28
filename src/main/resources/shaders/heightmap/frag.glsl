@@ -9,7 +9,7 @@ in float diffuseStrength;
 layout(location = 0) out vec4 color;
 
 uniform vec3 lightDirection = normalize(vec3(1.0, 2.0, 1.0));
-float ambient = 0.1;
+float ambient = 0.5;
 
 uniform bool doDiffuse = false;
 

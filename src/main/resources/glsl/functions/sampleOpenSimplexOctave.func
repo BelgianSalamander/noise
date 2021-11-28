@@ -72,7 +72,7 @@ float sampleOpenSimplexOctave(vec2 pos, int seed){
         float attn = 2.0 / 3.0 - dot(d, d);
         if(attn <= 0) continue;
 
-        vec2 grad = getVec(possb + c.sv, seed);
+        vec2 grad = getVec(possb + c.sv, seed) * 18.24196194486065;
         float extrapolation = dot(grad, d);
 
         attn *= attn;

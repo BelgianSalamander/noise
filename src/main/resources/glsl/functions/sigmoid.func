@@ -1,0 +1,6 @@
+sigmoid
+float
+(float n)
+float sigmoid(float n){
+    return 1 / (1 + exp(-n));
+}
