@@ -29,6 +29,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public abstract class OpenGL2DRenderer {
     private static final int HEIGHT_BYTES = 4;
     private static final int NORMAL_BYTES = 12;
+    protected static final int[] LOD_STEPS = {1, 2, 4, 8, 16, 32};
 
     protected final int chunkSize;
     protected final float step;
@@ -39,7 +40,7 @@ public abstract class OpenGL2DRenderer {
 
     protected final ColorMode colorMode;
 
-    protected int ebo;
+    protected int[] lodIndices;
     protected int xzBuffer;
 
     private Window window;
@@ -98,14 +99,14 @@ public abstract class OpenGL2DRenderer {
 
         camera = new Camera(window);
 
-        ebo = glGenBuffers();
+        //ebo = glGenBuffers();
         xzBuffer = glGenBuffers();
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBindBuffer(GL_ARRAY_BUFFER, xzBuffer);
 
         //Generate index buffer
-        IntBuffer indices = MemoryUtil.memAllocInt((chunkSize - 1) * (chunkSize - 1) * 6);
+        /*IntBuffer indices = MemoryUtil.memAllocInt((chunkSize - 1) * (chunkSize - 1) * 6);
         for (int x = 0; x < (chunkSize - 1); x++) {
             for (int z = 0; z < (chunkSize - 1); z++) {
                 int baseIndex = z * chunkSize + x;
@@ -120,7 +121,9 @@ public abstract class OpenGL2DRenderer {
         }
         indices.flip();
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-        MemoryUtil.memFree(indices);
+        MemoryUtil.memFree(indices);*/
+
+        generateIndices();
 
         //Generate xz buffer
         FloatBuffer xz = MemoryUtil.memAllocFloat(chunkSize * chunkSize * 2);
@@ -140,6 +143,149 @@ public abstract class OpenGL2DRenderer {
         if(colorMode.useTexture){
             glUniform1i(glGetUniformLocation(program, "tex"), 0);
         }
+    }
+
+    private void generateIndices() {
+        lodIndices = new int[LOD_STEPS.length];
+
+        for (int i = 0; i < lodIndices.length; i++) {
+            lodIndices[i] = generateIndicesForStep(LOD_STEPS[i]);
+        }
+    }
+
+    private int generateIndicesForStep(int lodStep) {
+        int neededForEdge = 4 * (chunkSize - 1);
+
+        int insideLength = chunkSize - 2;
+        int insidePointsOnSide = insideLength / lodStep;
+
+        int neededForInnerEdge = 4 * (insidePointsOnSide - 1);
+        int usedInside = 2 * (insidePointsOnSide - 1) * (insidePointsOnSide - 1);
+
+        int extraSpace = lodStep - 1;
+        int shift = 1 + extraSpace / 2;
+
+        int end = shift + insidePointsOnSide * lodStep;
+
+        IntBuffer indices = MemoryUtil.memAllocInt((usedInside + neededForEdge + neededForInnerEdge) * 3);
+
+        //For Now, only inner;
+        for(int x = shift; x < end - lodStep; x += lodStep){
+            for(int y = shift; y < end - lodStep; y += lodStep){
+                int baseIndex = (y * chunkSize + x);
+
+                indices.put(baseIndex);
+                indices.put(baseIndex + lodStep);
+                indices.put(baseIndex + chunkSize * lodStep);
+                indices.put(baseIndex + chunkSize * lodStep);
+                indices.put(baseIndex + lodStep);
+                indices.put(baseIndex + chunkSize * lodStep + lodStep);
+            }
+        }
+
+        //Y edge
+        for(int y = 0; y < chunkSize - 1; y++){
+            int baseIndex = y * chunkSize;
+
+            float modifiedPos = ((float) y) / lodStep;
+
+
+            int connectTo = (int) (Math.ceil(modifiedPos) - 1);
+            if(connectTo < 0) connectTo = 0;
+            else if(connectTo >= insidePointsOnSide) connectTo = insidePointsOnSide - 1;
+
+            int connectToY = shift + connectTo * lodStep;
+            int connectToX = shift;
+
+            indices.put(baseIndex);
+            indices.put(connectToY * chunkSize + connectToX);
+            indices.put(baseIndex + chunkSize);
+
+            int xShift = chunkSize - 1;
+            connectToX = end - lodStep;
+
+            indices.put(baseIndex + xShift);
+            indices.put(baseIndex + chunkSize + xShift);
+            indices.put(connectToY * chunkSize + connectToX);
+        }
+
+        //X edge
+        for(int x = 0; x < chunkSize - 1; x++){
+            int baseIndex = x;
+            float modifiedPos = ((float) x) / lodStep;
+
+
+            int connectTo = (int) (Math.ceil(modifiedPos) - 1);
+            if(connectTo < 0) connectTo = 0;
+            else if(connectTo >= insidePointsOnSide) connectTo = insidePointsOnSide - 1;
+
+            int connectToX = shift + connectTo * lodStep;
+            int connectToY = shift;
+
+            indices.put(baseIndex);
+            indices.put(baseIndex + 1);
+            indices.put(connectToY * chunkSize + connectToX);
+
+            int yShift = (chunkSize - 1) * chunkSize;
+            connectToY = end - lodStep;
+
+            indices.put(baseIndex + yShift);
+            indices.put(connectToX + connectToY * chunkSize);
+            indices.put(baseIndex + 1 + yShift);
+        }
+
+        //Inner Y Edge
+        for(int y = shift; y < end - lodStep; y += lodStep){
+            int nextY = y + lodStep;
+
+            int connectToY = Math.round((y + nextY) / 2.f) + 1;
+
+            if(lodStep == 1) connectToY--;
+
+            int x = shift;
+
+            indices.put(y * chunkSize + x);
+            indices.put(nextY * chunkSize + x);
+            indices.put(connectToY * chunkSize);
+
+            x = end - lodStep;
+
+            indices.put(y * chunkSize + x);
+            indices.put(connectToY * chunkSize + chunkSize - 1);
+            indices.put(nextY * chunkSize + x);
+        }
+
+        //Inner X Edge
+        for(int x = shift; x < end - lodStep; x += lodStep){
+            int nextX = x + lodStep;
+
+            int connectToX = Math.round((x + nextX) / 2.f) + 1;
+
+            if(lodStep == 1) connectToX--;
+
+            int y = shift;
+
+            indices.put(y * chunkSize + x);
+            indices.put(connectToX);
+            indices.put(y * chunkSize + nextX);
+
+            y = end - lodStep;
+            int yShift = (chunkSize - 1) * chunkSize;
+
+            indices.put(y * chunkSize + x);
+            indices.put(y * chunkSize + nextX);
+            indices.put(connectToX + yShift);
+        }
+
+        indices.flip();
+
+        int ebo = glGenBuffers();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+
+        MemoryUtil.memFree(indices);
+
+        return ebo;
     }
 
     public void changeSeed(long seed){
@@ -254,8 +400,15 @@ public abstract class OpenGL2DRenderer {
             Matrix4f projectionMatrix = window.getProjectionMatrix();
             setProjectionMatrix(projectionMatrix);
 
+            int x = (int) Math.floor(camera.getPosition().z / (chunkSize - 1));
+            int z = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
+
             for(TerrainChunk chunk : chunks.values()){
-                chunk.draw(viewMatrix);
+                int LOD = Math.abs(x - chunk.x) + Math.abs(z - chunk.z) / 2;
+                if(LOD >= lodIndices.length){
+                    LOD = lodIndices.length - 1;
+                }
+                chunk.draw(viewMatrix, LOD);
             }
 
             window.swapBuffers();
@@ -282,13 +435,12 @@ public abstract class OpenGL2DRenderer {
         int x = (int) Math.floor(camera.getPosition().z / (chunkSize - 1));
         int z = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
 
-        List<Pos> toRemove = new ArrayList<>(2);
+        Set<Pos> toRemove = new HashSet<>(2);
         chunks.keySet().forEach(key -> {
             if (key.x() < x - viewDistance || key.x() > x + viewDistance || key.y() < z - viewDistance || key.y() > z + viewDistance) {
                 toRemove.add(key);
             }
         });
-        toRemove.forEach(chunks::remove);
 
         for (int i = -viewDistance; i <= viewDistance; i++) {
             for (int j = -viewDistance; j <= viewDistance; j++) {
@@ -296,8 +448,11 @@ public abstract class OpenGL2DRenderer {
                 if (!chunks.containsKey(key)) {
                     queueChunk(key.x(), key.y());
                 }
+                toRemove.remove(key);
             }
         }
+
+        toRemove.forEach(this::removeChunk);
     }
 
     protected void removeChunk(Pos key){
@@ -323,6 +478,7 @@ public abstract class OpenGL2DRenderer {
     protected class TerrainChunk{
         private static final Matrix4f epicMatrix = new Matrix4f();
 
+        protected final int x, z;
         protected final Matrix4f modelMatrix;
         protected final int vao;
         protected final int heightBuffer;
@@ -331,6 +487,8 @@ public abstract class OpenGL2DRenderer {
         protected final int texture;
 
         public TerrainChunk(float x, float z, int vao, int heightBuffer, int colorDataBuffer, int normalBuffer, int texture){
+            this.x = (int) x / (chunkSize - 1);
+            this.z = (int) z / (chunkSize - 1);
             this.modelMatrix = new Matrix4f().translate(z, 0, x);
             this.vao = vao;
             this.heightBuffer = heightBuffer;
@@ -351,7 +509,7 @@ public abstract class OpenGL2DRenderer {
             }
         }
 
-        private void draw(Matrix4f viewMatrix){
+        private void draw(Matrix4f viewMatrix, int lod){
             setModelView(viewMatrix.mul(modelMatrix, epicMatrix));
             glBindVertexArray(vao);
 
@@ -360,7 +518,7 @@ public abstract class OpenGL2DRenderer {
                 glBindTexture(GL_TEXTURE_2D, texture);
             }
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lodIndices[lod]);
             glDrawElements(GL_TRIANGLES, (chunkSize - 1) * (chunkSize - 1) * 6, GL_UNSIGNED_INT, 0);
 
             //System.out.println("Drawing chunk " + modelMatrix.m30() / 255 + ", " + modelMatrix.m32() / 255);

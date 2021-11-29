@@ -266,8 +266,6 @@ public class CPUChunkGenerator extends OpenGL2DRenderer{
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderer.chunkSize, renderer.chunkSize, 0, GL_RGBA, GL_FLOAT, textureData());
             }
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.ebo);
-
             return renderer.new TerrainChunk(x * (renderer.chunkSize - 1), z * (renderer.chunkSize - 1), vao, heightBuffer, colorBuffer, normalBuffer, texture);
         }
     }

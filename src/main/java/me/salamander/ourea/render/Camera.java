@@ -17,7 +17,7 @@ public class Camera {
     private double[] previousPos;
 
     private static final float ROTATION_SPEED = 0.005f;
-    private float MOVEMENT_SPEED = 50.0f;
+    private float MOVEMENT_SPEED = 500.0f;
     private static final float MAX_PITCH = (float) (Math.PI * 0.495f);
     private static final float MIN_PITCH = (float) (Math.PI * -0.495f);
 

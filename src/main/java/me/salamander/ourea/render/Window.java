@@ -95,7 +95,7 @@ public class Window {
     }
 
     public Matrix4f getProjectionMatrix(){
-        return new Matrix4f().perspective((float) Math.toRadians(60), (float) width / height, 0.1f, 1000.f);
+        return new Matrix4f().perspective((float) Math.toRadians(60), (float) width / height, 0.1f, 10000.f);
     }
 
     public String getTitle() {
