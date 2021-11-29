@@ -21,7 +21,7 @@ public class Turbulence implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
 
     }
 
@@ -31,7 +31,7 @@ public class Turbulence implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         final float x0 = x + (12148.0f / 65536.0f);
         final float y0 = y + (56346.0f / 65536.0f);
         final float x1 = x + (23436.0f / 65536.0f);
@@ -44,7 +44,7 @@ public class Turbulence implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         final float x0 = x + (12148.0f / 65536.0f);
         final float y0 = y + (56346.0f / 65536.0f);
         final float z0 = z + (81919.0f / 65536.0f);

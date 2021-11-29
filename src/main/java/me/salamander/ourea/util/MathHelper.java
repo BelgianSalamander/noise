@@ -29,7 +29,7 @@ public class MathHelper {
         return (a % b + b) % b;
     }
 
-    public static int hash(int x, int y, long seed) {
+    public static int hash(int x, int y, int seed) {
         seed ^= x * 1748247483L;
         seed ^= y * 8482748374L;
         seed ^= seed >> 13;
@@ -42,30 +42,30 @@ public class MathHelper {
         return (int) seed;
     }
 
-    public static int hash(int x, int y, int z, long seed) {
+    public static int hash(int x, int y, int z, int seed) {
         int hash = hash(x, y, seed);
         hash = hash(hash, z, seed);
         return hash;
     }
 
-    public static float random(int x, int y, long seed){
+    public static float random(int x, int y, int seed){
         int hash = hash(x, y, seed);
         return (hash & 0xFFFF) / 65536f;
     }
 
-    public static float random(int x, int y, int z, long seed){
+    public static float random(int x, int y, int z, int seed){
         int hash = hash(x, y, z, seed);
         return (hash & 0xFFFF) / 65536f;
     }
 
-    public static Grad2 getGradient(int x, int y, long seed){
+    public static Grad2 getGradient(int x, int y, int seed){
         int hash = hash(x, y, seed);
         //random.setSeed(seed + x ^ 16363462 + y);
         //int hash = random.nextInt();
         return grad2[mod(hash, grad2.length)];
     }
 
-    public static Grad3 getGradient(int x, int y, int z, long seed){
+    public static Grad3 getGradient(int x, int y, int z, int seed){
         int hash = hash(x, y, z, seed);
         return grad3[mod(hash, grad3.length)];
     }

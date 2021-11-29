@@ -4,7 +4,7 @@ import me.salamander.ourea.modules.NoiseSampler;
 
 public class Z implements NoiseSampler {
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
 
     }
 
@@ -14,12 +14,12 @@ public class Z implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         throw new UnsupportedOperationException("Cannot get Z of 2D noise");
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         return z;
     }
 }

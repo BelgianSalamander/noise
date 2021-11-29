@@ -1,6 +1,7 @@
 package me.salamander.ourea;
 
 import me.salamander.ourea.color.ColorGradient;
+import me.salamander.ourea.glsl.transpile.JavaTranspiler;
 import me.salamander.ourea.modules.modifier.BinaryModule;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.modules.modifier.Turbulence;
@@ -12,12 +13,48 @@ import me.salamander.ourea.modules.source.coord.X;
 import me.salamander.ourea.modules.source.coord.Y;
 import me.salamander.ourea.render.opengl.CPUChunkGenerator;
 import me.salamander.ourea.render.opengl.OpenGL2DRenderer;
-import org.lwjgl.opengl.GL45;
 
 import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
+        glslTest();
+    }
+
+    public static void glslTest(){
+        NoiseSampler testSampler = new NoiseSampler() {
+            @Override
+            public void setSalt(int salt) {
+
+            }
+
+            @Override
+            public void setFrequency(float frequency) {
+
+            }
+
+            @Override
+            public float sample(float x, float y, int seed) {
+                if(x > y || (x == (y + 1) && x % 2 == 0)){
+                    return (float)Math.sin(x);
+                }else{
+                    return (float)Math.sin(y);
+                }
+            }
+
+            @Override
+            public float sample(float x, float y, float z, int seed) {
+                return 0;
+            }
+        };
+
+        JavaTranspiler transpiler = new JavaTranspiler(testSampler, 2);
+        while(transpiler.hasNextExpression()){
+            System.out.println(transpiler.nextStatement().toGLSL(transpiler.getInfo()));
+        }
+    }
+
+    public static void CPUTest() {
         ColorGradient gradient = new ColorGradient();
 
         gradient.put(-1, Color.BLUE);
@@ -39,7 +76,7 @@ public class Main {
         turbulence.setPower(0.25f);
 
         OpenGL2DRenderer renderer = new CPUChunkGenerator(
-                256, 0.01f, 69420L, OpenGL2DRenderer.ColorMode.TEXTURE_SMOOTH, gradient,
+                256, 0.01f, 69420, OpenGL2DRenderer.ColorMode.TEXTURE_SMOOTH, gradient,
                 turbulence
         );
         renderer.setViewDistance(3);

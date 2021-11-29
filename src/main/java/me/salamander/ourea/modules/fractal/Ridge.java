@@ -50,7 +50,7 @@ public class Ridge implements NoiseSampler{
     }
 
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
 
     }
 
@@ -60,7 +60,7 @@ public class Ridge implements NoiseSampler{
     }
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         float value = 0;
         float frequency = 1;
         float amplitude = 1;
@@ -79,7 +79,7 @@ public class Ridge implements NoiseSampler{
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         float value = 0;
         float frequency = 1;
         float amplitude = 1;

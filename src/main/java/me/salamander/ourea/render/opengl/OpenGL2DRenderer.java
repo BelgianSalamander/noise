@@ -33,7 +33,7 @@ public abstract class OpenGL2DRenderer {
 
     protected final int chunkSize;
     protected final float step;
-    protected long seed;
+    protected int seed;
 
     protected final NoiseSampler noiseSampler;
     protected final ColorGradient gradient;
@@ -64,7 +64,7 @@ public abstract class OpenGL2DRenderer {
 
     private FirstClicked regenerateSeed;
 
-    public OpenGL2DRenderer(int chunkSize, float step, long seed, ColorMode colorMode, ColorGradient gradient, NoiseSampler sampler){
+    public OpenGL2DRenderer(int chunkSize, float step, int seed, ColorMode colorMode, ColorGradient gradient, NoiseSampler sampler){
         this.chunkSize = chunkSize;
         this.colorMode = colorMode;
         this.noiseSampler = sampler;
@@ -288,7 +288,7 @@ public abstract class OpenGL2DRenderer {
         return ebo;
     }
 
-    public void changeSeed(long seed){
+    public void changeSeed(int seed){
         this.seed = seed;
         regenerateChunks = true;
     }
@@ -427,7 +427,7 @@ public abstract class OpenGL2DRenderer {
 
     private void trackInput() {
         if(regenerateSeed.wasClicked()){
-            changeSeed(random.nextLong());
+            changeSeed(random.nextInt());
         }
     }
 

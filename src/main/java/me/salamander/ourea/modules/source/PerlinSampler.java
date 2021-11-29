@@ -9,11 +9,11 @@ public class PerlinSampler implements NoiseSampler {
     private static final float SCALE2D = 1 / (float) Math.sqrt(2 / 4F);
     private static final float SCALE3D = 1 / (float) Math.sqrt(3 / 4F);
 
-    private long salt = 0;
+    private int salt = 0;
     private float frequency = 1;
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         seed += salt;
         x *= frequency;
         y *= frequency;
@@ -22,10 +22,6 @@ public class PerlinSampler implements NoiseSampler {
         int lowY = MathHelper.floor(y);
         int highX = lowX + 1;
         int highY = lowY + 1;
-
-        if(lowX > 3){
-            //System.out.println("Poggies");
-        }
 
         Grad2 grad00 = MathHelper.getGradient(lowX, lowY, seed);
         Grad2 grad01 = MathHelper.getGradient(highX, lowY, seed);
@@ -40,7 +36,7 @@ public class PerlinSampler implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         seed += salt;
         x *= frequency;
         y *= frequency;
@@ -72,7 +68,7 @@ public class PerlinSampler implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
         this.salt = salt;
     }
 

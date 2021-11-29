@@ -21,7 +21,7 @@ public class SwingRenderer {
 
     static float max = 0;
 
-    public void render(NoiseSampler sampler, long seed) {
+    public void render(NoiseSampler sampler, int seed) {
         //Generate a buffered image of the noise
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for (int x = 0; x < width; x++) {

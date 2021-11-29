@@ -10,11 +10,11 @@ import me.salamander.ourea.util.MathHelper;
  * A lot of this code is taken from K.jpg's OpenSimplex 2, smooth variant ("SuperSimplex")
  */
 public class OpenSimplex2SSampler implements NoiseSampler {
-    private long salt;
+    private int salt;
     private float frequency = 1;
 
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
         this.salt = salt;
     }
 
@@ -24,7 +24,7 @@ public class OpenSimplex2SSampler implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         seed += salt;
         x *= frequency;
         y *= frequency;
@@ -67,7 +67,7 @@ public class OpenSimplex2SSampler implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         seed += salt;
         x *= frequency;
         y *= frequency;

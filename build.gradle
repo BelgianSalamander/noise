@@ -39,6 +39,11 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+
+    implementation "org.ow2.asm:asm-commons:9.2"
+    implementation "org.ow2.asm:asm-tree:9.2"
+    implementation "org.ow2.asm:asm-analysis:9.2"
+    implementation "org.ow2.asm:asm-util:9.2"
 }
 
 sourceSets{

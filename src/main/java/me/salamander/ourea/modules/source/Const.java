@@ -18,7 +18,7 @@ public class Const implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
 
     }
 
@@ -28,12 +28,12 @@ public class Const implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         return value;
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         return value;
     }
 }

@@ -14,7 +14,7 @@ public class CPUChunkGenerator extends OpenGL2DRenderer{
     private final CompletionService<ChunkData> completionService;
     private int code = 0;
 
-    public CPUChunkGenerator(int chunkSize, float step, long seed, ColorMode colorMode, ColorGradient gradient, NoiseSampler sampler) {
+    public CPUChunkGenerator(int chunkSize, float step, int seed, ColorMode colorMode, ColorGradient gradient, NoiseSampler sampler) {
         super(chunkSize, step, seed, colorMode, gradient, sampler);
 
         executor = Executors.newFixedThreadPool(5);

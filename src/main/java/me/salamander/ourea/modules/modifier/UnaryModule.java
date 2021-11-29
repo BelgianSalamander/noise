@@ -12,7 +12,7 @@ public class UnaryModule implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(long salt) {
+    public void setSalt(int salt) {
 
     }
 
@@ -22,12 +22,12 @@ public class UnaryModule implements NoiseSampler {
     }
 
     @Override
-    public float sample(float x, float y, long seed) {
+    public float sample(float x, float y, int seed) {
         return op.apply(source.sample(x, y, seed));
     }
 
     @Override
-    public float sample(float x, float y, float z, long seed) {
+    public float sample(float x, float y, float z, int seed) {
         return op.apply(source.sample(x, y, z, seed));
     }
 
