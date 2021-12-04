@@ -1,9 +1,8 @@
 package me.salamander.ourea.glsl.transpile;
 
-import me.salamander.ourea.glsl.transpile.method.MethodResolver;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
 import me.salamander.ourea.glsl.transpile.tree.*;
-import me.salamander.ourea.glsl.transpile.tree.comparison.CompareExpression;
+import me.salamander.ourea.glsl.transpile.tree.comparison.*;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
@@ -22,7 +21,7 @@ public class JavaTranspiler {
     private final Stack<Expression> stack = new Stack<>();
     private final FrameInfo[] code;
     private final TranspilationInfo info = new TranspilationInfo();
-    private final Node controlFlowGraph;
+    private final CFGNode controlFlowGraph;
     private int index = 0;
 
     public JavaTranspiler(NoiseSampler sampler, int dimension) {
@@ -81,194 +80,97 @@ public class JavaTranspiler {
             }
         }
 
-        Node[] nodes = new Node[code.length];
+        CFGNode[] nodes = new CFGNode[code.length];
 
         for(int i = 0; i < code.length; i++) {
-            nodes[i] = new Node(code[i]);
+            nodes[i] = new CFGNode(code[i], this);
         }
 
         for(int i = 0; i < nodes.length; i++) {
             FrameInfo frame = code[i];
-            Node node = nodes[i];
+            CFGNode node = nodes[i];
 
             for(int prev : frame.prev) {
                 node.addPrev(nodes[prev]);
             }
 
-            for(int next : frame.next){
-                node.addNext(nodes[next]);
+            if(frame.next.size() == 0){
+                node.type = CFGNode.NodeType.RETURN;
+            }else if(frame.next.size() == 1){
+                node.type = CFGNode.NodeType.CODE;
+                node.normalNext = nodes[frame.next.iterator().next()];
+            }else if(frame.next.size() == 2){
+                node.type = CFGNode.NodeType.CONDITIONAL_JUMP;
+                int normalNext = i + 1;
+                node.normalNext = nodes[normalNext];
+                Iterator<Integer> it = frame.next.iterator();
+                int exceptionalNext = it.next();
+                if(exceptionalNext == normalNext){
+                    exceptionalNext = it.next();
+                }
+                node.exceptionalNext = nodes[exceptionalNext];
+            }else{
+                throw new RuntimeException("Unexpected number of successors: " + frame.next.size());
             }
         }
 
         controlFlowGraph = nodes[0];
         controlFlowGraph.reduce();
-        controlFlowGraph.printGraph(System.out);
 
         initInfo();
     }
 
-    public boolean hasNextExpression(){
-        if(index >= code.length) return false;
-        while(true){
-            FrameInfo frame = peek();
-            if(frame != null){
-                if(frame.insnNode.getOpcode() != -1){
-                    return true;
-                }
-            }
-
-            index++;
-            if(index >= code.length){
-                return false;
-            }
-        }
+    public Expression[] flattenGraph() {
+        controlFlowGraph.processLoops();
+        Expression[] expressions = controlFlowGraph.flatten();
+        return reduce(expressions);
     }
 
-    public Expression nextStatement() {
-        Expression top = null;
-        while(top == null){
-            top = processNext();
+    private Expression[] reduce(Expression[] expressions) {
+        for (int i = 0; i < expressions.length; i++) {
+            expressions[i] = reduceExpression(expressions[i]);
         }
-
-        Expression last = top;
-        while(!stack.isEmpty()){
-            last = processNext();
-        }
-
-        assert last.getType() == Type.VOID_TYPE;
-        return last;
+        return expressions;
     }
 
-    private Expression processNext(){
-        FrameInfo frame = advance();
-        while(frame.insnNode.getOpcode() == -1){
-            frame = advance();
-        }
+    private Expression reduceExpression(Expression expression) {
+        if(expression instanceof IfElseExpression ifElse){
+           Condition condition = ifElse.getCondition();
+            Expression[] ifTrue = reduce(ifElse.getIfTrue());
+            Expression[] ifFalse = reduce(ifElse.getIfFalse());
 
-        AbstractInsnNode insn = frame.insnNode;
-        Expression expression;
-
-        switch (insn.getOpcode()) {
-            case ILOAD -> expression = new LoadVarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var);
-            case FLOAD -> expression = new LoadVarExpression(Type.FLOAT_TYPE, ((VarInsnNode) insn).var);
-            case DLOAD -> expression = new LoadVarExpression(Type.DOUBLE_TYPE, ((VarInsnNode) insn).var);
-            case LLOAD -> expression = new LoadVarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var);
-            case ALOAD -> expression = new LoadVarExpression(peek().getTop().getType(), ((VarInsnNode) insn).var);
-
-            case GETFIELD -> expression = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
-
-            case IADD, LADD, FADD, DADD -> {
-                Expression right = stack.pop();
-                Expression left = stack.pop();
-                expression = new BinaryExpression(left, right, BinaryExpression.Operator.ADD);
-            }
-            case ISUB, LSUB, FSUB, DSUB -> {
-                Expression right = stack.pop();
-                Expression left = stack.pop();
-                expression = new BinaryExpression(left, right, BinaryExpression.Operator.SUB);
-            }
-            case IMUL, LMUL, FMUL, DMUL -> {
-                Expression right = stack.pop();
-                Expression left = stack.pop();
-                expression = new BinaryExpression(left, right, BinaryExpression.Operator.MUL);
-            }
-            case IDIV, LDIV, FDIV, DDIV -> {
-                Expression right = stack.pop();
-                Expression left = stack.pop();
-                expression = new BinaryExpression(left, right, BinaryExpression.Operator.DIV);
-            }
-            case IREM, LREM, FREM, DREM -> {
-                Expression right = stack.pop();
-                Expression left = stack.pop();
-                expression = new BinaryExpression(left, right, BinaryExpression.Operator.MOD);
+            if(ifTrue.length != 1 && ifFalse.length != 1 || ifTrue.length == 0 || ifFalse.length == 0){
+                return new IfElseExpression(condition, ifTrue, ifFalse);
             }
 
-            case LDC -> expression = new ConstantExpression(((LdcInsnNode) insn).cst);
-            case ICONST_M1 -> expression = new ConstantExpression(-1);
-            case ICONST_0 -> expression = new ConstantExpression(0);
-            case ICONST_1 -> expression = new ConstantExpression(1);
-            case ICONST_2 -> expression = new ConstantExpression(2);
-            case ICONST_3 -> expression = new ConstantExpression(3);
-            case ICONST_4 -> expression = new ConstantExpression(4);
-            case ICONST_5 -> expression = new ConstantExpression(5);
-            case FCONST_0 -> expression = new ConstantExpression(0.0f);
-            case FCONST_1 -> expression = new ConstantExpression(1.0f);
-            case FCONST_2 -> expression = new ConstantExpression(2.0f);
-            case DCONST_0 -> expression = new ConstantExpression(0.0);
-            case DCONST_1 -> expression = new ConstantExpression(1.0);
-            case LCONST_0 -> expression = new ConstantExpression(0L);
-            case LCONST_1 -> expression = new ConstantExpression(1L);
-            case BIPUSH, SIPUSH -> expression = new ConstantExpression(((IntInsnNode) insn).operand);
-
-            case I2F, I2D, I2L -> expression = new CastExpression(stack.pop(), Type.FLOAT_TYPE);
-
-            case FCMPG, FCMPL, LCMP, DCMPG, DCMPL -> {
-                Expression right = stack.pop();
-                Expression left = stack.pop();
-                expression = new CompareExpression(left, right);
-            }
-
-            case ISTORE, FSTORE, DSTORE, LSTORE, ASTORE -> {
-                Expression value = stack.pop();
-                expression = new StoreVarExpression(value, ((VarInsnNode) insn).var);
-            }
-
-            case INVOKESTATIC -> {
-                MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
-                int numArgs = Type.getArgumentTypes(methodInsnNode.desc).length;
-                Expression[] args = new Expression[numArgs];
-                for(int i = numArgs - 1; i >= 0; i--){
-                    args[i] = stack.pop();
-                }
-                expression = new InvokeStaticExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, args);
-            }
-            case INVOKEVIRTUAL -> {
-                MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
-                int numArgs = Type.getArgumentTypes(methodInsnNode.desc).length + 1;
-                Expression[] args = new Expression[numArgs];
-                for(int i = numArgs - 1; i >= 0; i--){
-                    args[i] = stack.pop();
-                }
-                expression = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, args);
-            }
-            case GETSTATIC -> {
-                FieldInsnNode fieldInsnNode = (FieldInsnNode) insn;
-                //Get field value
-                try {
-                    Class<?> clazz = Class.forName(fieldInsnNode.owner.replace('/', '.'));
-                    Field field = clazz.getDeclaredField(fieldInsnNode.name);
-                    field.setAccessible(true);
-                    Object obj = field.get(null);
-                    expression = new ConstantExpression(obj);
-                } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-                    throw new RuntimeException("Failed to get field value!", e);
+            //Check if ifTrue is duplicated
+            if(ifFalse.length == 1){
+                Expression check = ifFalse[0];
+                if(check instanceof IfElseExpression secondIfElse){
+                    if(Arrays.equals(secondIfElse.getIfTrue(), ifTrue)){
+                        Condition newCondition = new BinaryBooleanExpression(condition, secondIfElse.getCondition(), BinaryBooleanExpression.Operator.OR);
+                        return new IfElseExpression(newCondition, secondIfElse.getIfTrue(), secondIfElse.getIfFalse());
+                    }else if(Arrays.equals(secondIfElse.getIfFalse(), ifTrue)){
+                        Condition newCondition = new BinaryBooleanExpression(condition, secondIfElse.getCondition().negate(), BinaryBooleanExpression.Operator.OR);
+                        return new IfElseExpression(newCondition, secondIfElse.getIfTrue(), secondIfElse.getIfFalse());
+                    }
                 }
             }
 
-            case FRETURN -> {
-                Expression value = stack.pop();
-                expression = new ReturnExpression(value);
-            }
-
-            default -> throw new IllegalStateException("Unexpected value: " + opcodeName(insn.getOpcode()));
-        }
-
-        if(!expression.isStatement()){
-            stack.push(expression);
+            //TODO: Check if ifFalse is duplicated
         }
 
         return expression;
     }
 
-    private FrameInfo advance(){
-        if(index == code.length) {
-            return null;
-        }
-        return code[index++];
+    public void printCFG(PrintStream out) {
+        controlFlowGraph.printGraph(out);
     }
 
-    private FrameInfo peek(){
-        return code[index];
+    public void parseAll(){
+        for(CFGNode node: controlFlowGraph.getAll(true, null)){
+            node.parse();
+        }
     }
 
     private void initInfo() {
@@ -277,9 +179,12 @@ public class JavaTranspiler {
         info.addMethodResolver("me/salamander/ourea/util/MathHelper", "lerp", "(FFF)F", new StaticMethodResolver("mix"));
         info.addMethodResolver("me/salamander/ourea/util/MathHelper", "lerp", "(FFFFFF)F", new StaticMethodResolver("lerp"));
 
+        info.addMethodResolver("me/salamander/ourea/util/MathHelper", "cos", "(F)F", new StaticMethodResolver("cos"));
+        info.addMethodResolver("me/salamander/ourea/util/MathHelper", "sin", "(F)F", new StaticMethodResolver("sin"));
+
         info.addMethodResolver("me/salamander/ourea/util/MathHelper", "getGradient", "(III)Lme/salamander/ourea/util/Grad2;", new StaticMethodResolver("getGradient"));
 
-        info.addMethodResolver("me/salamander/ourea/util/Grad2", "dot", "(FF)F", (owner, name, desc, info, args) -> "dot(" + args[0].toGLSL(info) + ", vec2(" + args[1].toGLSL(info) + ", " + args[2].toGLSL(info) + "))");
+        info.addMethodResolver("me/salamander/ourea/util/Grad2", "dot", "(FF)F", (owner, name, desc, info, args) -> "dot(" + args[0].toGLSL(info, 0) + ", vec2(" + args[1].toGLSL(info, 0) + ", " + args[2].toGLSL(info, 0) + "))");
     }
 
     private static <T> int indexOf(T[] array, T value) {
@@ -296,7 +201,7 @@ public class JavaTranspiler {
      * @param opcode The opcode as an integer
      * @return The mnemonic of the opcode
      */
-    private static String opcodeName(int opcode) {
+    static String opcodeName(int opcode) {
         return switch (opcode) {
             case NOP -> "nop";
             case ACONST_NULL -> "aconst_null";
@@ -473,81 +378,21 @@ public class JavaTranspiler {
         return info;
     }
 
-    private class FrameInfo{
-        private final Frame<BasicValue> frame;
-        private final AbstractInsnNode insnNode;
-        private final Set<Integer> next = new HashSet<>(1);
-        private final Set<Integer> prev = new HashSet<>(1);
-        private final int instructionIndex;
+    public class FrameInfo{
+        final Frame<BasicValue> frame;
+        final AbstractInsnNode insnNode;
+        final Set<Integer> next = new HashSet<>(1);
+        final Set<Integer> prev = new HashSet<>(1);
+        final int instructionIndex;
 
         public FrameInfo(Frame<BasicValue> frame, AbstractInsnNode insnNode, int instructionIndex) {
             this.frame = frame;
             this.insnNode = insnNode;
-            this.instructionIndex = instructionIndex;;
+            this.instructionIndex = instructionIndex;
         }
 
         public BasicValue getTop(){
             return frame.getStack(frame.getStackSize() - 1);
-        }
-    }
-
-    private class Node{
-        private static int nextId = 0;
-        private final List<FrameInfo> frames = new ArrayList<>();
-        private final Set<Node> prev = new HashSet<>();
-        private final Set<Node> next = new HashSet<>();
-        private final String id;
-
-        public Node(FrameInfo frameInfo){
-            frames.add(frameInfo);
-            id = "node " + nextId++;
-        }
-
-        public void addPrev(Node node){
-            prev.add(node);
-        }
-
-        public void addNext(Node node){
-            next.add(node);
-        }
-
-        public void reduce(){
-            while (mergeWithNext()){
-                //Do nothing
-            }
-
-            for(Node node: next){
-                node.reduce();
-            }
-        }
-
-        public boolean mergeWithNext(){
-            if(next.size() == 1){
-                Node nextNode = next.iterator().next();
-                frames.addAll(nextNode.frames);
-                this.next.clear();
-                this.next.addAll(nextNode.next);
-                return true;
-            }
-            return false;
-        }
-
-        public void printGraph(PrintStream out){
-            printGraph(out, new HashSet<>());
-        }
-
-        private void printGraph(PrintStream out, Set<Node> done){
-            if(done.contains(this)){
-                return;
-            }
-            done.add(this);
-            for(Node node: next){
-                out.println(id + " -> " + node.id);
-            }
-
-            for(Node node: next){
-                node.printGraph(out, done);
-            }
         }
     }
 }

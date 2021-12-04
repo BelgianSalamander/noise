@@ -14,12 +14,20 @@ public class CompareExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
+    public String toGLSL(TranspilationInfo info, int depth) {
         throw new RuntimeException("Cannot directly turn comparison into GLSL");
     }
 
     @Override
     public Type getType() {
         return Type.INT_TYPE;
+    }
+
+    public Expression getLeft() {
+        return left;
+    }
+
+    public Expression getRight() {
+        return right;
     }
 }

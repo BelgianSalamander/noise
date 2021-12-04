@@ -17,7 +17,7 @@ public class StaticMethodResolver implements MethodResolver{
             if(i > 0){
                 sb.append(", ");
             }
-            sb.append(args[i].toGLSL(info));
+            sb.append(args[i].toGLSL(info, 0));
         }
         sb.append(")");
         return sb.toString();

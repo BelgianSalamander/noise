@@ -13,8 +13,8 @@ public class StoreVarExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
-        return "var" + var + " = " + value.toGLSL(info) + ";";
+    public String toGLSL(TranspilationInfo info, int depth) {
+        return "  ".repeat(depth) + "var" + var + " = " + value.toGLSL(info, 0) + ";\n";
     }
 
     @Override

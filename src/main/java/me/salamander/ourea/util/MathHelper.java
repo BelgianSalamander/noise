@@ -70,6 +70,14 @@ public class MathHelper {
         return grad3[mod(hash, grad3.length)];
     }
 
+    public static float sin(float n){
+        return (float) Math.sin(n);
+    }
+
+    public static float cos(float n){
+        return (float) Math.cos(n);
+    }
+
     private static final Grad2[] grad2 = {
             new Grad2( 0.130526192220052f,  0.99144486137381f),
             new Grad2( 0.38268343236509f,   0.923879532511287f),

@@ -13,7 +13,7 @@ public class LoadVarExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
+    public String toGLSL(TranspilationInfo info, int depth) {
         return "var" + index;
     }
 

@@ -15,6 +15,4 @@ void main(){
     vec3 norm = normalize(fragNormal);
     float diffuse = max(dot(norm, lightDirection), 0.0);
     outColor.rgb *= (diffuse + ambient);
-    /*outColor.rgb *= 0.0001f;
-    outColor.rgb = fragNormal;*/
 }

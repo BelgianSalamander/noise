@@ -11,7 +11,7 @@ public class ConstantExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
+    public String toGLSL(TranspilationInfo info, int depth) {
         if(value instanceof String){
             return "\"" + value + "\"";
         }else if(value instanceof Integer){

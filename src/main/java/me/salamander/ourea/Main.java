@@ -2,6 +2,7 @@ package me.salamander.ourea;
 
 import me.salamander.ourea.color.ColorGradient;
 import me.salamander.ourea.glsl.transpile.JavaTranspiler;
+import me.salamander.ourea.glsl.transpile.tree.Expression;
 import me.salamander.ourea.modules.modifier.BinaryModule;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.modules.modifier.Turbulence;
@@ -13,6 +14,7 @@ import me.salamander.ourea.modules.source.coord.X;
 import me.salamander.ourea.modules.source.coord.Y;
 import me.salamander.ourea.render.opengl.CPUChunkGenerator;
 import me.salamander.ourea.render.opengl.OpenGL2DRenderer;
+import me.salamander.ourea.util.MathHelper;
 
 import java.awt.*;
 
@@ -35,11 +37,19 @@ public class Main {
 
             @Override
             public float sample(float x, float y, int seed) {
-                if(x > y || (x == (y + 1) && x % 2 == 0)){
-                    return (float)Math.sin(x);
-                }else{
-                    return (float)Math.sin(y);
+                float value = (x + y);
+
+                for(int i = 0; i < 10; i++) {
+                    if (x > y) {
+                        x--;
+                        value += (x - y);
+                    } else {
+                        y--;
+                        value += (y - x);
+                    }
                 }
+
+                return value;
             }
 
             @Override
@@ -49,8 +59,12 @@ public class Main {
         };
 
         JavaTranspiler transpiler = new JavaTranspiler(testSampler, 2);
-        while(transpiler.hasNextExpression()){
-            System.out.println(transpiler.nextStatement().toGLSL(transpiler.getInfo()));
+        transpiler.parseAll();
+        transpiler.printCFG(System.out);
+
+        Expression[] flat = transpiler.flattenGraph();
+        for(Expression e : flat){
+            System.out.println(e.toGLSL(transpiler.getInfo(), 0));
         }
     }
 

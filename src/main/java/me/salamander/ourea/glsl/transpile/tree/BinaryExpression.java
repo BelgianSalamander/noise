@@ -24,7 +24,7 @@ public class BinaryExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
+    public String toGLSL(TranspilationInfo info, int depth) {
         return operator.apply(left, right, info);
     }
 
@@ -32,31 +32,31 @@ public class BinaryExpression implements Expression{
         ADD{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info) + " + " + right.toGLSL(info);
+                return left.toGLSL(info, 0) + " + " + right.toGLSL(info, 0);
             }
         },
         SUB{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info) + " - " + right.toGLSL(info);
+                return left.toGLSL(info, 0) + " - " + right.toGLSL(info, 0);
             }
         },
         MUL{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info) + " * " + right.toGLSL(info);
+                return left.toGLSL(info, 0) + " * " + right.toGLSL(info, 0);
             }
         },
         DIV{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info) + " / " + right.toGLSL(info);
+                return left.toGLSL(info, 0) + " / " + right.toGLSL(info, 0);
             }
         },
         MOD{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info) + " % " + right.toGLSL(info);
+                return left.toGLSL(info, 0) + " % " + right.toGLSL(info, 0);
             }
         }
         ;

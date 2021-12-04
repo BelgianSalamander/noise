@@ -15,8 +15,8 @@ public class GetFieldExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
-        return expression.toGLSL(info) + "." + field;
+    public String toGLSL(TranspilationInfo info, int depth) {
+        return expression.toGLSL(info, 0) + "." + field;
     }
 
     @Override

@@ -18,7 +18,7 @@ public class InvokeVirtualExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
+    public String toGLSL(TranspilationInfo info, int depth) {
         MethodResolver resolver = info.getMethodResolver(owner, name, desc);
         if(resolver != null) {
             return resolver.toGLSL(owner, name, desc, info, args);
@@ -29,7 +29,7 @@ public class InvokeVirtualExpression implements Expression{
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append(args[i].toGLSL(info));
+            sb.append(args[i].toGLSL(info, 0));
         }
         sb.append(")");
         return sb.toString();

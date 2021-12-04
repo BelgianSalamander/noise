@@ -13,15 +13,15 @@ public class CastExpression implements Expression{
     }
 
     @Override
-    public String toGLSL(TranspilationInfo info) {
+    public String toGLSL(TranspilationInfo info, int depth) {
         if(type == Type.INT_TYPE){
-            return "int(" + expression.toGLSL(info) + ")";
+            return "int(" + expression.toGLSL(info, 0) + ")";
         }else if(type == Type.FLOAT_TYPE){
-            return "float(" + expression.toGLSL(info) + ")";
+            return "float(" + expression.toGLSL(info, 0) + ")";
         }else if(type == Type.DOUBLE_TYPE){
-            return "double(" + expression.toGLSL(info) + ")";
+            return "double(" + expression.toGLSL(info, 0) + ")";
         }else if(type == Type.LONG_TYPE){
-            return "long(" + expression.toGLSL(info) + ")";
+            return "long(" + expression.toGLSL(info, 0) + ")";
         }else{
             throw new RuntimeException("Unsupported cast type: " + type);
         }
