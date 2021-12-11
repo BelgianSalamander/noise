@@ -10,6 +10,8 @@ public interface Expression {
     String toGLSL(TranspilationInfo info, int depth);
     Type getType();
 
+    boolean isConstant();
+    Object getConstantValue();
 
     default boolean isStatement() {
         return getType() == Type.VOID_TYPE;

@@ -21,4 +21,18 @@ public class LoadVarExpression implements Expression{
     public Type getType() {
         return type;
     }
+
+    @Override
+    public boolean isConstant() {
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        throw new RuntimeException("Not a constant");
+    }
+
+    public int getIndex() {
+        return index;
+    }
 }

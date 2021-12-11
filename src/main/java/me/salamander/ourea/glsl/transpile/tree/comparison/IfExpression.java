@@ -45,10 +45,28 @@ public class IfExpression implements Expression {
     }
 
     @Override
+    public boolean isConstant() {
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        throw new RuntimeException("Not a constant");
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IfExpression that = (IfExpression) o;
         return Objects.equals(condition, that.condition) && Arrays.equals(statements, that.statements);
+    }
+
+    public Expression[] getBody() {
+        return statements;
+    }
+
+    public Condition getCondition() {
+        return condition;
     }
 }

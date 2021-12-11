@@ -73,8 +73,53 @@ public class JumpIfExpression implements Expression {
         return Type.VOID_TYPE;
     }
 
+    @Override
+    public boolean isConstant() {
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        throw new RuntimeException("Not a constant");
+    }
+
     enum Operator {
-        EQ(1, "=="), NE(0, "!="), GE(5, ">="), GT(4, ">"), LE(4, "<="), LT(2, "<");
+        EQ(1, "=="){
+            @Override
+            public boolean apply(int a, int b) {
+                return a == b;
+            }
+        },
+        NE(0, "!="){
+            @Override
+            public boolean apply(int a, int b) {
+                return a != b;
+            }
+        },
+        GE(5, ">="){
+            @Override
+            public boolean apply(int a, int b) {
+                return a >= b;
+            }
+        },
+        GT(4, ">"){
+            @Override
+            public boolean apply(int a, int b) {
+                return a > b;
+            }
+        },
+        LE(4, "<="){
+            @Override
+            public boolean apply(int a, int b) {
+                return a <= b;
+            }
+        },
+        LT(2, "<"){
+            @Override
+            public boolean apply(int a, int b) {
+                return a < b;
+            }
+        };
 
         private final int oppositeIndex;
         private final String symbol;
@@ -88,10 +133,10 @@ public class JumpIfExpression implements Expression {
         public String getSymbol(){
             return symbol;
         }
-
         public Operator getOpposite() {
             return opposite;
         }
+        public abstract boolean apply(int a, int b);
 
         static{
             for(Operator op : Operator.values()){

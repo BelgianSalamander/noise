@@ -28,4 +28,14 @@ public class ActualCompareExpression extends Condition {
     public Type getType() {
         return Type.BOOLEAN_TYPE;
     }
+
+    @Override
+    public boolean isConstant() {
+        return left.isConstant() && right.isConstant();
+    }
+
+    @Override
+    public Object getConstantValue() {
+        return operator.apply((Integer) left.getConstantValue(), (Integer) right.getConstantValue());
+    }
 }

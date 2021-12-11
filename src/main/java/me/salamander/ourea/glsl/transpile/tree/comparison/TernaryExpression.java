@@ -32,4 +32,26 @@ public class TernaryExpression implements Expression {
     public Type getType() {
         return ifTrue.getType();
     }
+
+    @Override
+    public boolean isConstant() {
+        if(condition.isConstant()){
+            boolean conditionValue = (boolean) condition.getConstantValue();
+            if(conditionValue) {
+                return ifTrue.isConstant();
+            }else{
+                return ifFalse.isConstant();
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        if((boolean) condition.getConstantValue()){
+            return ifTrue.getConstantValue();
+        }else{
+            return ifFalse.getConstantValue();
+        }
+    }
 }

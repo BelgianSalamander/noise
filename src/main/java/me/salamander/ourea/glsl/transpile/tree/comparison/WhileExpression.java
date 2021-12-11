@@ -41,10 +41,28 @@ public class WhileExpression implements Expression {
     }
 
     @Override
+    public boolean isConstant() {
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        throw new RuntimeException("Not a constant");
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WhileExpression that = (WhileExpression) o;
         return Objects.equals(condition, that.condition) && Arrays.equals(body, that.body);
+    }
+
+    public Expression[] getBody() {
+        return body;
+    }
+
+    public Condition getCondition() {
+        return condition;
     }
 }

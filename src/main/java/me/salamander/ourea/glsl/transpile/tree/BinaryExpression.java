@@ -24,6 +24,16 @@ public class BinaryExpression implements Expression{
     }
 
     @Override
+    public boolean isConstant() {
+        return left.isConstant() && right.isConstant();
+    }
+
+    @Override
+    public Object getConstantValue() {
+        return operator.apply((Number) left.getConstantValue(), (Number) right.getConstantValue(), left.getType());
+    }
+
+    @Override
     public String toGLSL(TranspilationInfo info, int depth) {
         return operator.apply(left, right, info);
     }
@@ -34,11 +44,41 @@ public class BinaryExpression implements Expression{
             public String apply(Expression left, Expression right, TranspilationInfo info){
                 return left.toGLSL(info, 0) + " + " + right.toGLSL(info, 0);
             }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() + right.intValue();
+                }else if(type == Type.FLOAT_TYPE) {
+                    return left.floatValue() + right.floatValue();
+                }else if(type == Type.DOUBLE_TYPE) {
+                    return left.doubleValue() + right.doubleValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() + right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
         },
         SUB{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
                 return left.toGLSL(info, 0) + " - " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() - right.intValue();
+                }else if(type == Type.FLOAT_TYPE) {
+                    return left.floatValue() - right.floatValue();
+                }else if(type == Type.DOUBLE_TYPE) {
+                    return left.doubleValue() - right.doubleValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() - right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
             }
         },
         MUL{
@@ -46,11 +86,41 @@ public class BinaryExpression implements Expression{
             public String apply(Expression left, Expression right, TranspilationInfo info){
                 return left.toGLSL(info, 0) + " * " + right.toGLSL(info, 0);
             }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() * right.intValue();
+                }else if(type == Type.FLOAT_TYPE) {
+                    return left.floatValue() * right.floatValue();
+                }else if(type == Type.DOUBLE_TYPE) {
+                    return left.doubleValue() * right.doubleValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() * right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
         },
         DIV{
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
                 return left.toGLSL(info, 0) + " / " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() / right.intValue();
+                }else if(type == Type.FLOAT_TYPE) {
+                    return left.floatValue() / right.floatValue();
+                }else if(type == Type.DOUBLE_TYPE) {
+                    return left.doubleValue() / right.doubleValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() / right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
             }
         },
         MOD{
@@ -58,9 +128,25 @@ public class BinaryExpression implements Expression{
             public String apply(Expression left, Expression right, TranspilationInfo info){
                 return left.toGLSL(info, 0) + " % " + right.toGLSL(info, 0);
             }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() % right.intValue();
+                }else if(type == Type.FLOAT_TYPE) {
+                    return left.floatValue() % right.floatValue();
+                }else if(type == Type.DOUBLE_TYPE) {
+                    return left.doubleValue() % right.doubleValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() % right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
         }
         ;
 
         public abstract String apply(Expression left, Expression right, TranspilationInfo info);
+        public abstract Number apply(Number left, Number right, Type type);
     }
 }

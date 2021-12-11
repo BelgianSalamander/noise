@@ -2,6 +2,7 @@ package me.salamander.ourea.glsl.transpile;
 
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
+import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -78,6 +79,18 @@ public class CFGNode {
                 this.normalNext = next.normalNext;
                 this.exceptionalNext = next.exceptionalNext;
                 this.type = next.type;
+
+                //Fix up the next nodes
+                if(next.normalNext != null){
+                    next.normalNext.prev.remove(next);
+                    next.normalNext.prev.add(this);
+                }
+
+                if(next.exceptionalNext != null){
+                    next.exceptionalNext.prev.remove(next);
+                    next.exceptionalNext.prev.add(this);
+                }
+
                 return true;
             }
         }
@@ -112,7 +125,9 @@ public class CFGNode {
                     expression = new LoadVarExpression(type, ((VarInsnNode) insn).var);
                 }
 
-                case GETFIELD -> expression = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
+                case GETFIELD -> {
+                    expression = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
+                }
 
                 case IADD, LADD, FADD, DADD -> {
                     Expression right = stack.pop();
@@ -245,10 +260,22 @@ public class CFGNode {
         if(expression == null){
             if(type == NodeType.CODE){
                 if(loopNodes.containsKey(normalNext)){
-                    return new Expression[]{loopNodes.get(normalNext).get()};
+                    //return normal except last GOTO is replaced with expression
+                    Expression[] normal = this.statements.toArray(new Expression[0]);
+
+                    normal[normal.length - 1] = loopNodes.get(normalNext).get();
+                    return normal;
                 }
             }else if(type == NodeType.CONDITIONAL_JUMP){
-
+                if(loopNodes.containsKey(exceptionalNext)){
+                    JumpIfExpression jumpIf = (JumpIfExpression) this.statements.get(this.statements.size() - 1);
+                    Expression ifExpr = new IfExpression(jumpIf.getCondition(), loopNodes.get(exceptionalNext).get());
+                    Expression[] normal = this.normalNext.flatten(scopeEnd, loopNodes);
+                    Expression[] full = new Expression[normal.length + 1];
+                    full[0] = ifExpr;
+                    System.arraycopy(normal, 0, full, 1, normal.length);
+                    return full;
+                }
             }
 
             //Check if this is a loop
@@ -433,24 +460,13 @@ public class CFGNode {
         }
     }
 
-    public void processLoops() {
-        this.processLoops(null, new HashSet<>());
-    }
-
-    private void processLoops(CFGNode scopeEnd, Set<CFGNode> done) {
-        if(done.contains(this)){
-            return;
-        }
-        done.add(this);
-
-        //Test if it is the start of a loop. This can be done by checking if one of its predecessors is also one of its descendants
-
-        if(normalNext != null && normalNext != scopeEnd){
-            normalNext.processLoops(scopeEnd, done);
-        }
-
-        if(exceptionalNext != null && exceptionalNext != scopeEnd){
-            exceptionalNext.processLoops(scopeEnd, done);
+    private Expression pop(Stack<Expression> stack){
+        Expression base = stack.pop();
+        if(base.isConstant() && !(base instanceof LoadSamplerExpression)){
+            Object value = base.getConstantValue();
+            return new ConstantExpression(value);
+        }else{
+            return base;
         }
     }
 

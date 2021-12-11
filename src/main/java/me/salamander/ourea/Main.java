@@ -58,7 +58,7 @@ public class Main {
             }
         };
 
-        JavaTranspiler transpiler = new JavaTranspiler(testSampler, 2);
+        JavaTranspiler transpiler = new JavaTranspiler(new PerlinSampler(), 2);
         transpiler.parseAll();
         transpiler.printCFG(System.out);
 

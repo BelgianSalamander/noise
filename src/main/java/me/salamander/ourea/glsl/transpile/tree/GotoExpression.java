@@ -21,4 +21,14 @@ public class GotoExpression implements Expression{
     public Type getType() {
         return Type.VOID_TYPE;
     }
+
+    @Override
+    public boolean isConstant() {
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        throw new RuntimeException("GotoExpression is not constant");
+    }
 }

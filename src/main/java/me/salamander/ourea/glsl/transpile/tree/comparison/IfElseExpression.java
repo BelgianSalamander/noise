@@ -52,6 +52,16 @@ public class IfElseExpression implements Expression {
     }
 
     @Override
+    public boolean isConstant() {
+        return false;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        throw new RuntimeException("Not a constant");
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(obj instanceof IfElseExpression other) {
             return condition.equals(other.condition) &&

@@ -22,9 +22,12 @@ public class JavaTranspiler {
     private final FrameInfo[] code;
     private final TranspilationInfo info = new TranspilationInfo();
     private final CFGNode controlFlowGraph;
+    private final NoiseSampler sampler;
     private int index = 0;
 
     public JavaTranspiler(NoiseSampler sampler, int dimension) {
+        this.sampler = sampler;
+
         ClassNode classNode = getClassNode(sampler);
         String desc = dimension == 2 ? "(FFI)F" : "(FFFI)F";
         String name = "sample";
@@ -121,7 +124,7 @@ public class JavaTranspiler {
     }
 
     public Expression[] flattenGraph() {
-        controlFlowGraph.processLoops();
+        //controlFlowGraph.processLoops();
         Expression[] expressions = controlFlowGraph.flatten();
         return reduce(expressions);
     }
@@ -158,6 +161,29 @@ public class JavaTranspiler {
             }
 
             //TODO: Check if ifFalse is duplicated
+        }else if(expression instanceof WhileExpression whileLoop){
+            Expression[] body = reduce(whileLoop.getBody());
+            Condition condition = whileLoop.getCondition();
+            if(body.length > 0){
+                if(body[0] instanceof IfExpression ifExpression){
+                    if(ifExpression.getBody().length == 1){
+                        if(ifExpression.getBody()[0] instanceof BreakExpression){
+                            condition = Condition.and(condition, ifExpression.getCondition().negate());
+                            Expression[] newBody = new Expression[body.length - 1];
+                            System.arraycopy(body, 1, newBody, 0, newBody.length);
+                            body = newBody;
+                        }
+                    }
+                }
+
+                if(body[body.length - 1] instanceof ContinueExpression){
+                    Expression[] newBody = new Expression[body.length - 1];
+                    System.arraycopy(body, 0, newBody, 0, newBody.length);
+                    body = newBody;
+                }
+            }
+
+            return new WhileExpression(condition, body);
         }
 
         return expression;
@@ -376,6 +402,10 @@ public class JavaTranspiler {
 
     public TranspilationInfo getInfo() {
         return info;
+    }
+
+    public NoiseSampler getSampler() {
+        return sampler;
     }
 
     public class FrameInfo{

@@ -20,6 +20,16 @@ public class BinaryBooleanExpression extends Condition{
     }
 
     @Override
+    public boolean isConstant() {
+        return left.isConstant() && right.isConstant();
+    }
+
+    @Override
+    public Object getConstantValue() {
+        return operator.apply((Boolean) left.getConstantValue(), (Boolean) right.getConstantValue());
+    }
+
+    @Override
     public Condition negate() {
         //Boolean algebra baby!
         if(operator == Operator.AND){
@@ -36,6 +46,11 @@ public class BinaryBooleanExpression extends Condition{
             public String apply(Expression left, Expression right, TranspilationInfo info) {
                 return left.toGLSL(info, 0) + " && " + right.toGLSL(info, 0);
             }
+
+            @Override
+            public boolean apply(boolean a, boolean b){
+                return a && b;
+            }
         },
         OR {
             @Override
@@ -43,8 +58,14 @@ public class BinaryBooleanExpression extends Condition{
                 return left.toGLSL(info, 0) + " || " + right.toGLSL(info, 0);
 
             }
+
+            @Override
+            public boolean apply(boolean a, boolean b){
+                return a || b;
+            }
         };
 
         public abstract String apply(Expression left, Expression right, TranspilationInfo info);
+        public abstract boolean apply(boolean a, boolean b);
     }
 }

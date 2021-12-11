@@ -31,4 +31,14 @@ public class CastExpression implements Expression{
     public Type getType() {
         return type;
     }
+
+    @Override
+    public boolean isConstant() {
+        return expression.isConstant();
+    }
+
+    @Override
+    public Object getConstantValue() {
+        return expression.getConstantValue();
+    }
 }

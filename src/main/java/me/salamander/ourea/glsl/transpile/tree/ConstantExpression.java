@@ -23,7 +23,7 @@ public class ConstantExpression implements Expression{
         }else if(value instanceof Long){
             return value.toString() + "l";
         }else{
-            throw new RuntimeException("Unsupported constant type: " + value.getClass());
+            return "[Unsupported constant type: " + value.getClass() + "]";
         }
     }
 
@@ -40,7 +40,17 @@ public class ConstantExpression implements Expression{
         }else if(value instanceof Long){
             return Type.LONG_TYPE;
         }else{
-            throw new RuntimeException("Unsupported constant type: " + value.getClass());
+            return Type.getType(value.getClass());
         }
+    }
+
+    @Override
+    public boolean isConstant() {
+        return true;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        return value;
     }
 }

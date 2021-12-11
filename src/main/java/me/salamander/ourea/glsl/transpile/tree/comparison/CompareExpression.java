@@ -23,6 +23,20 @@ public class CompareExpression implements Expression{
         return Type.INT_TYPE;
     }
 
+    @Override
+    public boolean isConstant() {
+        return left.isConstant() && right.isConstant() && left.getConstantValue() instanceof Comparable<?>;
+    }
+
+    @Override
+    public Object getConstantValue() {
+        Object leftValue = left.getConstantValue();
+        Object rightValue = right.getConstantValue();
+
+        //Both leftValue and rightValue implement Comparable
+        return ((Comparable) leftValue).compareTo(rightValue);
+    }
+
     public Expression getLeft() {
         return left;
     }
