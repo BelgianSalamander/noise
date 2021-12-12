@@ -32,6 +32,11 @@ public class LoadVarExpression implements Expression{
         throw new RuntimeException("Not a constant");
     }
 
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return this;
+    }
+
     public int getIndex() {
         return index;
     }

@@ -34,6 +34,11 @@ public class BinaryExpression implements Expression{
     }
 
     @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new BinaryExpression(left.resolvePrecedingExpression(precedingExpression), right.resolvePrecedingExpression(precedingExpression), operator);
+    }
+
+    @Override
     public String toGLSL(TranspilationInfo info, int depth) {
         return operator.apply(left, right, info);
     }
@@ -140,6 +145,108 @@ public class BinaryExpression implements Expression{
                 }else if(type == Type.LONG_TYPE) {
                     return left.longValue() % right.longValue();
                 }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
+        },
+        AND{
+            @Override
+            public String apply(Expression left, Expression right, TranspilationInfo info){
+                return left.toGLSL(info, 0) + " & " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() & right.intValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() & right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
+        },
+        OR{
+            @Override
+            public String apply(Expression left, Expression right, TranspilationInfo info){
+                return left.toGLSL(info, 0) + " | " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() | right.intValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() | right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
+        },
+        XOR{
+            @Override
+            public String apply(Expression left, Expression right, TranspilationInfo info){
+                return left.toGLSL(info, 0) + " ^ " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() ^ right.intValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() ^ right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
+        },
+        SHR{
+            @Override
+            public String apply(Expression left, Expression right, TranspilationInfo info){
+                return left.toGLSL(info, 0) + " >> " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() >> right.intValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() >> right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
+        },
+        SHL{
+            @Override
+            public String apply(Expression left, Expression right, TranspilationInfo info){
+                return left.toGLSL(info, 0) + " << " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if(type == Type.INT_TYPE) {
+                    return left.intValue() << right.intValue();
+                }else if(type == Type.LONG_TYPE) {
+                    return left.longValue() << right.longValue();
+                }else{
+                    throw new RuntimeException("Unsupported type: " + type);
+                }
+            }
+        },
+        USHR {
+            @Override
+            public String apply(Expression left, Expression right, TranspilationInfo info) {
+                return left.toGLSL(info, 0) + " >>> " + right.toGLSL(info, 0);
+            }
+
+            @Override
+            public Number apply(Number left, Number right, Type type) {
+                if (type == Type.INT_TYPE) {
+                    return left.intValue() >>> right.intValue();
+                } else if (type == Type.LONG_TYPE) {
+                    return left.longValue() >>> right.longValue();
+                } else {
                     throw new RuntimeException("Unsupported type: " + type);
                 }
             }

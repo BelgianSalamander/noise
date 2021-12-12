@@ -64,7 +64,7 @@ public class FBM implements NoiseSampler {
             value += source.sample(x * frequency, y * frequency, seed) * amplitude;
             frequency *= lacunarity;
             amplitude *= persistence;
-            seed *= 74247473L;
+            seed *= 74247473;
         }
         return value * scale;
     }

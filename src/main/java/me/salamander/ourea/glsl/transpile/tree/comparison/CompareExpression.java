@@ -37,6 +37,11 @@ public class CompareExpression implements Expression{
         return ((Comparable) leftValue).compareTo(rightValue);
     }
 
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new CompareExpression(left.resolvePrecedingExpression(precedingExpression), right.resolvePrecedingExpression(precedingExpression));
+    }
+
     public Expression getLeft() {
         return left;
     }

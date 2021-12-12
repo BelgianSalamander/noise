@@ -1,8 +1,7 @@
 package me.salamander.ourea;
 
 import me.salamander.ourea.color.ColorGradient;
-import me.salamander.ourea.glsl.transpile.JavaTranspiler;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.GLSLCompiler;
 import me.salamander.ourea.modules.modifier.BinaryModule;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.modules.modifier.Turbulence;
@@ -14,7 +13,6 @@ import me.salamander.ourea.modules.source.coord.X;
 import me.salamander.ourea.modules.source.coord.Y;
 import me.salamander.ourea.render.opengl.CPUChunkGenerator;
 import me.salamander.ourea.render.opengl.OpenGL2DRenderer;
-import me.salamander.ourea.util.MathHelper;
 
 import java.awt.*;
 
@@ -58,14 +56,11 @@ public class Main {
             }
         };
 
-        JavaTranspiler transpiler = new JavaTranspiler(new PerlinSampler(), 2);
-        transpiler.parseAll();
-        transpiler.printCFG(System.out);
+        NoiseSampler sampler = new FBM(new PerlinSampler(), 6, 0.5f, 2.0f);
+        GLSLCompiler compiler = new GLSLCompiler(sampler, 2);
+        compiler.compileMethods();
 
-        Expression[] flat = transpiler.flattenGraph();
-        for(Expression e : flat){
-            System.out.println(e.toGLSL(transpiler.getInfo(), 0));
-        }
+        System.out.println("Compiled!");
     }
 
     public static void CPUTest() {

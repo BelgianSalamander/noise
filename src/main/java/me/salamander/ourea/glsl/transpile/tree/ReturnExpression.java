@@ -29,4 +29,9 @@ public class ReturnExpression implements Expression {
     public Object getConstantValue() {
         throw new RuntimeException("ReturnExpression is not constant");
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new ReturnExpression(value.resolvePrecedingExpression(precedingExpression));
+    }
 }

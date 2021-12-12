@@ -1,7 +1,9 @@
 package me.salamander.ourea.glsl.transpile;
 
+import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
+import me.salamander.ourea.glsl.transpile.tree.ArrayLoadExpression;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -15,10 +17,12 @@ import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Opcodes.GOTO;
 
 public class CFGNode {
+    public static final Type UNRESOLVED_TYPE = Type.getObjectType("me/salamander/fake/gfe2674DHUEyhdfe784trtzagf/yy$y3r");
+
     private static int nextId = 0;
-    private final List<JavaTranspiler.FrameInfo> frames = new ArrayList<>();
+    private final List<JavaParser.FrameInfo> frames = new ArrayList<>();
     private final Set<CFGNode> prev = new HashSet<>();
-    private final JavaTranspiler transpiler;
+    private final JavaParser transpiler;
     NodeType type;
 
     private final List<Expression> statements = new ArrayList<>();
@@ -29,7 +33,7 @@ public class CFGNode {
 
     private final String id;
 
-    public CFGNode(JavaTranspiler.FrameInfo frameInfo, JavaTranspiler transpiler){
+    public CFGNode(JavaParser.FrameInfo frameInfo, JavaParser transpiler){
         frames.add(frameInfo);
         id = "node " + nextId++;
         this.transpiler = transpiler;
@@ -49,6 +53,7 @@ public class CFGNode {
 
     public void reduce(){
         Stack<CFGNode> toProcess = new Stack<>();
+
         toProcess.add(this);
         Set<CFGNode> processed = new HashSet<>();
         while(!toProcess.isEmpty()){
@@ -98,10 +103,23 @@ public class CFGNode {
     }
 
     public void parse(){
-        Stack<Expression> stack = new Stack<>();
+        Stack<Expression> stack = new Stack<>(){
+            @Override
+            public Expression pop() {
+                if(!isEmpty()) {
+                    return simplify(super.pop());
+                }
+
+                if(CFGNode.this.prev.size() == 0){
+                    throw new RuntimeException("No previous nodes");
+                }
+
+                return new PrecedingValueExpression();
+            }
+        };
 
         int k = -1;
-        for(JavaTranspiler.FrameInfo frameInfo : frames){
+        for(JavaParser.FrameInfo frameInfo : frames){
             k++;
             Expression expression = null;
             AbstractInsnNode insn = frameInfo.insnNode;
@@ -114,6 +132,14 @@ public class CFGNode {
                 case DLOAD -> expression = new LoadVarExpression(Type.DOUBLE_TYPE, ((VarInsnNode) insn).var);
                 case LLOAD -> expression = new LoadVarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var);
                 case ALOAD -> {
+                    VarInsnNode varNode = (VarInsnNode) insn;
+
+                    if (varNode.var == 0 && transpiler.getObject() != null) {
+                        expression = new ConstantExpression(transpiler.getObject());
+                        transpiler.setRequiresIdentity();
+                        break;
+                    }
+
                     //Get type
                     Type type;
                     if(k != frames.size() - 1){
@@ -122,7 +148,7 @@ public class CFGNode {
                         //We can get it from next
                         type = normalNext.frames.get(0).getTop().getType();
                     }
-                    expression = new LoadVarExpression(type, ((VarInsnNode) insn).var);
+                    expression = new LoadVarExpression(type, varNode.var);
                 }
 
                 case GETFIELD -> {
@@ -154,6 +180,36 @@ public class CFGNode {
                     Expression left = stack.pop();
                     expression = new BinaryExpression(left, right, BinaryExpression.Operator.MOD);
                 }
+                case IXOR, LXOR -> {
+                    Expression right = stack.pop();
+                    Expression left = stack.pop();
+                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.XOR);
+                }
+                case IAND, LAND -> {
+                    Expression right = stack.pop();
+                    Expression left = stack.pop();
+                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.AND);
+                }
+                case IOR, LOR -> {
+                    Expression right = stack.pop();
+                    Expression left = stack.pop();
+                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.OR);
+                }
+                case ISHL, LSHL -> {
+                    Expression right = stack.pop();
+                    Expression left = stack.pop();
+                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.SHL);
+                }
+                case ISHR, LSHR -> {
+                    Expression right = stack.pop();
+                    Expression left = stack.pop();
+                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.SHR);
+                }
+                case IUSHR, LUSHR -> {
+                    Expression right = stack.pop();
+                    Expression left = stack.pop();
+                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.USHR);
+                }
 
                 case LDC -> expression = new ConstantExpression(((LdcInsnNode) insn).cst);
                 case ICONST_M1 -> expression = new ConstantExpression(-1);
@@ -178,7 +234,12 @@ public class CFGNode {
                     expression = new StoreVarExpression(new BinaryExpression(new LoadVarExpression(Type.INT_TYPE, var), new ConstantExpression(increment), BinaryExpression.Operator.ADD), var);
                 }
 
-                case I2F, I2D, I2L -> expression = new CastExpression(stack.pop(), Type.FLOAT_TYPE);
+                case I2F, L2F, D2F -> expression = new CastExpression(stack.pop(), Type.FLOAT_TYPE);
+                case I2D, L2D, F2D -> expression = new CastExpression(stack.pop(), Type.DOUBLE_TYPE);
+                case I2L, F2L, D2L -> expression = new CastExpression(stack.pop(), Type.LONG_TYPE);
+                case F2I, D2I, L2I -> expression = new CastExpression(stack.pop(), Type.INT_TYPE);
+
+                //case I2B, I2C, I2S -> expression = new CastExpression(stack.pop(), Type.INT_TYPE); //Need to trim
 
                 case FCMPG, FCMPL, LCMP, DCMPG, DCMPL -> {
                     Expression right = stack.pop();
@@ -195,6 +256,10 @@ public class CFGNode {
 
                 case INVOKESTATIC -> {
                     MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
+
+                    MethodInfo methodInfo = new MethodInfo(null, methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, true);
+                    transpiler.getDependents().add(methodInfo);
+
                     int numArgs = Type.getArgumentTypes(methodInsnNode.desc).length;
                     Expression[] args = new Expression[numArgs];
                     for(int i = numArgs - 1; i >= 0; i--){
@@ -209,7 +274,55 @@ public class CFGNode {
                     for(int i = numArgs - 1; i >= 0; i--){
                         args[i] = stack.pop();
                     }
-                    expression = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, args);
+
+                    Object methodCaller;
+                    String ownerName = methodInsnNode.owner;
+                    if(args[0].isConstant()){
+                        methodCaller = args[0].getConstantValue();
+                        ownerName = methodCaller.getClass().getName().replace('.', '/');
+                    }else{
+                        methodCaller = null;
+                    }
+
+                    MethodInfo methodInfo = new MethodInfo(methodCaller, ownerName, methodInsnNode.name, methodInsnNode.desc, false);
+                    transpiler.getDependents().add(methodInfo);
+
+                    expression = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, false, args);
+                }
+                case INVOKEINTERFACE -> {
+                    MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
+                    int numArgs = Type.getArgumentTypes(methodInsnNode.desc).length + 1;
+                    Expression[] args = new Expression[numArgs];
+                    for(int i = numArgs - 1; i >= 0; i--){
+                        args[i] = stack.pop();
+                    }
+
+                    Object methodCaller;
+                    String ownerName = methodInsnNode.owner;
+                    if(args[0].isConstant()){
+                        methodCaller = args[0].getConstantValue();
+                        ownerName = methodCaller.getClass().getName().replace('.', '/');
+                    }else{
+                        methodCaller = null;
+                    }
+
+                    MethodInfo methodInfo = new MethodInfo(methodCaller, ownerName, methodInsnNode.name, methodInsnNode.desc, false);
+                    transpiler.getDependents().add(methodInfo);
+
+                    /*if(methodInsnNode.name.equals("sample")){
+                        Expression arg = args[0];
+                        if(arg instanceof LoadSamplerExpression samplerLoad){
+                            if(methodInsnNode.desc.equals("(FFI)F")){
+                                expression = new SamplerSampleExpression(samplerLoad.getConstantValue(), args[1], args[2], args[3]);
+                                break;
+                            }else if(methodInsnNode.desc.equals("(FFFI)F")){
+                                expression = new SamplerSampleExpression(samplerLoad.getConstantValue(), args[1], args[2], args[3], args[4]);
+                                break;
+                            }
+                        }
+                    }*/
+
+                    expression = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, true, args);
                 }
                 case GETSTATIC -> {
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) insn;
@@ -224,18 +337,43 @@ public class CFGNode {
                         throw new RuntimeException("Failed to get field value!", e);
                     }
                 }
-                case FRETURN -> {
+                case ARETURN, IRETURN, FRETURN, LRETURN, DRETURN -> {
                     Expression value = stack.pop();
                     expression = new ReturnExpression(value);
                 }
 
+                case ARRAYLENGTH -> {
+                    Expression array = stack.pop();
+                    if(!array.isConstant()){
+                        throw new RuntimeException("Array must be constant!"); //Will be improved later
+                    }
+
+                    Object arrayObj = array.getConstantValue();
+                    if(!(arrayObj instanceof Object[])){
+                        throw new RuntimeException("Array must be an array!"); //Will be improved later
+                    }
+
+                    expression = new ConstantExpression(((Object[])arrayObj).length);
+                }
+
+                case AALOAD, BALOAD, CALOAD, SALOAD, IALOAD, LALOAD, FALOAD, DALOAD -> {
+                    Expression index = stack.pop();
+                    Expression array = stack.pop();
+
+                    expression = new ArrayLoadExpression(array, index);
+                }
+
                 case GOTO -> expression = new GotoExpression(((JumpInsnNode) insn).label);
 
-                default -> throw new IllegalStateException("Unexpected value: " + JavaTranspiler.opcodeName(insn.getOpcode()));
+                default -> {
+                    MethodNode method = transpiler.getMethod();
+                    throw new IllegalStateException("Unexpected value: " + JavaParser.opcodeName(insn.getOpcode()) + " while parsing " + transpiler.getClassNode().name + "#" + method.name + method.desc + ". Maybe forgot to add ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES flags when loading the class?");
+                }
             }
             if(expression.isStatement()){
                 if(stack.size() > 0){
-                    throw new IllegalStateException("Stack not empty after statement!");
+                    //throw new IllegalStateException("Stack not empty after statement!");
+                    System.out.println("Warning: Stack not empty after statement! (This probably means it is part of a ternary expression)");
                 }
                 statements.add(expression);
             }else{
@@ -302,9 +440,14 @@ public class CFGNode {
                 newLoopNodes.put(loopExit, BreakExpression::new);
 
                 Expression[] body = this.flatten(loopEnd, newLoopNodes);
-                Expression[] loop = new Expression[1];
-                loop[0] = new WhileExpression(Condition.of(true), body);
-                return loop;
+                Expression loop = new WhileExpression(Condition.of(true), body);
+
+                Expression[] next = loopExit.flatten(scopeEnd, loopNodes);
+                Expression[] full = new Expression[next.length + 1];
+                full[0] = loop;
+                System.arraycopy(next, 0, full, 1, next.length);
+
+                return full;
             }else if(type == NodeType.CONDITIONAL_JUMP){
 
                 CFGNode end = getMeetup(scopeEnd);
@@ -343,13 +486,25 @@ public class CFGNode {
                     jumpStatement = new IfElseExpression(condition, ifTrue, ifFalse);
                 }
 
-                Expression[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Expression[0]);
-                Expression[] postJump = end == null ? new Expression[0] : end.flatten(scopeEnd, loopNodes);
-                Expression[] result = new Expression[preJump.length + 1 + postJump.length];
-                System.arraycopy(preJump, 0, result, 0, preJump.length);
-                result[preJump.length] = jumpStatement;
-                System.arraycopy(postJump, 0, result, preJump.length + 1, postJump.length);
-                return result;
+                boolean isTernary = end.prev.iterator().next().expression != null;
+
+                if(!isTernary) {
+                    Expression[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Expression[0]);
+                    Expression[] postJump = end == null ? new Expression[0] : end.flatten(scopeEnd, loopNodes);
+                    Expression[] result = new Expression[preJump.length + 1 + postJump.length];
+                    System.arraycopy(preJump, 0, result, 0, preJump.length);
+                    result[preJump.length] = jumpStatement;
+                    System.arraycopy(postJump, 0, result, preJump.length + 1, postJump.length);
+                    return result;
+                }else{
+                    assert ifTrue.length == 1 && ifFalse.length == 1;
+                    Expression ternary = new TernaryExpression(condition, ifTrue[0], ifFalse[0]);
+                    Expression[] postJump = end.flatten(scopeEnd, loopNodes);
+                    if(postJump.length > 0){
+                        postJump[0] = postJump[0].resolvePrecedingExpression(ternary);
+                    }
+                    return postJump;
+                }
             }else if(type == NodeType.CODE && normalNext != scopeEnd){
                 Expression[] thisExp = statements.toArray(new Expression[statements.size()]);
                 Expression[] nextExp = normalNext.flatten(scopeEnd, loopNodes);
@@ -460,10 +615,12 @@ public class CFGNode {
         }
     }
 
-    private Expression pop(Stack<Expression> stack){
-        Expression base = stack.pop();
+    private Expression simplify(Expression base){
         if(base.isConstant() && !(base instanceof LoadSamplerExpression)){
             Object value = base.getConstantValue();
+            if(value instanceof NoiseSampler sampler){
+                return new LoadSamplerExpression(sampler);
+            }
             return new ConstantExpression(value);
         }else{
             return base;

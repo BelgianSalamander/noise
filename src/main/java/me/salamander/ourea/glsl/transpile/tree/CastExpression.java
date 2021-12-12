@@ -39,6 +39,22 @@ public class CastExpression implements Expression{
 
     @Override
     public Object getConstantValue() {
-        return expression.getConstantValue();
+        Number val = (Number) expression.getConstantValue();
+        if(type == Type.INT_TYPE){
+            return val.intValue();
+        }else if(type == Type.FLOAT_TYPE){
+            return val.floatValue();
+        }else if(type == Type.DOUBLE_TYPE){
+            return val.doubleValue();
+        }else if(type == Type.LONG_TYPE){
+            return val.longValue();
+        }else{
+            throw new RuntimeException("Unsupported cast type: " + type);
+        }
+    }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new CastExpression(expression.resolvePrecedingExpression(precedingExpression), type);
     }
 }

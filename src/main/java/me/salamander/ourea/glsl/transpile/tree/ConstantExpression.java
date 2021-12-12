@@ -53,4 +53,9 @@ public class ConstantExpression implements Expression{
     public Object getConstantValue() {
         return value;
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return this;
+    }
 }

@@ -31,4 +31,10 @@ public class StoreVarExpression implements Expression{
     public Object getConstantValue() {
         throw new RuntimeException("StoreVarExpression is not constant");
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        value = value.resolvePrecedingExpression(precedingExpression);
+        return this;
+    }
 }

@@ -23,4 +23,9 @@ public class BreakExpression implements Expression{
     public Object getConstantValue() {
         throw new RuntimeException("Not a constant");
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return this;
+    }
 }

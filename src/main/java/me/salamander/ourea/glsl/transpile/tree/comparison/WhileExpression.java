@@ -65,4 +65,9 @@ public class WhileExpression implements Expression {
     public Condition getCondition() {
         return condition;
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        throw new RuntimeException("This should not be called on this");
+    }
 }

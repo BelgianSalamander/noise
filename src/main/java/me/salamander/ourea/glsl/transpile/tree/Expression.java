@@ -13,6 +13,8 @@ public interface Expression {
     boolean isConstant();
     Object getConstantValue();
 
+    Expression resolvePrecedingExpression(Expression precedingExpression);
+
     default boolean isStatement() {
         return getType() == Type.VOID_TYPE;
     }

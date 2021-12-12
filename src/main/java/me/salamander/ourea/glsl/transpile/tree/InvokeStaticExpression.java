@@ -93,4 +93,12 @@ public class InvokeStaticExpression implements Expression {
             }
         }
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        for(int i = 0; i < args.length; i++){
+            args[i] = args[i].resolvePrecedingExpression(precedingExpression);
+        }
+        return this;
+    }
 }

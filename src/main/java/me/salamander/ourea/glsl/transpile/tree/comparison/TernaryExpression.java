@@ -54,4 +54,9 @@ public class TernaryExpression implements Expression {
             return ifFalse.getConstantValue();
         }
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new TernaryExpression((Condition) condition.resolvePrecedingExpression(precedingExpression), ifTrue, ifFalse);
+    }
 }

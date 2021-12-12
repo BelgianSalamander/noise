@@ -38,4 +38,9 @@ public class ActualCompareExpression extends Condition {
     public Object getConstantValue() {
         return operator.apply((Integer) left.getConstantValue(), (Integer) right.getConstantValue());
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new ActualCompareExpression(left.resolvePrecedingExpression(precedingExpression), right.resolvePrecedingExpression(precedingExpression), operator);
+    }
 }

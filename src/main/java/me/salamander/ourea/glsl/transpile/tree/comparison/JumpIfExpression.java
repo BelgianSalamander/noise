@@ -59,10 +59,6 @@ public class JumpIfExpression implements Expression {
         return new ActualCompareExpression(left, right, operator);
     }
 
-    public String negatedGLSL(TranspilationInfo info){
-        return "[PSEUDO_STATEMENT] Jump If " + left.toGLSL(info, 0) + " " + operator.opposite.symbol + " " + right.toGLSL(info, 0);
-    }
-
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
         return "[PSEUDO_STATEMENT] Jump If " + left.toGLSL(info, 0) + " " + operator.symbol + " " + right.toGLSL(info, 0);
@@ -81,6 +77,11 @@ public class JumpIfExpression implements Expression {
     @Override
     public Object getConstantValue() {
         throw new RuntimeException("Not a constant");
+    }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        throw new RuntimeException("Should not be called on JumpIfExpression");
     }
 
     enum Operator {

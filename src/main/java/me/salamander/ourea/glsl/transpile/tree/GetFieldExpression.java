@@ -43,10 +43,16 @@ public class GetFieldExpression implements Expression{
         }
     }
 
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new GetFieldExpression(expression.resolvePrecedingExpression(precedingExpression), field, desc);
+    }
+
     private void loadField(){
         if(field_ == null){
             try {
-                Class<?> clazz = expression.getClass();
+                Object obj = expression.getConstantValue();
+                Class<?> clazz = obj.getClass();
                 while(clazz != null && field_ == null){
                     field_ = clazz.getDeclaredField(field);
                     clazz = clazz.getSuperclass();

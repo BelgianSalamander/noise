@@ -12,14 +12,16 @@ public class InvokeVirtualExpression implements Expression{
     private String owner;
     private String name;
     private String desc;
+    private boolean itf;
 
     private Method method;
 
-    public InvokeVirtualExpression(String owner, String name, String desc, Expression... args){
+    public InvokeVirtualExpression(String owner, String name, String desc, boolean itf, Expression... args){
         this.owner = owner;
         this.name = name;
         this.desc = desc;
         this.args = args;
+        this.itf = itf;
     }
 
     @Override
@@ -67,6 +69,14 @@ public class InvokeVirtualExpression implements Expression{
         }catch (IllegalAccessException | InvocationTargetException e){
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        for(int i = 0; i < args.length; i++){
+            args[i] = args[i].resolvePrecedingExpression(precedingExpression);
+        }
+        return this;
     }
 
     private void loadMethod(){

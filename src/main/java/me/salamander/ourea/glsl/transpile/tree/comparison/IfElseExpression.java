@@ -7,7 +7,7 @@ import org.objectweb.asm.Type;
 import java.util.Arrays;
 
 public class IfElseExpression implements Expression {
-    private final Condition condition;
+    private Condition condition;
     private final Expression[] trueExpressions;
     private final Expression[] falseExpressions;
 
@@ -59,6 +59,11 @@ public class IfElseExpression implements Expression {
     @Override
     public Object getConstantValue() {
         throw new RuntimeException("Not a constant");
+    }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new IfElseExpression((Condition) condition.resolvePrecedingExpression(precedingExpression), trueExpressions, falseExpressions);
     }
 
     @Override

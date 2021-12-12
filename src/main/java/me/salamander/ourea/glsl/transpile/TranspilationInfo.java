@@ -8,7 +8,7 @@ import java.util.Map;
 public class TranspilationInfo {
     private final Map<String, MethodResolver> methodResolvers = new HashMap<>();
 
-    void addMethodResolver(String owner, String name, String desc, MethodResolver resolver) {
+    public void addMethodResolver(String owner, String name, String desc, MethodResolver resolver) {
         methodResolvers.put(owner + "#" + name + " " + desc, resolver);
     }
 

@@ -30,6 +30,11 @@ public class BinaryBooleanExpression extends Condition{
     }
 
     @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new BinaryBooleanExpression((Condition) left.resolvePrecedingExpression(precedingExpression), (Condition) right.resolvePrecedingExpression(precedingExpression), operator);
+    }
+
+    @Override
     public Condition negate() {
         //Boolean algebra baby!
         if(operator == Operator.AND){

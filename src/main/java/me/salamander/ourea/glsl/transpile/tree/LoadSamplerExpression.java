@@ -27,7 +27,12 @@ public class LoadSamplerExpression implements Expression{
     }
 
     @Override
-    public Object getConstantValue() {
+    public NoiseSampler getConstantValue() {
         return sampler;
+    }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return this;
     }
 }

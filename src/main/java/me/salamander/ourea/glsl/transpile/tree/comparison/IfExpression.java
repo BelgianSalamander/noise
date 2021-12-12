@@ -69,4 +69,9 @@ public class IfExpression implements Expression {
     public Condition getCondition() {
         return condition;
     }
+
+    @Override
+    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+        return new IfExpression((Condition) condition.resolvePrecedingExpression(precedingExpression), statements);
+    }
 }

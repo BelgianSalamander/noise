@@ -1,41 +1,48 @@
 package me.salamander.ourea.glsl.transpile;
 
+import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
 import me.salamander.ourea.modules.NoiseSampler;
+import me.salamander.ourea.util.Pair;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class JavaTranspiler {
+public class JavaParser {
+    private final Set<MethodInfo> dependents = new HashSet<>();
     private final Stack<Expression> stack = new Stack<>();
     private final FrameInfo[] code;
     private final TranspilationInfo info = new TranspilationInfo();
     private final CFGNode controlFlowGraph;
-    private final NoiseSampler sampler;
+    private final MethodNode methodNode;
+    private final ClassNode classNode;
+    private final Object object;
     private int index = 0;
 
-    public JavaTranspiler(NoiseSampler sampler, int dimension) {
-        this.sampler = sampler;
+    private boolean needsIdentity = false;
 
-        ClassNode classNode = getClassNode(sampler);
-        String desc = dimension == 2 ? "(FFI)F" : "(FFFI)F";
-        String name = "sample";
+    @Deprecated
+    public JavaParser(NoiseSampler sampler, int dimension) {
+        this(sampler, getSampleMethod(sampler, dimension));
+    }
 
-        MethodNode target = classNode.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).findFirst().orElse(null);
-        if (target == null) {
-            throw new RuntimeException("Failed to find NoiseSampler.sample method");
-        }
+    private JavaParser(Object obj, Pair<ClassNode, MethodNode> pair){
+        this(obj, pair.first(), pair.second());
+    }
+
+    public JavaParser(Object object, ClassNode classNode, MethodNode target) {
+        this.methodNode = target;
+        this.classNode = classNode;
+        this.object = object;
 
         Interpreter<BasicValue> interpreter = new SimpleVerifier();
         Analyzer<BasicValue> analyzer = new Analyzer<>(interpreter){
@@ -213,6 +220,18 @@ public class JavaTranspiler {
         info.addMethodResolver("me/salamander/ourea/util/Grad2", "dot", "(FF)F", (owner, name, desc, info, args) -> "dot(" + args[0].toGLSL(info, 0) + ", vec2(" + args[1].toGLSL(info, 0) + ", " + args[2].toGLSL(info, 0) + "))");
     }
 
+    public void setRequiresIdentity(){
+        needsIdentity = true;
+    }
+
+    public boolean requiresIdentity(){
+        return needsIdentity;
+    }
+
+    public Set<MethodInfo> getDependents() {
+        return dependents;
+    }
+
     private static <T> int indexOf(T[] array, T value) {
         for(int i = 0; i < array.length; i++) {
             if(array[i].equals(value)) {
@@ -387,7 +406,8 @@ public class JavaTranspiler {
         };
     }
 
-    private ClassNode getClassNode(NoiseSampler sampler) {
+    @Deprecated
+    private static ClassNode getClassNode(NoiseSampler sampler) {
         try {
             String classPath = sampler.getClass().getName().replace('.', '/') + ".class";
             InputStream is = ClassLoader.getSystemResourceAsStream(classPath);
@@ -404,8 +424,31 @@ public class JavaTranspiler {
         return info;
     }
 
-    public NoiseSampler getSampler() {
-        return sampler;
+    public MethodNode getMethod(){
+        return methodNode;
+    }
+
+    public ClassNode getClassNode() {
+        return classNode;
+    }
+
+    public Object getObject() {
+        return object;
+    }
+
+    @Deprecated
+    private static Pair<ClassNode, MethodNode> getSampleMethod(NoiseSampler sampler, int dimension){
+        ClassNode classNode = getClassNode(sampler);
+
+        String desc = dimension == 2 ? "(FFI)F" : "(FFFI)F";
+        String name = "sample";
+
+        MethodNode target = classNode.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).findFirst().orElse(null);
+        if (target == null) {
+            throw new RuntimeException("Failed to find NoiseSampler.sample method");
+        }
+
+        return new Pair<>(classNode, target);
     }
 
     public class FrameInfo{
