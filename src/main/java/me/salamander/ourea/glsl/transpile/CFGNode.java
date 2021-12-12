@@ -4,10 +4,13 @@ import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
 import me.salamander.ourea.glsl.transpile.tree.ArrayLoadExpression;
+import me.salamander.ourea.glsl.transpile.tree.statement.ExpressionPseudoStatement;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.swing.plaf.nimbus.State;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -25,8 +28,8 @@ public class CFGNode {
     private final JavaParser transpiler;
     NodeType type;
 
-    private final List<Expression> statements = new ArrayList<>();
-    private Expression expression;
+    private final List<Statement> statements = new ArrayList<>();
+    private Expression residualValue;
 
     CFGNode normalNext;
     CFGNode exceptionalNext;
@@ -121,21 +124,21 @@ public class CFGNode {
         int k = -1;
         for(JavaParser.FrameInfo frameInfo : frames){
             k++;
-            Expression expression = null;
+            CodeFragment<?> fragment = null;
             AbstractInsnNode insn = frameInfo.insnNode;
             if(insn.getOpcode() == -1){
                 continue;
             }
             switch (insn.getOpcode()){
-                case ILOAD -> expression = new LoadVarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var);
-                case FLOAD -> expression = new LoadVarExpression(Type.FLOAT_TYPE, ((VarInsnNode) insn).var);
-                case DLOAD -> expression = new LoadVarExpression(Type.DOUBLE_TYPE, ((VarInsnNode) insn).var);
-                case LLOAD -> expression = new LoadVarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var);
+                case ILOAD -> fragment = new LoadVarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var);
+                case FLOAD -> fragment = new LoadVarExpression(Type.FLOAT_TYPE, ((VarInsnNode) insn).var);
+                case DLOAD -> fragment = new LoadVarExpression(Type.DOUBLE_TYPE, ((VarInsnNode) insn).var);
+                case LLOAD -> fragment = new LoadVarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var);
                 case ALOAD -> {
                     VarInsnNode varNode = (VarInsnNode) insn;
 
                     if (varNode.var == 0 && transpiler.getObject() != null) {
-                        expression = new ConstantExpression(transpiler.getObject());
+                        fragment = new ConstantExpression(transpiler.getObject());
                         transpiler.setRequiresIdentity();
                         break;
                     }
@@ -148,110 +151,110 @@ public class CFGNode {
                         //We can get it from next
                         type = normalNext.frames.get(0).getTop().getType();
                     }
-                    expression = new LoadVarExpression(type, varNode.var);
+                    fragment = new LoadVarExpression(type, varNode.var);
                 }
 
                 case GETFIELD -> {
-                    expression = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
+                    fragment = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
                 }
 
                 case IADD, LADD, FADD, DADD -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.ADD);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.ADD);
                 }
                 case ISUB, LSUB, FSUB, DSUB -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.SUB);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.SUB);
                 }
                 case IMUL, LMUL, FMUL, DMUL -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.MUL);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.MUL);
                 }
                 case IDIV, LDIV, FDIV, DDIV -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.DIV);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.DIV);
                 }
                 case IREM, LREM, FREM, DREM -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.MOD);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.MOD);
                 }
                 case IXOR, LXOR -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.XOR);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.XOR);
                 }
                 case IAND, LAND -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.AND);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.AND);
                 }
                 case IOR, LOR -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.OR);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.OR);
                 }
                 case ISHL, LSHL -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.SHL);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.SHL);
                 }
                 case ISHR, LSHR -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.SHR);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.SHR);
                 }
                 case IUSHR, LUSHR -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new BinaryExpression(left, right, BinaryExpression.Operator.USHR);
+                    fragment = new BinaryExpression(left, right, BinaryExpression.Operator.USHR);
                 }
 
-                case LDC -> expression = new ConstantExpression(((LdcInsnNode) insn).cst);
-                case ICONST_M1 -> expression = new ConstantExpression(-1);
-                case ICONST_0 -> expression = new ConstantExpression(0);
-                case ICONST_1 -> expression = new ConstantExpression(1);
-                case ICONST_2 -> expression = new ConstantExpression(2);
-                case ICONST_3 -> expression = new ConstantExpression(3);
-                case ICONST_4 -> expression = new ConstantExpression(4);
-                case ICONST_5 -> expression = new ConstantExpression(5);
-                case FCONST_0 -> expression = new ConstantExpression(0.0f);
-                case FCONST_1 -> expression = new ConstantExpression(1.0f);
-                case FCONST_2 -> expression = new ConstantExpression(2.0f);
-                case DCONST_0 -> expression = new ConstantExpression(0.0);
-                case DCONST_1 -> expression = new ConstantExpression(1.0);
-                case LCONST_0 -> expression = new ConstantExpression(0L);
-                case LCONST_1 -> expression = new ConstantExpression(1L);
-                case BIPUSH, SIPUSH -> expression = new ConstantExpression(((IntInsnNode) insn).operand);
+                case LDC -> fragment = new ConstantExpression(((LdcInsnNode) insn).cst);
+                case ICONST_M1 -> fragment = new ConstantExpression(-1);
+                case ICONST_0 -> fragment = new ConstantExpression(0);
+                case ICONST_1 -> fragment = new ConstantExpression(1);
+                case ICONST_2 -> fragment = new ConstantExpression(2);
+                case ICONST_3 -> fragment = new ConstantExpression(3);
+                case ICONST_4 -> fragment = new ConstantExpression(4);
+                case ICONST_5 -> fragment = new ConstantExpression(5);
+                case FCONST_0 -> fragment = new ConstantExpression(0.0f);
+                case FCONST_1 -> fragment = new ConstantExpression(1.0f);
+                case FCONST_2 -> fragment = new ConstantExpression(2.0f);
+                case DCONST_0 -> fragment = new ConstantExpression(0.0);
+                case DCONST_1 -> fragment = new ConstantExpression(1.0);
+                case LCONST_0 -> fragment = new ConstantExpression(0L);
+                case LCONST_1 -> fragment = new ConstantExpression(1L);
+                case BIPUSH, SIPUSH -> fragment = new ConstantExpression(((IntInsnNode) insn).operand);
 
                 case IINC -> {
                     int var = ((IincInsnNode) insn).var;
                     int increment = ((IincInsnNode) insn).incr;
-                    expression = new StoreVarExpression(new BinaryExpression(new LoadVarExpression(Type.INT_TYPE, var), new ConstantExpression(increment), BinaryExpression.Operator.ADD), var);
+                    fragment = new StoreVarStatement(new BinaryExpression(new LoadVarExpression(Type.INT_TYPE, var), new ConstantExpression(increment), BinaryExpression.Operator.ADD), var);
                 }
 
-                case I2F, L2F, D2F -> expression = new CastExpression(stack.pop(), Type.FLOAT_TYPE);
-                case I2D, L2D, F2D -> expression = new CastExpression(stack.pop(), Type.DOUBLE_TYPE);
-                case I2L, F2L, D2L -> expression = new CastExpression(stack.pop(), Type.LONG_TYPE);
-                case F2I, D2I, L2I -> expression = new CastExpression(stack.pop(), Type.INT_TYPE);
+                case I2F, L2F, D2F -> fragment = new CastExpression(stack.pop(), Type.FLOAT_TYPE);
+                case I2D, L2D, F2D -> fragment = new CastExpression(stack.pop(), Type.DOUBLE_TYPE);
+                case I2L, F2L, D2L -> fragment = new CastExpression(stack.pop(), Type.LONG_TYPE);
+                case F2I, D2I, L2I -> fragment = new CastExpression(stack.pop(), Type.INT_TYPE);
 
                 //case I2B, I2C, I2S -> expression = new CastExpression(stack.pop(), Type.INT_TYPE); //Need to trim
 
                 case FCMPG, FCMPL, LCMP, DCMPG, DCMPL -> {
                     Expression right = stack.pop();
                     Expression left = stack.pop();
-                    expression = new CompareExpression(left, right);
+                    fragment = new CompareExpression(left, right);
                 }
 
-                case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE -> expression = new JumpIfExpression(stack, insn.getOpcode());
+                case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE -> fragment = new JumpIfStatement(stack, insn.getOpcode());
 
                 case ISTORE, FSTORE, DSTORE, LSTORE, ASTORE -> {
                     Expression value = stack.pop();
-                    expression = new StoreVarExpression(value, ((VarInsnNode) insn).var);
+                    fragment = new StoreVarStatement(value, ((VarInsnNode) insn).var);
                 }
 
                 case INVOKESTATIC -> {
@@ -265,7 +268,7 @@ public class CFGNode {
                     for(int i = numArgs - 1; i >= 0; i--){
                         args[i] = stack.pop();
                     }
-                    expression = new InvokeStaticExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, args);
+                    fragment = new InvokeStaticExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, args);
                 }
                 case INVOKEVIRTUAL -> {
                     MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
@@ -287,7 +290,7 @@ public class CFGNode {
                     MethodInfo methodInfo = new MethodInfo(methodCaller, ownerName, methodInsnNode.name, methodInsnNode.desc, false);
                     transpiler.getDependents().add(methodInfo);
 
-                    expression = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, false, args);
+                    fragment = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, false, args);
                 }
                 case INVOKEINTERFACE -> {
                     MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
@@ -322,7 +325,7 @@ public class CFGNode {
                         }
                     }*/
 
-                    expression = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, true, args);
+                    fragment = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, true, args);
                 }
                 case GETSTATIC -> {
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) insn;
@@ -332,14 +335,14 @@ public class CFGNode {
                         Field field = clazz.getDeclaredField(fieldInsnNode.name);
                         field.setAccessible(true);
                         Object obj = field.get(null);
-                        expression = new ConstantExpression(obj);
+                        fragment = new ConstantExpression(obj);
                     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
                         throw new RuntimeException("Failed to get field value!", e);
                     }
                 }
                 case ARETURN, IRETURN, FRETURN, LRETURN, DRETURN -> {
                     Expression value = stack.pop();
-                    expression = new ReturnExpression(value);
+                    fragment = new ReturnStatement(value);
                 }
 
                 case ARRAYLENGTH -> {
@@ -353,63 +356,63 @@ public class CFGNode {
                         throw new RuntimeException("Array must be an array!"); //Will be improved later
                     }
 
-                    expression = new ConstantExpression(((Object[])arrayObj).length);
+                    fragment = new ConstantExpression(((Object[])arrayObj).length);
                 }
 
                 case AALOAD, BALOAD, CALOAD, SALOAD, IALOAD, LALOAD, FALOAD, DALOAD -> {
                     Expression index = stack.pop();
                     Expression array = stack.pop();
 
-                    expression = new ArrayLoadExpression(array, index);
+                    fragment = new ArrayLoadExpression(array, index);
                 }
 
-                case GOTO -> expression = new GotoExpression(((JumpInsnNode) insn).label);
+                case GOTO -> fragment = new GotoStatement(((JumpInsnNode) insn).label);
 
                 default -> {
                     MethodNode method = transpiler.getMethod();
                     throw new IllegalStateException("Unexpected value: " + JavaParser.opcodeName(insn.getOpcode()) + " while parsing " + transpiler.getClassNode().name + "#" + method.name + method.desc + ". Maybe forgot to add ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES flags when loading the class?");
                 }
             }
-            if(expression.isStatement()){
+            if(fragment instanceof Statement statement){
                 if(stack.size() > 0){
                     //throw new IllegalStateException("Stack not empty after statement!");
                     System.out.println("Warning: Stack not empty after statement! (This probably means it is part of a ternary expression)");
                 }
-                statements.add(expression);
+                statements.add(statement);
             }else{
-                stack.push(expression);
+                stack.push((Expression) fragment);
             }
         }
 
         if(stack.size() == 1){
-            this.expression = stack.pop();
+            this.residualValue = stack.pop();
         }else if(stack.size() > 1){
             throw new IllegalStateException("Stack had size greater than one after parsing node!");
         }
     }
 
-    public Expression[] flatten(){
+    public Statement[] flatten(){
         return this.flatten(null, new HashMap<>());
     }
 
-    public Expression[] flatten(CFGNode scopeEnd, Map<CFGNode, Supplier<Expression>> loopNodes){
+    public Statement[] flatten(CFGNode scopeEnd, Map<CFGNode, Supplier<Statement>> loopNodes){
         //TODO: Start by detecting all loops and replace them with a single loop statement
 
-        if(expression == null){
+        if(residualValue == null){
             if(type == NodeType.CODE){
                 if(loopNodes.containsKey(normalNext)){
                     //return normal except last GOTO is replaced with expression
-                    Expression[] normal = this.statements.toArray(new Expression[0]);
+                    Statement[] normal = this.statements.toArray(new Statement[0]);
 
                     normal[normal.length - 1] = loopNodes.get(normalNext).get();
                     return normal;
                 }
             }else if(type == NodeType.CONDITIONAL_JUMP){
                 if(loopNodes.containsKey(exceptionalNext)){
-                    JumpIfExpression jumpIf = (JumpIfExpression) this.statements.get(this.statements.size() - 1);
-                    Expression ifExpr = new IfExpression(jumpIf.getCondition(), loopNodes.get(exceptionalNext).get());
-                    Expression[] normal = this.normalNext.flatten(scopeEnd, loopNodes);
-                    Expression[] full = new Expression[normal.length + 1];
+                    JumpIfStatement jumpIf = (JumpIfStatement) this.statements.get(this.statements.size() - 1);
+                    Statement ifExpr = new IfStatement(jumpIf.getCondition(), loopNodes.get(exceptionalNext).get());
+                    Statement[] normal = this.normalNext.flatten(scopeEnd, loopNodes);
+                    Statement[] full = new Statement[normal.length + 1];
                     full[0] = ifExpr;
                     System.arraycopy(normal, 0, full, 1, normal.length);
                     return full;
@@ -435,15 +438,15 @@ public class CFGNode {
                 if(loopExit == null){
                     throw new IllegalStateException("Loop has no exit! (This may be because it was not compiled by javac. This will be worked on later.)");
                 }
-                HashMap<CFGNode, Supplier<Expression>> newLoopNodes = new HashMap<>();
-                newLoopNodes.put(this, ContinueExpression::new);
-                newLoopNodes.put(loopExit, BreakExpression::new);
+                HashMap<CFGNode, Supplier<Statement>> newLoopNodes = new HashMap<>();
+                newLoopNodes.put(this, ContinueStatement::new);
+                newLoopNodes.put(loopExit, BreakStatement::new);
 
-                Expression[] body = this.flatten(loopEnd, newLoopNodes);
-                Expression loop = new WhileExpression(Condition.of(true), body);
+                Statement[] body = this.flatten(loopEnd, newLoopNodes);
+                Statement loop = new WhileStatement(Condition.of(true), body);
 
-                Expression[] next = loopExit.flatten(scopeEnd, loopNodes);
-                Expression[] full = new Expression[next.length + 1];
+                Statement[] next = loopExit.flatten(scopeEnd, loopNodes);
+                Statement[] full = new Statement[next.length + 1];
                 full[0] = loop;
                 System.arraycopy(next, 0, full, 1, next.length);
 
@@ -451,72 +454,77 @@ public class CFGNode {
             }else if(type == NodeType.CONDITIONAL_JUMP){
 
                 CFGNode end = getMeetup(scopeEnd);
-                Expression[] ifTrue = exceptionalNext.flatten(end, loopNodes);
-                Expression[] ifFalse = normalNext.flatten(end, loopNodes);
+                Statement[] ifTrue = exceptionalNext.flatten(end, loopNodes);
+                Statement[] ifFalse = normalNext.flatten(end, loopNodes);
 
                 boolean negate = false;
 
                 if(ifTrue.length == 0 && ifFalse.length != 0){
                     negate = true;
-                    Expression[] temp = ifTrue;
+                    Statement[] temp = ifTrue;
                     ifTrue = ifFalse;
                     ifFalse = temp;
                 }
 
-                JumpIfExpression jumpIf = (JumpIfExpression) this.statements.get(this.statements.size() - 1);
+                JumpIfStatement jumpIf = (JumpIfStatement) this.statements.get(this.statements.size() - 1);
                 ActualCompareExpression condition = jumpIf.getCondition();
                 if(negate){
                     condition = condition.negate();
                 }
 
-                Expression jumpStatement;
+                Statement jumpStatement;
 
                 if(ifFalse.length == 0){
-                    if(ifTrue[ifTrue.length - 1] instanceof GotoExpression){
+                    if(ifTrue[ifTrue.length - 1] instanceof GotoStatement){
                         ifTrue = Arrays.copyOf(ifTrue, ifTrue.length - 1);
                     }
-                    jumpStatement = new IfExpression(condition, ifTrue);
+                    jumpStatement = new IfStatement(condition, ifTrue);
                 }else{
-                    if(ifTrue[ifTrue.length - 1] instanceof GotoExpression){
+                    if(ifTrue[ifTrue.length - 1] instanceof GotoStatement){
                         ifTrue = Arrays.copyOf(ifTrue, ifTrue.length - 1);
                     }
-                    if(ifFalse[ifFalse.length - 1] instanceof GotoExpression){
+                    if(ifFalse[ifFalse.length - 1] instanceof GotoStatement){
                         ifFalse = Arrays.copyOf(ifFalse, ifFalse.length - 1);
                     }
-                    jumpStatement = new IfElseExpression(condition, ifTrue, ifFalse);
+                    jumpStatement = new IfElseStatement(condition, ifTrue, ifFalse);
                 }
 
-                boolean isTernary = end.prev.iterator().next().expression != null;
+                boolean isTernary = end.prev.iterator().next().residualValue != null;
 
                 if(!isTernary) {
-                    Expression[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Expression[0]);
-                    Expression[] postJump = end == null ? new Expression[0] : end.flatten(scopeEnd, loopNodes);
-                    Expression[] result = new Expression[preJump.length + 1 + postJump.length];
+                    Statement[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Statement[0]);
+                    Statement[] postJump = end.flatten(scopeEnd, loopNodes);
+                    Statement[] result = new Statement[preJump.length + 1 + postJump.length];
                     System.arraycopy(preJump, 0, result, 0, preJump.length);
                     result[preJump.length] = jumpStatement;
                     System.arraycopy(postJump, 0, result, preJump.length + 1, postJump.length);
                     return result;
                 }else{
                     assert ifTrue.length == 1 && ifFalse.length == 1;
-                    Expression ternary = new TernaryExpression(condition, ifTrue[0], ifFalse[0]);
-                    Expression[] postJump = end.flatten(scopeEnd, loopNodes);
+
+
+
+                    Expression ternary = new TernaryExpression(condition, ((ExpressionPseudoStatement) ifTrue[0]).expression, ((ExpressionPseudoStatement) ifFalse[0]).expression);
+                    Statement[] postJump = end.flatten(scopeEnd, loopNodes);
                     if(postJump.length > 0){
                         postJump[0] = postJump[0].resolvePrecedingExpression(ternary);
                     }
                     return postJump;
                 }
             }else if(type == NodeType.CODE && normalNext != scopeEnd){
-                Expression[] thisExp = statements.toArray(new Expression[statements.size()]);
-                Expression[] nextExp = normalNext.flatten(scopeEnd, loopNodes);
-                Expression[] result = new Expression[thisExp.length + nextExp.length];
+                Statement[] thisExp = statements.toArray(new Statement[0]);
+                Statement[] nextExp = normalNext.flatten(scopeEnd, loopNodes);
+                Statement[] result = new Statement[thisExp.length + nextExp.length];
                 System.arraycopy(thisExp, 0, result, 0, thisExp.length);
                 System.arraycopy(nextExp, 0, result, thisExp.length, nextExp.length);
                 return result;
             }else{
-                return statements.toArray(new Expression[0]);
+                return statements.toArray(new Statement[0]);
             }
         }else{
-            return new Expression[]{expression};
+            return new Statement[]{
+                    new ExpressionPseudoStatement(this.residualValue)
+            };
         }
     }
 
@@ -586,11 +594,11 @@ public class CFGNode {
         System.out.println("\nCode:");
         for(CFGNode node: arr){
             System.out.println(node.id + ":");
-            for(Expression statement: node.statements){
+            for(Statement statement: node.statements){
                 System.out.println("\t" + statement.toGLSL(transpiler.getInfo(), 0));
             }
-            if(node.expression != null){
-                System.out.println("\tValue: " + node.expression.toGLSL(transpiler.getInfo(), 0));
+            if(node.residualValue != null){
+                System.out.println("\tValue: " + node.residualValue.toGLSL(transpiler.getInfo(), 0));
             }
         }
     }

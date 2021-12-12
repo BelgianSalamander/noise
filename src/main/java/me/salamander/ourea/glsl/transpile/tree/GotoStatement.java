@@ -1,13 +1,14 @@
 package me.salamander.ourea.glsl.transpile.tree;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.LabelNode;
 
-public class GotoExpression implements Expression{
+public class GotoStatement implements Statement {
     private final LabelNode label;
 
-    public GotoExpression(LabelNode label){
+    public GotoStatement(LabelNode label){
         this.label = label;
     }
 
@@ -18,22 +19,7 @@ public class GotoExpression implements Expression{
     }
 
     @Override
-    public Type getType() {
-        return Type.VOID_TYPE;
-    }
-
-    @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
-    public Object getConstantValue() {
-        throw new RuntimeException("GotoExpression is not constant");
-    }
-
-    @Override
-    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+    public GotoStatement resolvePrecedingExpression(Expression precedingExpression) {
         return this;
     }
 }

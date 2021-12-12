@@ -2,16 +2,17 @@ package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Type;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class IfExpression implements Expression {
+public class IfStatement implements Statement {
     private Condition condition;
-    private Expression[] statements;
+    private Statement[] statements;
 
-    public IfExpression(Condition condition, Expression... statements) {
+    public IfStatement(Condition condition, Statement... statements) {
         this.condition = condition;
         this.statements = statements;
 
@@ -29,7 +30,7 @@ public class IfExpression implements Expression {
         sb.append(condition.toGLSL(info, 0));
         sb.append(") {\n");
 
-        for(Expression statement : statements) {
+        for(Statement statement : statements) {
             sb.append(statement.toGLSL(info, depth + 1));
         }
 
@@ -40,29 +41,14 @@ public class IfExpression implements Expression {
     }
 
     @Override
-    public Type getType() {
-        return Type.VOID_TYPE;
-    }
-
-    @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
-    public Object getConstantValue() {
-        throw new RuntimeException("Not a constant");
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        IfExpression that = (IfExpression) o;
+        IfStatement that = (IfStatement) o;
         return Objects.equals(condition, that.condition) && Arrays.equals(statements, that.statements);
     }
 
-    public Expression[] getBody() {
+    public Statement[] getBody() {
         return statements;
     }
 
@@ -71,7 +57,7 @@ public class IfExpression implements Expression {
     }
 
     @Override
-    public Expression resolvePrecedingExpression(Expression precedingExpression) {
-        return new IfExpression((Condition) condition.resolvePrecedingExpression(precedingExpression), statements);
+    public IfStatement resolvePrecedingExpression(Expression precedingExpression) {
+        return new IfStatement((Condition) condition.resolvePrecedingExpression(precedingExpression), statements);
     }
 }

@@ -4,6 +4,7 @@ import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.util.Pair;
 import org.objectweb.asm.ClassReader;
@@ -130,70 +131,70 @@ public class JavaParser {
         initInfo();
     }
 
-    public Expression[] flattenGraph() {
+    public Statement[] flattenGraph() {
         //controlFlowGraph.processLoops();
-        Expression[] expressions = controlFlowGraph.flatten();
+        Statement[] expressions = controlFlowGraph.flatten();
         return reduce(expressions);
     }
 
-    private Expression[] reduce(Expression[] expressions) {
+    private Statement[] reduce(Statement[] expressions) {
         for (int i = 0; i < expressions.length; i++) {
-            expressions[i] = reduceExpression(expressions[i]);
+            expressions[i] = reduceStatement(expressions[i]);
         }
         return expressions;
     }
 
-    private Expression reduceExpression(Expression expression) {
-        if(expression instanceof IfElseExpression ifElse){
+    private Statement reduceStatement(Statement statement) {
+        if(statement instanceof IfElseStatement ifElse){
            Condition condition = ifElse.getCondition();
-            Expression[] ifTrue = reduce(ifElse.getIfTrue());
-            Expression[] ifFalse = reduce(ifElse.getIfFalse());
+            Statement[] ifTrue = reduce(ifElse.getIfTrue());
+            Statement[] ifFalse = reduce(ifElse.getIfFalse());
 
             if(ifTrue.length != 1 && ifFalse.length != 1 || ifTrue.length == 0 || ifFalse.length == 0){
-                return new IfElseExpression(condition, ifTrue, ifFalse);
+                return new IfElseStatement(condition, ifTrue, ifFalse);
             }
 
             //Check if ifTrue is duplicated
             if(ifFalse.length == 1){
-                Expression check = ifFalse[0];
-                if(check instanceof IfElseExpression secondIfElse){
+                Statement check = ifFalse[0];
+                if(check instanceof IfElseStatement secondIfElse){
                     if(Arrays.equals(secondIfElse.getIfTrue(), ifTrue)){
                         Condition newCondition = new BinaryBooleanExpression(condition, secondIfElse.getCondition(), BinaryBooleanExpression.Operator.OR);
-                        return new IfElseExpression(newCondition, secondIfElse.getIfTrue(), secondIfElse.getIfFalse());
+                        return new IfElseStatement(newCondition, secondIfElse.getIfTrue(), secondIfElse.getIfFalse());
                     }else if(Arrays.equals(secondIfElse.getIfFalse(), ifTrue)){
                         Condition newCondition = new BinaryBooleanExpression(condition, secondIfElse.getCondition().negate(), BinaryBooleanExpression.Operator.OR);
-                        return new IfElseExpression(newCondition, secondIfElse.getIfTrue(), secondIfElse.getIfFalse());
+                        return new IfElseStatement(newCondition, secondIfElse.getIfTrue(), secondIfElse.getIfFalse());
                     }
                 }
             }
 
             //TODO: Check if ifFalse is duplicated
-        }else if(expression instanceof WhileExpression whileLoop){
-            Expression[] body = reduce(whileLoop.getBody());
+        }else if(statement instanceof WhileStatement whileLoop){
+            Statement[] body = reduce(whileLoop.getBody());
             Condition condition = whileLoop.getCondition();
             if(body.length > 0){
-                if(body[0] instanceof IfExpression ifExpression){
-                    if(ifExpression.getBody().length == 1){
-                        if(ifExpression.getBody()[0] instanceof BreakExpression){
-                            condition = Condition.and(condition, ifExpression.getCondition().negate());
-                            Expression[] newBody = new Expression[body.length - 1];
+                if(body[0] instanceof IfStatement ifStatement){
+                    if(ifStatement.getBody().length == 1){
+                        if(ifStatement.getBody()[0] instanceof BreakStatement){
+                            condition = Condition.and(condition, ifStatement.getCondition().negate());
+                            Statement[] newBody = new Statement[body.length - 1];
                             System.arraycopy(body, 1, newBody, 0, newBody.length);
                             body = newBody;
                         }
                     }
                 }
 
-                if(body[body.length - 1] instanceof ContinueExpression){
-                    Expression[] newBody = new Expression[body.length - 1];
+                if(body[body.length - 1] instanceof ContinueStatement){
+                    Statement[] newBody = new Statement[body.length - 1];
                     System.arraycopy(body, 0, newBody, 0, newBody.length);
                     body = newBody;
                 }
             }
 
-            return new WhileExpression(condition, body);
+            return new WhileStatement(condition, body);
         }
 
-        return expression;
+        return statement;
     }
 
     public void printCFG(PrintStream out) {

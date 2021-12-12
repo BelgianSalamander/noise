@@ -1,13 +1,14 @@
 package me.salamander.ourea.glsl.transpile.tree;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Type;
 
-public class StoreVarExpression implements Expression{
+public class StoreVarStatement implements Statement {
     private Expression value;
     private int var;
 
-    public StoreVarExpression(Expression value, int var) {
+    public StoreVarStatement(Expression value, int var) {
         this.value = value;
         this.var = var;
     }
@@ -18,22 +19,7 @@ public class StoreVarExpression implements Expression{
     }
 
     @Override
-    public Type getType() {
-        return Type.VOID_TYPE;
-    }
-
-    @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
-    public Object getConstantValue() {
-        throw new RuntimeException("StoreVarExpression is not constant");
-    }
-
-    @Override
-    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+    public Statement resolvePrecedingExpression(Expression precedingExpression) {
         value = value.resolvePrecedingExpression(precedingExpression);
         return this;
     }

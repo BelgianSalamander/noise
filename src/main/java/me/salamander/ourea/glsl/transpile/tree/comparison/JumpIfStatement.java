@@ -1,19 +1,21 @@
 package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
+import me.salamander.ourea.glsl.transpile.tree.CodeFragment;
 import me.salamander.ourea.glsl.transpile.tree.ConstantExpression;
 import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.Stack;
 
-public class JumpIfExpression implements Expression {
+public class JumpIfStatement implements Statement {
     private final Expression left;
     private final Expression right;
     private final Operator operator;
 
-    public JumpIfExpression(Stack<Expression> stack, int opcode) {
+    public JumpIfStatement(Stack<Expression> stack, int opcode) {
         if(opcode == Opcodes.IFEQ || opcode == Opcodes.IFNE || opcode == Opcodes.IFGE || opcode == Opcodes.IFGT || opcode == Opcodes.IFLE || opcode == Opcodes.IFLT) {
             Expression leftTemp = stack.pop();
             if(leftTemp.getType() != Type.INT_TYPE){
@@ -65,22 +67,7 @@ public class JumpIfExpression implements Expression {
     }
 
     @Override
-    public Type getType() {
-        return Type.VOID_TYPE;
-    }
-
-    @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
-    public Object getConstantValue() {
-        throw new RuntimeException("Not a constant");
-    }
-
-    @Override
-    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+    public Statement resolvePrecedingExpression(Expression precedingExpression) {
         throw new RuntimeException("Should not be called on JumpIfExpression");
     }
 

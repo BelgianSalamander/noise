@@ -2,16 +2,16 @@ package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.tree.Expression;
-import org.objectweb.asm.Type;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class WhileExpression implements Expression {
+public class WhileStatement implements Statement {
     private Condition condition;
-    private Expression[] body;
+    private Statement[] body;
 
-    public WhileExpression(Condition condition, Expression[] body) {
+    public WhileStatement(Condition condition, Statement[] body) {
         this.condition = condition;
         this.body = body;
     }
@@ -25,7 +25,7 @@ public class WhileExpression implements Expression {
         sb.append(condition.toGLSL(info, 0));
         sb.append(") {\n");
 
-        for(Expression statement : body) {
+        for(Statement statement : body) {
             sb.append(statement.toGLSL(info, depth + 1));
         }
 
@@ -36,29 +36,14 @@ public class WhileExpression implements Expression {
     }
 
     @Override
-    public Type getType() {
-        return Type.VOID_TYPE;
-    }
-
-    @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
-    public Object getConstantValue() {
-        throw new RuntimeException("Not a constant");
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WhileExpression that = (WhileExpression) o;
+        WhileStatement that = (WhileStatement) o;
         return Objects.equals(condition, that.condition) && Arrays.equals(body, that.body);
     }
 
-    public Expression[] getBody() {
+    public Statement[] getBody() {
         return body;
     }
 
@@ -67,7 +52,7 @@ public class WhileExpression implements Expression {
     }
 
     @Override
-    public Expression resolvePrecedingExpression(Expression precedingExpression) {
+    public Statement resolvePrecedingExpression(Expression precedingExpression) {
         throw new RuntimeException("This should not be called on this");
     }
 }

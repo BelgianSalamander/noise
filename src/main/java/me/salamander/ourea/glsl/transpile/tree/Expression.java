@@ -4,18 +4,9 @@ import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
 
 
-public interface Expression {
-    //If type is void, the expression is a statement
-
-    String toGLSL(TranspilationInfo info, int depth);
+public interface Expression extends CodeFragment<Expression> {
     Type getType();
 
     boolean isConstant();
     Object getConstantValue();
-
-    Expression resolvePrecedingExpression(Expression precedingExpression);
-
-    default boolean isStatement() {
-        return getType() == Type.VOID_TYPE;
-    }
 }

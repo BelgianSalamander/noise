@@ -4,6 +4,7 @@ import me.salamander.ourea.glsl.transpile.JavaParser;
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
 import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
@@ -56,7 +57,7 @@ public class GLSLCompiler {
         System.out.println("Compiled all required methods: (" + compiledMethods.size() + ")");
         for(Map.Entry<MethodInfo, CompiledMethod> entry : compiledMethods.entrySet()){
             System.out.println("\t" + entry.getKey().ownerName() + "." + entry.getKey().name() + ":" + entry.getKey().desc());
-            for(Expression expr: entry.getValue().getCode()){
+            for(Statement expr: entry.getValue().getCode()){
                 System.out.println(expr.toGLSL(transpilationInfo, 4));
             }
         }
@@ -74,7 +75,7 @@ public class GLSLCompiler {
         JavaParser parser = new JavaParser(methodInfo.ownerObj(), classNode, methodNode);
         parser.parseAll();
 
-        Expression[] expressions = parser.flattenGraph();
+        Statement[] expressions = parser.flattenGraph();
         boolean needsIdentity = parser.requiresIdentity();
 
         if(!needsIdentity){

@@ -2,16 +2,17 @@ package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Type;
 
 import java.util.Arrays;
 
-public class IfElseExpression implements Expression {
+public class IfElseStatement implements Statement {
     private Condition condition;
-    private final Expression[] trueExpressions;
-    private final Expression[] falseExpressions;
+    private final Statement[] trueExpressions;
+    private final Statement[] falseExpressions;
 
-    public IfElseExpression(Condition condition, Expression[] trueExpressions, Expression[] falseExpressions) {
+    public IfElseStatement(Condition condition, Statement[] trueExpressions, Statement[] falseExpressions) {
         this.condition = condition;
         this.trueExpressions = trueExpressions;
         this.falseExpressions = falseExpressions;
@@ -32,12 +33,12 @@ public class IfElseExpression implements Expression {
        sb.append("if(");
        sb.append(condition.toGLSL(info, 0));
        sb.append(") {\n");
-       for(Expression e : trueExpressions) {
+       for(Statement e : trueExpressions) {
            sb.append(e.toGLSL(info, depth + 1));
        }
        sb.append("  ".repeat(depth));
        sb.append("} else {\n");
-       for(Expression e : falseExpressions) {
+       for(Statement e : falseExpressions) {
            sb.append(e.toGLSL(info, depth + 1));
        }
        sb.append("  ".repeat(depth));
@@ -47,28 +48,13 @@ public class IfElseExpression implements Expression {
     }
 
     @Override
-    public Type getType() {
-        return Type.VOID_TYPE;
-    }
-
-    @Override
-    public boolean isConstant() {
-        return false;
-    }
-
-    @Override
-    public Object getConstantValue() {
-        throw new RuntimeException("Not a constant");
-    }
-
-    @Override
-    public Expression resolvePrecedingExpression(Expression precedingExpression) {
-        return new IfElseExpression((Condition) condition.resolvePrecedingExpression(precedingExpression), trueExpressions, falseExpressions);
+    public IfElseStatement resolvePrecedingExpression(Expression precedingExpression) {
+        return new IfElseStatement((Condition) condition.resolvePrecedingExpression(precedingExpression), trueExpressions, falseExpressions);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof IfElseExpression other) {
+        if(obj instanceof IfElseStatement other) {
             return condition.equals(other.condition) &&
                     Arrays.equals(trueExpressions, other.trueExpressions) &&
                     Arrays.equals(falseExpressions, other.falseExpressions);
@@ -76,11 +62,11 @@ public class IfElseExpression implements Expression {
         return false;
     }
 
-    public Expression[] getIfTrue() {
+    public Statement[] getIfTrue() {
         return trueExpressions;
     }
 
-    public Expression[] getIfFalse() {
+    public Statement[] getIfFalse() {
         return falseExpressions;
     }
 }
