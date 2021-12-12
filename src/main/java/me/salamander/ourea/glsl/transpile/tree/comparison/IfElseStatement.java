@@ -1,7 +1,7 @@
 package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Type;
 

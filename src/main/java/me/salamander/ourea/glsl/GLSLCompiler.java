@@ -3,7 +3,6 @@ package me.salamander.ourea.glsl;
 import me.salamander.ourea.glsl.transpile.JavaParser;
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.ClassReader;

@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
@@ -20,7 +20,7 @@ public class GetFieldExpression implements Expression{
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
-        return expression.toGLSL(info, 0) + "." + field;
+        return eval(expression, info) + "." + field;
     }
 
     @Override
@@ -41,6 +41,11 @@ public class GetFieldExpression implements Expression{
         }catch (IllegalAccessException e){
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 2;
     }
 
     @Override

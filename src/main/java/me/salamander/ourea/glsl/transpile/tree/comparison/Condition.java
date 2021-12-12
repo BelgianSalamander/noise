@@ -1,7 +1,7 @@
 package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 import org.objectweb.asm.Type;
 
 public abstract class Condition implements Expression {
@@ -61,6 +61,11 @@ public abstract class Condition implements Expression {
         @Override
         public Object getConstantValue() {
             return value;
+        }
+
+        @Override
+        public int getPrecedence() {
+            return 0;
         }
 
         @Override

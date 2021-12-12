@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
@@ -15,7 +15,7 @@ public class ArrayLoadExpression implements Expression {
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
-        return array.toGLSL(info, depth) + "[" + index.toGLSL(info, depth) + "]";
+        return eval(array, info) + "[" + index.toGLSL(info, depth) + "]";
     }
 
     @Override
@@ -31,6 +31,11 @@ public class ArrayLoadExpression implements Expression {
     @Override
     public Object getConstantValue() {
         return ((Object[]) array.getConstantValue())[(int) index.getConstantValue()];
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 2;
     }
 
     @Override

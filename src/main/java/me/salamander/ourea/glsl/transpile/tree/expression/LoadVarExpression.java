@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
@@ -30,6 +30,11 @@ public class LoadVarExpression implements Expression{
     @Override
     public Object getConstantValue() {
         throw new RuntimeException("Not a constant");
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 0;
     }
 
     @Override

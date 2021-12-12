@@ -1,7 +1,7 @@
 package me.salamander.ourea.glsl.transpile.tree.statement;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 
 public class ExpressionPseudoStatement implements Statement{
     public Expression expression;

@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.method.MethodResolver;
@@ -69,6 +69,11 @@ public class InvokeVirtualExpression implements Expression{
         }catch (IllegalAccessException | InvocationTargetException e){
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 2;
     }
 
     @Override

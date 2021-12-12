@@ -1,15 +1,13 @@
 package me.salamander.ourea.glsl.transpile.analysis;
 
-import me.salamander.ourea.glsl.transpile.tree.ConstantExpression;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
-import me.salamander.ourea.glsl.transpile.tree.LoadVarExpression;
+import me.salamander.ourea.glsl.transpile.tree.expression.ConstantExpression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.LoadVarExpression;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
-import org.objectweb.asm.tree.analysis.SimpleVerifier;
 
 import java.util.List;
 

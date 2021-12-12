@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.method.MethodResolver;
@@ -68,6 +68,11 @@ public class InvokeStaticExpression implements Expression {
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 2;
     }
 
     private void loadMethod(){

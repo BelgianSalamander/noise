@@ -1,6 +1,6 @@
 package me.salamander.ourea.glsl.transpile.analysis;
 
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.BasicValue;
 

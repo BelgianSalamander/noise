@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.CFGNode;
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
@@ -23,6 +23,11 @@ public class PrecedingValueExpression implements Expression{
     @Override
     public Object getConstantValue() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public int getPrecedence() {
+        return -1;
     }
 
     @Override

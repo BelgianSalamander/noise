@@ -3,14 +3,12 @@ package me.salamander.ourea.glsl.transpile;
 import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
-import me.salamander.ourea.glsl.transpile.tree.ArrayLoadExpression;
-import me.salamander.ourea.glsl.transpile.tree.statement.ExpressionPseudoStatement;
-import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
+import me.salamander.ourea.glsl.transpile.tree.expression.*;
+import me.salamander.ourea.glsl.transpile.tree.statement.*;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
-import javax.swing.plaf.nimbus.State;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -490,9 +488,9 @@ public class CFGNode {
                 }
 
                 boolean isTernary = end.prev.iterator().next().residualValue != null;
+                Statement[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Statement[0]);
 
                 if(!isTernary) {
-                    Statement[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Statement[0]);
                     Statement[] postJump = end.flatten(scopeEnd, loopNodes);
                     Statement[] result = new Statement[preJump.length + 1 + postJump.length];
                     System.arraycopy(preJump, 0, result, 0, preJump.length);
@@ -505,11 +503,15 @@ public class CFGNode {
 
 
                     Expression ternary = new TernaryExpression(condition, ((ExpressionPseudoStatement) ifTrue[0]).expression, ((ExpressionPseudoStatement) ifFalse[0]).expression);
+
                     Statement[] postJump = end.flatten(scopeEnd, loopNodes);
                     if(postJump.length > 0){
                         postJump[0] = postJump[0].resolvePrecedingExpression(ternary);
                     }
-                    return postJump;
+                    Statement[] result = new Statement[preJump.length + postJump.length];
+                    System.arraycopy(preJump, 0, result, 0, preJump.length);
+                    System.arraycopy(postJump, 0, result, preJump.length, postJump.length);
+                    return result;
                 }
             }else if(type == NodeType.CODE && normalNext != scopeEnd){
                 Statement[] thisExp = statements.toArray(new Statement[0]);

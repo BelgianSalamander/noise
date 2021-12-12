@@ -1,7 +1,7 @@
 package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 import org.objectweb.asm.Type;
 
 public class ActualCompareExpression extends Condition {
@@ -37,6 +37,11 @@ public class ActualCompareExpression extends Condition {
     @Override
     public Object getConstantValue() {
         return operator.apply((Integer) left.getConstantValue(), (Integer) right.getConstantValue());
+    }
+
+    @Override
+    public int getPrecedence() {
+        return operator.getPrecedence();
     }
 
     @Override

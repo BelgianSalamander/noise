@@ -1,7 +1,7 @@
 package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 
 public class BinaryBooleanExpression extends Condition{
     private final Condition left;
@@ -30,6 +30,11 @@ public class BinaryBooleanExpression extends Condition{
     }
 
     @Override
+    public int getPrecedence() {
+        return operator.getPrecedence();
+    }
+
+    @Override
     public Expression resolvePrecedingExpression(Expression precedingExpression) {
         return new BinaryBooleanExpression((Condition) left.resolvePrecedingExpression(precedingExpression), (Condition) right.resolvePrecedingExpression(precedingExpression), operator);
     }
@@ -46,7 +51,7 @@ public class BinaryBooleanExpression extends Condition{
     }
 
     public enum Operator {
-        AND {
+        AND(12) {
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info) {
                 return left.toGLSL(info, 0) + " && " + right.toGLSL(info, 0);
@@ -57,7 +62,7 @@ public class BinaryBooleanExpression extends Condition{
                 return a && b;
             }
         },
-        OR {
+        OR(14) {
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info) {
                 return left.toGLSL(info, 0) + " || " + right.toGLSL(info, 0);
@@ -69,6 +74,16 @@ public class BinaryBooleanExpression extends Condition{
                 return a || b;
             }
         };
+
+        private final int precedence;
+
+        Operator(int precedence){
+            this.precedence = precedence;
+        }
+
+        public int getPrecedence() {
+            return precedence;
+        }
 
         public abstract String apply(Expression left, Expression right, TranspilationInfo info);
         public abstract boolean apply(boolean a, boolean b);

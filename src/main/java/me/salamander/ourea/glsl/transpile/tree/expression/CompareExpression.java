@@ -1,7 +1,6 @@
-package me.salamander.ourea.glsl.transpile.tree.comparison;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
 import org.objectweb.asm.Type;
 
 public class CompareExpression implements Expression{
@@ -35,6 +34,11 @@ public class CompareExpression implements Expression{
 
         //Both leftValue and rightValue implement Comparable
         return ((Comparable) leftValue).compareTo(rightValue);
+    }
+
+    @Override
+    public int getPrecedence() {
+        throw new RuntimeException("Cannot directly turn comparison into GLSL so precedence is not applicable");
     }
 
     @Override

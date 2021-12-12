@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
@@ -34,6 +34,11 @@ public class BinaryExpression implements Expression{
     }
 
     @Override
+    public int getPrecedence() {
+        return operator.getPrecedence();
+    }
+
+    @Override
     public Expression resolvePrecedingExpression(Expression precedingExpression) {
         return new BinaryExpression(left.resolvePrecedingExpression(precedingExpression), right.resolvePrecedingExpression(precedingExpression), operator);
     }
@@ -44,10 +49,10 @@ public class BinaryExpression implements Expression{
     }
 
     public enum Operator {
-        ADD{
+        ADD(5){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " + " + right.toGLSL(info, 0);
+                return eval(left, info) + " + " + eval(right, info);
             }
 
             @Override
@@ -65,10 +70,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        SUB{
+        SUB(5){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " - " + right.toGLSL(info, 0);
+                return eval(left, info) + " - " + eval(right, info);
             }
 
             @Override
@@ -86,10 +91,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        MUL{
+        MUL(4){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " * " + right.toGLSL(info, 0);
+                return eval(left, info) + " * " + eval(right, info);
             }
 
             @Override
@@ -107,10 +112,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        DIV{
+        DIV(4){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " / " + right.toGLSL(info, 0);
+                return eval(left, info) + " / " + eval(right, info);
             }
 
             @Override
@@ -128,10 +133,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        MOD{
+        MOD(4){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " % " + right.toGLSL(info, 0);
+                return eval(left, info) + " % " + eval(right, info);
             }
 
             @Override
@@ -149,10 +154,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        AND{
+        AND(9){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " & " + right.toGLSL(info, 0);
+                return eval(left, info) + " & " + eval(right, info);
             }
 
             @Override
@@ -166,10 +171,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        OR{
+        OR(11){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " | " + right.toGLSL(info, 0);
+                return eval(left, info) + " | " + eval(right, info);
             }
 
             @Override
@@ -183,10 +188,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        XOR{
+        XOR(10){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " ^ " + right.toGLSL(info, 0);
+                return eval(left, info) + " ^ " + eval(right, info);
             }
 
             @Override
@@ -200,10 +205,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        SHR{
+        SHR(6){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " >> " + right.toGLSL(info, 0);
+                return eval(left, info) + " >> " + eval(right, info);
             }
 
             @Override
@@ -217,10 +222,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        SHL{
+        SHL(6){
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info){
-                return left.toGLSL(info, 0) + " << " + right.toGLSL(info, 0);
+                return eval(left, info) + " << " + eval(right, info);
             }
 
             @Override
@@ -234,10 +239,10 @@ public class BinaryExpression implements Expression{
                 }
             }
         },
-        USHR {
+        USHR(6) {
             @Override
             public String apply(Expression left, Expression right, TranspilationInfo info) {
-                return left.toGLSL(info, 0) + " >>> " + right.toGLSL(info, 0);
+                return eval(left, info) + " >>> " + eval(right, info);
             }
 
             @Override
@@ -252,6 +257,24 @@ public class BinaryExpression implements Expression{
             }
         }
         ;
+
+        private final int precedence;
+
+        Operator(int precedence){
+            this.precedence = precedence;
+        }
+
+        public int getPrecedence(){
+            return precedence;
+        }
+
+        protected String eval(Expression expr, TranspilationInfo info){
+            String base = expr.toGLSL(info, 0);
+            if(expr.getPrecedence() > precedence){
+                return "(" + base + ")";
+            }
+            return base;
+        }
 
         public abstract String apply(Expression left, Expression right, TranspilationInfo info);
         public abstract Number apply(Number left, Number right, Type type);

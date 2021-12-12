@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
@@ -51,6 +51,11 @@ public class CastExpression implements Expression{
         }else{
             throw new RuntimeException("Unsupported cast type: " + type);
         }
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 2;
     }
 
     @Override

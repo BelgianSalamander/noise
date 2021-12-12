@@ -1,9 +1,9 @@
 package me.salamander.ourea.glsl.transpile.tree.comparison;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.CodeFragment;
-import me.salamander.ourea.glsl.transpile.tree.ConstantExpression;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.ConstantExpression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.CompareExpression;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -72,37 +72,37 @@ public class JumpIfStatement implements Statement {
     }
 
     enum Operator {
-        EQ(1, "=="){
+        EQ(1, "==", 8){
             @Override
             public boolean apply(int a, int b) {
                 return a == b;
             }
         },
-        NE(0, "!="){
+        NE(0, "!=", 8){
             @Override
             public boolean apply(int a, int b) {
                 return a != b;
             }
         },
-        GE(5, ">="){
+        GE(5, ">=", 7){
             @Override
             public boolean apply(int a, int b) {
                 return a >= b;
             }
         },
-        GT(4, ">"){
+        GT(4, ">", 7){
             @Override
             public boolean apply(int a, int b) {
                 return a > b;
             }
         },
-        LE(4, "<="){
+        LE(4, "<=", 7){
             @Override
             public boolean apply(int a, int b) {
                 return a <= b;
             }
         },
-        LT(2, "<"){
+        LT(2, "<", 7){
             @Override
             public boolean apply(int a, int b) {
                 return a < b;
@@ -111,11 +111,13 @@ public class JumpIfStatement implements Statement {
 
         private final int oppositeIndex;
         private final String symbol;
+        private final int precedence;
         private Operator opposite;
 
-        Operator(int opposite, String symbol) {
+        Operator(int opposite, String symbol, int precedence) {
             this.oppositeIndex = opposite;
             this.symbol = symbol;
+            this.precedence = precedence;
         }
 
         public String getSymbol(){
@@ -124,6 +126,10 @@ public class JumpIfStatement implements Statement {
         public Operator getOpposite() {
             return opposite;
         }
+        public int getPrecedence(){
+            return precedence;
+        }
+
         public abstract boolean apply(int a, int b);
 
         static{

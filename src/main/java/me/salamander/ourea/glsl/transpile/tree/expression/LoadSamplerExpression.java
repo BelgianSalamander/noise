@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.modules.NoiseSampler;
@@ -29,6 +29,11 @@ public class LoadSamplerExpression implements Expression{
     @Override
     public NoiseSampler getConstantValue() {
         return sampler;
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 0;
     }
 
     @Override

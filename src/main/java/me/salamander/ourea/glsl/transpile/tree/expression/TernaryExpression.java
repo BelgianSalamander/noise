@@ -1,7 +1,7 @@
-package me.salamander.ourea.glsl.transpile.tree.comparison;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.comparison.Condition;
 import org.objectweb.asm.Type;
 
 public class TernaryExpression implements Expression {
@@ -25,7 +25,7 @@ public class TernaryExpression implements Expression {
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
-        return "(" + condition.toGLSL(info, depth) + " ? " + ifTrue.toGLSL(info, depth) + " : " + ifFalse.toGLSL(info, depth) + ")";
+        return condition.toGLSL(info, depth) + " ? " + ifTrue.toGLSL(info, depth) + " : " + ifFalse.toGLSL(info, depth);
     }
 
     @Override
@@ -53,6 +53,11 @@ public class TernaryExpression implements Expression {
         }else{
             return ifFalse.getConstantValue();
         }
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 15;
     }
 
     @Override

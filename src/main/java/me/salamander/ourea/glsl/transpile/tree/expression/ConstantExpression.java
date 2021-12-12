@@ -1,4 +1,4 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.expression;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import org.objectweb.asm.Type;
@@ -52,6 +52,11 @@ public class ConstantExpression implements Expression{
     @Override
     public Object getConstantValue() {
         return value;
+    }
+
+    @Override
+    public int getPrecedence() {
+        return 0;
     }
 
     @Override

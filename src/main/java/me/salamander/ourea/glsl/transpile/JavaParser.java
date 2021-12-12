@@ -2,8 +2,10 @@ package me.salamander.ourea.glsl.transpile;
 
 import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
-import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
+import me.salamander.ourea.glsl.transpile.tree.statement.BreakStatement;
+import me.salamander.ourea.glsl.transpile.tree.statement.ContinueStatement;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.util.Pair;

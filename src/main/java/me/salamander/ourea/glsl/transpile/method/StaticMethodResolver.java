@@ -1,7 +1,7 @@
 package me.salamander.ourea.glsl.transpile.method;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.Expression;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 
 public class StaticMethodResolver implements MethodResolver{
     private final String name;

@@ -1,6 +1,5 @@
 package me.salamander.ourea.glsl;
 
-import me.salamander.ourea.glsl.transpile.tree.Expression;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 
 import java.util.Set;

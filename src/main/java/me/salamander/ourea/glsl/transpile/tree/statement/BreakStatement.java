@@ -1,8 +1,7 @@
-package me.salamander.ourea.glsl.transpile.tree;
+package me.salamander.ourea.glsl.transpile.tree.statement;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
-import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
-import org.objectweb.asm.Type;
+import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
 
 public class BreakStatement implements Statement {
     @Override
