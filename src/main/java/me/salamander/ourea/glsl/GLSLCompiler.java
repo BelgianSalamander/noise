@@ -50,7 +50,7 @@ public class GLSLCompiler {
     }
 
     private void createInfo() {
-        transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "floor", "(F)I", new StaticMethodResolver("floor"));
+        transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "floor", "(F)I", new StaticMethodResolver("floori"));
         transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "smoothstep", "(F)F", new StaticMethodResolver("smoothstep"));
         transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "lerp", "(FFF)F", new StaticMethodResolver("mix"));
         transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "lerp", "(FFFFFF)F", new StaticMethodResolver("lerp"));
@@ -108,7 +108,7 @@ public class GLSLCompiler {
         }
 
         for(Map.Entry<Class<?>, ConstantType> entry: BUILTIN_TYPES.entrySet()){
-            if(constantTypes.containsKey(entry.getKey())){
+            if(/*constantTypes.containsKey(entry.getKey())*/ true){
                 constantTypes.put(entry.getKey(), entry.getValue());
                 transpilationInfo.addConstantType(Type.getType(entry.getKey()), entry.getValue());
             }
@@ -143,19 +143,21 @@ public class GLSLCompiler {
 
         for(ConstantType type : constantTypes.values()){
             //Declare arrays
-            sb.append(type.getName());
-            sb.append(" ");
-            sb.append(type.getName());
-            sb.append("_constants[] = {\n");
             List<Object> values = constantValues.get(type);
-            for(int i = 0; i < values.size(); i++){
-                sb.append("  ");
-                sb.append(type.create(values.get(i), constantValues, constantTypes));
-                if(i < values.size() - 1){
-                    sb.append(",\n");
+            if(values.size() > 0) {
+                sb.append(type.getName());
+                sb.append(" ");
+                sb.append(type.getName());
+                sb.append("_constants[] = {\n");
+                for (int i = 0; i < values.size(); i++) {
+                    sb.append("  ");
+                    sb.append(type.create(values.get(i), constantValues, constantTypes));
+                    if (i < values.size() - 1) {
+                        sb.append(",\n");
+                    }
                 }
+                sb.append("\n};\n\n");
             }
-            sb.append("\n}\n\n");
         }
 
         Map<Object, String> constants = new HashMap<>();
@@ -264,13 +266,13 @@ public class GLSLCompiler {
             sb.append("}\n\n");
         }
 
-        sb.append("\n\nint main{\n");
-        sb.append("  float x = (gl_GlobalInvocationID.x + offset) * step + startPos.x;\n");
-        sb.append("  float y = (gl_GlobalInvocationID.y + offset) * step + startPos.y;\n");
-        sb.append("  flaot value = ");
+        sb.append("\n\nvoid main(){\n");
+        sb.append("  float x = (gl_GlobalInvocationID.x + offset.x) * step + startPos.x;\n");
+        sb.append("  float y = (gl_GlobalInvocationID.y + offset.y) * step + startPos.y;\n");
+        sb.append("  float value = ");
 
         //TODO: Support for 3 dimensions
-        sb.append(target.call(transpilationInfo, "sample", "x", "y"));
+        sb.append(target.call(transpilationInfo, "sample", "x", "y", "baseSeed"));
         sb.append(";\n");
         sb.append("  uint index = (gl_GlobalInvocationID.y + offset.y) * width + gl_GlobalInvocationID.x + offset.x;\n");
         sb.append("  data.data[index].height = value;\n");
@@ -407,14 +409,6 @@ public class GLSLCompiler {
 
             for(MethodInfo info : toCompile){
                 compileMethod(info);
-            }
-        }
-
-        System.out.println("Compiled all required methods: (" + compiledMethods.size() + ")");
-        for(Map.Entry<MethodInfo, CompiledMethod> entry : compiledMethods.entrySet()){
-            System.out.println("\t" + entry.getKey().ownerName() + "." + entry.getKey().name() + ":" + entry.getKey().desc());
-            for(Statement expr: entry.getValue().getCode()){
-                System.out.println(expr.toGLSL(transpilationInfo, 4));
             }
         }
     }

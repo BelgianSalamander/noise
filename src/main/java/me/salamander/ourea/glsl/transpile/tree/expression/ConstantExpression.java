@@ -19,7 +19,7 @@ public class ConstantExpression implements Expression{
         }else if(value instanceof Float){
             return value.toString() + "f";
         }else if(value instanceof Double){
-            return value.toString() + "d";
+            return value.toString() + "";
         }else if(value instanceof Long){
             return value.toString() + "l";
         }else{

@@ -96,6 +96,15 @@ vec3 grad3[] = {
     vec3(0.30290547, 0.6738873, 0.6738873)
 };
 
+int mod(int a, int b){
+    return (a % b + b) % b;
+}
+
+int floori(float f){
+    int res = int(f);
+    return res <= f ? res : res - 1;
+}
+
 int hash(int x, int y, int seed){
     seed ^= x * 1748247483;
     seed ^= y * 848274837;
@@ -128,5 +137,9 @@ float lerp(float v00, float v01, float v10, float v11, float tx, float ty) {
 
 float lerp(float v000, float v001, float v010, float v011, float v100, float v101, float v110, float v111, float tx, float ty, float tz) {
     return lerp(mix(v000, v001, tx), mix(v010, v011, tx), mix(v100, v101, tx), mix(v110, v111, tx), ty, tz);
+}
+
+float smoothstep(float t){
+    return t * t * t * (t * (t * 6 - 15) + 10);
 }
 

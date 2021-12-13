@@ -12,7 +12,7 @@ public class StaticMethodResolver implements MethodResolver{
 
     @Override
     public String toGLSL(String owner, String name, String desc, TranspilationInfo info, Expression[] args) {
-        StringBuilder sb = new StringBuilder(name + "(");
+        StringBuilder sb = new StringBuilder(this.name + "(");
         for(int i = 0; i < args.length; i++){
             if(i > 0){
                 sb.append(", ");

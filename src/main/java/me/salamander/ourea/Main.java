@@ -39,6 +39,7 @@ public class Main {
         gradient.put(1, Color.WHITE);
 
         OpenGL2DRenderer renderer = new GPUChunkGenerator(256, 0.01f, 59584, OpenGL2DRenderer.ColorMode.SMOOTH, gradient, turbulence);
+        renderer.init();
     }
 
     public static void CPUTest() {
