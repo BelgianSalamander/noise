@@ -276,8 +276,11 @@ public class GLSLCompiler {
         sb.append(";\n");
         sb.append("  uint index = (gl_GlobalInvocationID.y + offset.y) * width + gl_GlobalInvocationID.x + offset.x;\n");
         sb.append("  data.data[index].height = value;\n");
-        sb.append("  data.data[index].color = vec3((value + 1) / 2, (value + 1) / 2, (value + 1) / 2);\n");
+        sb.append("  data.data[index].color = vec4((value + 1) / 2, (value + 1) / 2, 1, 1);\n");
         sb.append("  data.data[index].normal = normalize(vec3(1.0, 2.0, 1.0));\n");
+        /*sb.append("  if(gl_WorkGroupID.y == 1){\n");
+        sb.append("    data.data[index].color = vec4(0, 1, 0, 1);\n");
+        sb.append("  }\n");*/
         sb.append("}");
 
         return sb.toString();

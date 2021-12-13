@@ -2,8 +2,10 @@ package me.salamander.ourea.color;
 
 import me.salamander.ourea.util.SortedList;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 public class ColorGradient {
@@ -57,6 +59,19 @@ public class ColorGradient {
         }
 
         if(includeAlpha) vb.put(1.0f);
+    }
+
+    public FloatBuffer writeSelf(){
+        FloatBuffer fb = MemoryUtil.memAllocFloat(entries.size() * 4);
+        for(ColorEntry entry : entries){
+            //Put color then position
+            fb.put(entry.r);
+            fb.put(entry.g);
+            fb.put(entry.b);
+            fb.put(entry.position);
+        }
+        fb.flip();
+        return fb;
     }
 
     private static class ColorEntry implements Comparable<ColorEntry> {

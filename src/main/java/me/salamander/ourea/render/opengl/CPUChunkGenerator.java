@@ -228,7 +228,7 @@ public class CPUChunkGenerator extends OpenGL2DRenderer{
     }
 
     private record ChunkData(int code, int x, int z, FloatBuffer height, FloatBuffer color, FloatBuffer normal, FloatBuffer textureData){
-        public TerrainChunk toBakedChunk(OpenGL2DRenderer renderer){
+        public SplitTerrainChunk toBakedChunk(OpenGL2DRenderer renderer){
             int vao = glGenVertexArrays();
             int heightBuffer = glGenBuffers();
             int colorBuffer = glGenBuffers();
@@ -266,7 +266,7 @@ public class CPUChunkGenerator extends OpenGL2DRenderer{
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderer.chunkSize, renderer.chunkSize, 0, GL_RGBA, GL_FLOAT, textureData());
             }
 
-            return renderer.new TerrainChunk(x * (renderer.chunkSize - 1), z * (renderer.chunkSize - 1), vao, heightBuffer, colorBuffer, normalBuffer, texture);
+            return renderer.new SplitTerrainChunk(x * (renderer.chunkSize - 1), z * (renderer.chunkSize - 1), vao, heightBuffer, colorBuffer, normalBuffer, texture);
         }
     }
 

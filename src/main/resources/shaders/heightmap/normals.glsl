@@ -8,9 +8,9 @@ uniform float heightScale;
 uniform ivec2 offset;
 
 struct DataPoint{ //Base Alignment: 16
-    vec3 normal; //Base Alignment: 16, Aligned Offset: 0
-    vec3 color; //Base Alignment: 16, Aligned Offset: 16
-    float height; //Base Alignment: 0, Aligned Offset: 28
+    vec4 color;
+    vec3 normal;
+    float height;
 };
 
 struct ColorPoint{ //Base Alignment: 16

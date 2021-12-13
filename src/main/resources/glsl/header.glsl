@@ -1,14 +1,14 @@
 #version 450
 
 uniform int baseSeed;
-uniform uint width;
+uniform uint width = 256;
 uniform vec2 startPos;
 uniform ivec2 offset;
 uniform float step;
 
 struct DataPoint{
+    vec4 color;
     vec3 normal;
-    vec3 color;
     float height;
 };
 
@@ -96,7 +96,7 @@ vec3 grad3[] = {
     vec3(0.30290547, 0.6738873, 0.6738873)
 };
 
-int mod(int a, int b){
+int modi(int a, int b){
     return (a % b + b) % b;
 }
 
@@ -124,11 +124,11 @@ int hash(int x, int y, int z, int seed){
 }
 
 vec2 getGradient(int x, int y, int seed){
-    return grad2[mod(hash(x, y, seed), 24)];
+    return grad2[modi(hash(x, y, seed), 24)];
 }
 
 vec3 getGradient(int x, int y, int z, int seed){
-    return grad3[mod(hash(x, y, seed), 48)];
+    return grad3[modi(hash(x, y, seed), 48)];
 }
 
 float lerp(float v00, float v01, float v10, float v11, float tx, float ty) {

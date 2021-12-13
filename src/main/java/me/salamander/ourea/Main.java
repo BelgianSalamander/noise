@@ -26,7 +26,7 @@ public class Main {
         NoiseSampler perlin1 = new PerlinSampler();
         NoiseSampler perlin2 = new PerlinSampler();
         NoiseSampler product = new BinaryModule(perlin1, perlin2, BinaryModule.Operator.MUL);
-        NoiseSampler turbulence = new Turbulence(new OpenSimplex2SSampler(), new PerlinSampler(), product);
+        NoiseSampler turbulence = new Turbulence(new OpenSimplex2SSampler(), new PerlinSampler(), new FBM(product, 6, 0.5f, 2.0f));
 
         ColorGradient gradient = new ColorGradient();
 
@@ -40,6 +40,7 @@ public class Main {
 
         OpenGL2DRenderer renderer = new GPUChunkGenerator(256, 0.01f, 59584, OpenGL2DRenderer.ColorMode.SMOOTH, gradient, turbulence);
         renderer.init();
+        renderer.mainloop();
     }
 
     public static void CPUTest() {

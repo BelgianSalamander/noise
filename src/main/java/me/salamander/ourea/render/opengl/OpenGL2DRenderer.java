@@ -6,10 +6,7 @@ import me.salamander.ourea.render.Camera;
 import me.salamander.ourea.render.FirstClicked;
 import me.salamander.ourea.render.Window;
 import me.salamander.ourea.util.Pos;
-import me.salamander.ourea.util.PosMap;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.NVFragmentCoverageToColor;
 import org.lwjgl.opengl.NVXGPUMemoryInfo;
 import org.lwjgl.system.MemoryUtil;
 
@@ -19,9 +16,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -57,6 +51,7 @@ public abstract class OpenGL2DRenderer {
     private boolean regenerateChunks = false;
 
     private final Map<Pos, TerrainChunk> chunks = new HashMap<>();
+    private final Set<Pos> queuedChunks = new HashSet<>();
 
     private final int bytesPerChunk;
 
@@ -299,8 +294,16 @@ public abstract class OpenGL2DRenderer {
         System.out.println("Regenerating chunks");
         invalidateGeneratingChunks();
         chunks.keySet().forEach(
-                pos -> queueChunk(pos.x(), pos.y())
+                pos -> queueChunkInternal(pos.x(), pos.y())
         );
+    }
+
+    private void queueChunkInternal(int x, int y){
+        Pos pos = new Pos(x, y);
+        if(!queuedChunks.contains(pos)){
+            queuedChunks.add(pos);
+            queueChunk(x, y);
+        }
     }
 
     private void createShaders() {
@@ -351,7 +354,7 @@ public abstract class OpenGL2DRenderer {
         glUniform1f(u_invHeightScale, 1f / scale);
     }
 
-    private void setModelView(Matrix4f modelView){
+    protected void setModelView(Matrix4f modelView){
         FloatBuffer buffer = MemoryUtil.memAllocFloat(16);
         modelView.get(buffer);
         glUniformMatrix4fv(u_modelView, false, buffer);
@@ -396,6 +399,7 @@ public abstract class OpenGL2DRenderer {
 
             camera.handleInput(window, deltaTime);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glUseProgram(program);
 
             Matrix4f viewMatrix = camera.getViewMatrix();
 
@@ -406,11 +410,11 @@ public abstract class OpenGL2DRenderer {
             int z = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
 
             for(TerrainChunk chunk : chunks.values()){
-                int LOD = Math.abs(x - chunk.x) + Math.abs(z - chunk.z) / 2;
+                int LOD = Math.abs(x - chunk.x()) + Math.abs(z - chunk.z()) / 2;
                 if(LOD >= lodIndices.length){
                     LOD = lodIndices.length - 1;
                 }
-                chunk.draw(viewMatrix, LOD);
+                chunk.draw(viewMatrix, lodIndices[LOD]);
             }
 
             window.swapBuffers();
@@ -448,7 +452,7 @@ public abstract class OpenGL2DRenderer {
             for (int j = -viewDistance; j <= viewDistance; j++) {
                 Pos key = new Pos(x + i, z + j);
                 if (!chunks.containsKey(key)) {
-                    queueChunk(key.x(), key.y());
+                    queueChunkInternal(key.x(), key.y());
                 }
                 toRemove.remove(key);
             }
@@ -471,7 +475,10 @@ public abstract class OpenGL2DRenderer {
     protected abstract void delete();
 
     protected void putBakedChunk(int x, int z, TerrainChunk chunk){
-        TerrainChunk prev = chunks.put(new Pos(x, z), chunk);
+        System.out.println("Baked chunk at " + x + ", " + z);
+        Pos pos = new Pos(x, z);
+        queuedChunks.remove(pos);
+        TerrainChunk prev = chunks.put(pos, chunk);
         if(prev != null){
             prev.delete();
         }
@@ -481,7 +488,7 @@ public abstract class OpenGL2DRenderer {
         this.viewDistance = viewDistance;
     }
 
-    protected class TerrainChunk{
+    protected class SplitTerrainChunk implements TerrainChunk{
         private static final Matrix4f epicMatrix = new Matrix4f();
 
         protected final int x, z;
@@ -492,7 +499,7 @@ public abstract class OpenGL2DRenderer {
         protected final int normalBuffer;
         protected final int texture;
 
-        public TerrainChunk(float x, float z, int vao, int heightBuffer, int colorDataBuffer, int normalBuffer, int texture){
+        public SplitTerrainChunk(float x, float z, int vao, int heightBuffer, int colorDataBuffer, int normalBuffer, int texture){
             this.x = (int) x / (chunkSize - 1);
             this.z = (int) z / (chunkSize - 1);
             this.modelMatrix = new Matrix4f().translate(z, 0, x);
@@ -503,6 +510,17 @@ public abstract class OpenGL2DRenderer {
             this.normalBuffer = normalBuffer;
         }
 
+        @Override
+        public int x() {
+            return x;
+        }
+
+        @Override
+        public int z() {
+            return z;
+        }
+
+        @Override
         public void delete(){
             glBindVertexArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -515,7 +533,8 @@ public abstract class OpenGL2DRenderer {
             }
         }
 
-        private void draw(Matrix4f viewMatrix, int lod){
+        @Override
+        public void draw(Matrix4f viewMatrix, int lod){
             setModelView(viewMatrix.mul(modelMatrix, epicMatrix));
             glBindVertexArray(vao);
 
@@ -524,7 +543,7 @@ public abstract class OpenGL2DRenderer {
                 glBindTexture(GL_TEXTURE_2D, texture);
             }
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lodIndices[lod]);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lod);
             glDrawElements(GL_TRIANGLES, (chunkSize - 1) * (chunkSize - 1) * 6, GL_UNSIGNED_INT, 0);
 
             //System.out.println("Drawing chunk " + modelMatrix.m30() / 255 + ", " + modelMatrix.m32() / 255);
