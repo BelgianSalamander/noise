@@ -57,10 +57,12 @@ public class Main {
         };
 
         NoiseSampler sampler = new FBM(new PerlinSampler(), 6, 0.5f, 2.0f);
-        GLSLCompiler compiler = new GLSLCompiler(sampler, 2);
+        GLSLCompiler compiler = new GLSLCompiler(new OpenSimplex2SSampler(), 3);
         compiler.compileMethods();
 
         System.out.println("Compiled!");
+
+        System.out.println(compiler.link());
     }
 
     public static void CPUTest() {

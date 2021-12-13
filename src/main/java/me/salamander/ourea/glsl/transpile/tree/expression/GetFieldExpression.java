@@ -20,6 +20,10 @@ public class GetFieldExpression implements Expression{
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
+        Type t = Type.getType(desc);
+        if(info.isReferenceField(t, field)){
+            return t.getClassName().replace('.', '_').replace('$', '_') + "_constants[" + eval(expression, info) + "." + field + "]";
+        }
         return eval(expression, info) + "." + field;
     }
 

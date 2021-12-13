@@ -7,9 +7,9 @@ import org.objectweb.asm.Type;
 public class ActualCompareExpression extends Condition {
     private final Expression left;
     private final Expression right;
-    private final JumpIfStatement.Operator operator;
+    private final JumpIfEqualStatement.Operator operator;
 
-    public ActualCompareExpression(Expression left, Expression right, JumpIfStatement.Operator operator) {
+    public ActualCompareExpression(Expression left, Expression right, JumpIfEqualStatement.Operator operator) {
         this.left = left;
         this.right = right;
         this.operator = operator;

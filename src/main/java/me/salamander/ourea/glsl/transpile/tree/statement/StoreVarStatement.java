@@ -15,7 +15,7 @@ public class StoreVarStatement implements Statement {
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
-        return "  ".repeat(depth) + "var" + var + " = " + value.toGLSL(info, 0) + ";\n";
+        return "  ".repeat(depth) + info.getVarName(var, value.getType()) + " = " + value.toGLSL(info, 0) + ";\n";
     }
 
     @Override

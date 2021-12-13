@@ -106,8 +106,8 @@ public class OpenSimplex2SSampler implements NoiseSampler {
     }
 
     private static class LatticePoint2D {
-        int xsv, ysv;
-        float dx, dy;
+        final int xsv, ysv;
+        final float dx, dy;
         public LatticePoint2D(int xsv, int ysv) {
             this.xsv = xsv; this.ysv = ysv;
             float ssv = (xsv + ysv) * -0.211324865405187f;
@@ -117,8 +117,8 @@ public class OpenSimplex2SSampler implements NoiseSampler {
     }
 
     private static class LatticePoint3D {
-        public float dxr, dyr, dzr;
-        public int xrv, yrv, zrv;
+        public final float dxr, dyr, dzr;
+        public final int xrv, yrv, zrv;
         LatticePoint3D nextOnFailure, nextOnSuccess;
         public LatticePoint3D(int xrv, int yrv, int zrv, int lattice) {
             this.dxr = -xrv + lattice * 0.5f; this.dyr = -yrv + lattice * 0.5f; this.dzr = -zrv + lattice * 0.5f;

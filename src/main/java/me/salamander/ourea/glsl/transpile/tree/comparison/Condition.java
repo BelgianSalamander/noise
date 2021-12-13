@@ -36,6 +36,52 @@ public abstract class Condition implements Expression {
         }
     }
 
+    public static Condition not(Condition condition) {
+        if(condition instanceof BooleanCondition) {
+            return new BooleanCondition(!((BooleanCondition) condition).value);
+        }else{
+            return new Not(condition);
+        }
+    }
+
+    private static class Not extends Condition {
+        private final Condition condition;
+
+        public Not(Condition condition) {
+            this.condition = condition;
+        }
+
+        @Override
+        public String toGLSL(TranspilationInfo info, int depth) {
+            return "!" + eval(condition, info);
+        }
+
+        @Override
+        public Expression resolvePrecedingExpression(Expression precedingExpression) {
+            return new Not((Condition) condition.resolvePrecedingExpression(precedingExpression));
+        }
+
+        @Override
+        public Condition negate() {
+            return condition;
+        }
+
+        @Override
+        public boolean isConstant() {
+            return condition.isConstant();
+        }
+
+        @Override
+        public Object getConstantValue() {
+            return !((boolean) condition.getConstantValue());
+        }
+
+        @Override
+        public int getPrecedence() {
+            return 3;
+        }
+    }
+
     private static class BooleanCondition extends Condition {
         private final boolean value;
 

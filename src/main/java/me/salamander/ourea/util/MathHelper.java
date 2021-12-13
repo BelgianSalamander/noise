@@ -30,8 +30,8 @@ public class MathHelper {
     }
 
     public static int hash(int x, int y, int seed) {
-        seed ^= x * 1748247483L;
-        seed ^= y * 8482748374L;
+        seed ^= x * 1748247483;
+        seed ^= y * 848274837;
         seed ^= seed >> 13;
         seed *= 16807;
         seed ^= seed >> 7;

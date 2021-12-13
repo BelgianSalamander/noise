@@ -23,7 +23,12 @@ public class ConstantExpression implements Expression{
         }else if(value instanceof Long){
             return value.toString() + "l";
         }else{
-            return "[Unsupported constant type: " + value.getClass() + "]";
+            String name = info.getConstant(value);
+            if(name == null){
+                throw new RuntimeException("Constant " + value + " not found in constants table");
+            }else{
+                return name;
+            }
         }
     }
 

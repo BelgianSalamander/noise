@@ -10,12 +10,12 @@ import org.objectweb.asm.Type;
 
 import java.util.Stack;
 
-public class JumpIfStatement implements Statement {
+public class JumpIfEqualStatement implements ConditionalJump {
     private final Expression left;
     private final Expression right;
     private final Operator operator;
 
-    public JumpIfStatement(Stack<Expression> stack, int opcode) {
+    public JumpIfEqualStatement(Stack<Expression> stack, int opcode) {
         if(opcode == Opcodes.IFEQ || opcode == Opcodes.IFNE || opcode == Opcodes.IFGE || opcode == Opcodes.IFGT || opcode == Opcodes.IFLE || opcode == Opcodes.IFLT) {
             Expression leftTemp = stack.pop();
             if(leftTemp.getType() != Type.INT_TYPE){
@@ -57,6 +57,7 @@ public class JumpIfStatement implements Statement {
         }
     }
 
+    @Override
     public ActualCompareExpression getCondition(){
         return new ActualCompareExpression(left, right, operator);
     }

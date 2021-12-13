@@ -128,10 +128,22 @@ public class CFGNode {
                 continue;
             }
             switch (insn.getOpcode()){
-                case ILOAD -> fragment = new LoadVarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var);
-                case FLOAD -> fragment = new LoadVarExpression(Type.FLOAT_TYPE, ((VarInsnNode) insn).var);
-                case DLOAD -> fragment = new LoadVarExpression(Type.DOUBLE_TYPE, ((VarInsnNode) insn).var);
-                case LLOAD -> fragment = new LoadVarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var);
+                case ILOAD -> {
+                    fragment = new LoadVarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var);
+                    transpiler.addVar(((VarInsnNode) insn).var, Type.INT_TYPE);
+                }
+                case FLOAD -> {
+                    fragment = new LoadVarExpression(Type.FLOAT_TYPE, ((VarInsnNode) insn).var);
+                    transpiler.addVar(((VarInsnNode) insn).var, Type.FLOAT_TYPE);
+                }
+                case DLOAD -> {
+                    fragment = new LoadVarExpression(Type.DOUBLE_TYPE, ((VarInsnNode) insn).var);
+                    transpiler.addVar(((VarInsnNode) insn).var, Type.DOUBLE_TYPE);
+                }
+                case LLOAD -> {
+                    fragment = new LoadVarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var);
+                    transpiler.addVar(((VarInsnNode) insn).var, Type.LONG_TYPE);
+                }
                 case ALOAD -> {
                     VarInsnNode varNode = (VarInsnNode) insn;
 
@@ -150,10 +162,18 @@ public class CFGNode {
                         type = normalNext.frames.get(0).getTop().getType();
                     }
                     fragment = new LoadVarExpression(type, varNode.var);
+                    transpiler.addVar(varNode.var, type);
                 }
 
                 case GETFIELD -> {
                     fragment = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
+                    Expression expression = (Expression)  fragment;
+                    if(expression.isConstant()){
+                        Object constant = expression.getConstantValue();
+                        if(!(constant instanceof Number) && !(constant instanceof NoiseSampler)){
+                            transpiler.addConstant(constant);
+                        }
+                    }
                 }
 
                 case IADD, LADD, FADD, DADD -> {
@@ -248,11 +268,12 @@ public class CFGNode {
                     fragment = new CompareExpression(left, right);
                 }
 
-                case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE -> fragment = new JumpIfStatement(stack, insn.getOpcode());
+                case IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE, IF_ICMPEQ, IF_ICMPNE, IF_ICMPLT, IF_ICMPGE, IF_ICMPGT, IF_ICMPLE, IF_ACMPEQ, IF_ACMPNE -> fragment = new JumpIfEqualStatement(stack, insn.getOpcode());
 
                 case ISTORE, FSTORE, DSTORE, LSTORE, ASTORE -> {
                     Expression value = stack.pop();
                     fragment = new StoreVarStatement(value, ((VarInsnNode) insn).var);
+                    transpiler.addVar(((VarInsnNode) insn).var, value.getType());
                 }
 
                 case INVOKESTATIC -> {
@@ -333,6 +354,9 @@ public class CFGNode {
                         Field field = clazz.getDeclaredField(fieldInsnNode.name);
                         field.setAccessible(true);
                         Object obj = field.get(null);
+                        if(!(obj instanceof Number) && !(obj instanceof NoiseSampler)){
+                            transpiler.addConstant(obj);
+                        }
                         fragment = new ConstantExpression(obj);
                     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
                         throw new RuntimeException("Failed to get field value!", e);
@@ -362,6 +386,14 @@ public class CFGNode {
                     Expression array = stack.pop();
 
                     fragment = new ArrayLoadExpression(array, index);
+                }
+
+                case IFNULL, IFNONNULL -> {
+                    Expression value = stack.pop();
+                    transpiler.setNullable(value.getType());
+
+                    boolean invert = insn.getOpcode() == IFNONNULL;
+                    fragment = new JumpIfNullStatement(value, invert);
                 }
 
                 case GOTO -> fragment = new GotoStatement(((JumpInsnNode) insn).label);
@@ -407,7 +439,7 @@ public class CFGNode {
                 }
             }else if(type == NodeType.CONDITIONAL_JUMP){
                 if(loopNodes.containsKey(exceptionalNext)){
-                    JumpIfStatement jumpIf = (JumpIfStatement) this.statements.get(this.statements.size() - 1);
+                    ConditionalJump jumpIf = (ConditionalJump) this.statements.get(this.statements.size() - 1);
                     Statement ifExpr = new IfStatement(jumpIf.getCondition(), loopNodes.get(exceptionalNext).get());
                     Statement[] normal = this.normalNext.flatten(scopeEnd, loopNodes);
                     Statement[] full = new Statement[normal.length + 1];
@@ -464,8 +496,8 @@ public class CFGNode {
                     ifFalse = temp;
                 }
 
-                JumpIfStatement jumpIf = (JumpIfStatement) this.statements.get(this.statements.size() - 1);
-                ActualCompareExpression condition = jumpIf.getCondition();
+                ConditionalJump jumpIf = (ConditionalJump) this.statements.get(this.statements.size() - 1);
+                Condition condition = jumpIf.getCondition();
                 if(negate){
                     condition = condition.negate();
                 }

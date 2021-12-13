@@ -14,7 +14,7 @@ public class LoadVarExpression implements Expression{
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
-        return "var" + index;
+        return info.getVarName(index, type);
     }
 
     @Override

@@ -10,6 +10,7 @@ import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.util.Pair;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.*;
 
@@ -32,6 +33,9 @@ public class JavaParser {
     private int index = 0;
 
     private boolean needsIdentity = false;
+    private final Set<Pair<Integer, Type>> variables = new HashSet<>();
+    private final Set<Object> constants = new HashSet<>();
+    private final Set<Type> nullableTypes = new HashSet<>();
 
     @Deprecated
     public JavaParser(NoiseSampler sampler, int dimension) {
@@ -452,6 +456,30 @@ public class JavaParser {
         }
 
         return new Pair<>(classNode, target);
+    }
+
+    void addVar(int index, Type type){
+        variables.add(new Pair<>(index, type));
+    }
+
+    void addConstant(Object value){
+        constants.add(value);
+    }
+
+    void setNullable(Type type){
+        nullableTypes.add(type);
+    }
+
+    public Set<Pair<Integer, Type>> getVariables() {
+        return variables;
+    }
+
+    public Set<Object> getConstants() {
+        return constants;
+    }
+
+    public Set<Type> nullableTypes() {
+        return nullableTypes;
     }
 
     public class FrameInfo{
