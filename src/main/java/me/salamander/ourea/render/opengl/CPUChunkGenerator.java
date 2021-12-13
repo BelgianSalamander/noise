@@ -269,4 +269,9 @@ public class CPUChunkGenerator extends OpenGL2DRenderer{
             return renderer.new TerrainChunk(x * (renderer.chunkSize - 1), z * (renderer.chunkSize - 1), vao, heightBuffer, colorBuffer, normalBuffer, texture);
         }
     }
+
+    @Override
+    protected void initialize() {
+        super.initialize();
+    }
 }

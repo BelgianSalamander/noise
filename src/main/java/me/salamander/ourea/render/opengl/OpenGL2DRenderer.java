@@ -81,7 +81,7 @@ public abstract class OpenGL2DRenderer {
      * Initializes the OpenGL context among other things this means that there are some methods that can only called from the same thread as this.
      * @see #mainloop()
      */
-    public void init(){
+    public final void init(){
         window = new Window("Ourea", 800, 600);
         regenerateSeed = new FirstClicked(window, GLFW_KEY_Q);
 
@@ -143,6 +143,8 @@ public abstract class OpenGL2DRenderer {
         if(colorMode.useTexture){
             glUniform1i(glGetUniformLocation(program, "tex"), 0);
         }
+
+        initialize();
     }
 
     private void generateIndices() {
@@ -460,6 +462,10 @@ public abstract class OpenGL2DRenderer {
         if(chunk != null){
             chunk.delete();
         }
+    }
+
+    protected void initialize(){
+
     }
 
     protected abstract void delete();

@@ -26,7 +26,16 @@ public class InvokeVirtualExpression implements Expression{
 
     @Override
     public String toGLSL(TranspilationInfo info, int depth) {
-        MethodResolver resolver = info.getMethodResolver(owner, name, desc);
+        MethodResolver resolver = null;
+
+        if(args[0].isConstant()){
+            resolver = info.getMethodResolver(args[0].getConstantValue().getClass().getName().replace('.', '/'), name, desc);
+        }
+
+        if(resolver == null){
+            resolver = info.getMethodResolver(owner, name, desc);
+        }
+
         if(resolver != null) {
             return resolver.toGLSL(owner, name, desc, info, args);
         }

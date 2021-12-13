@@ -56,6 +56,47 @@ public record MethodInfo(Object ownerObj, String ownerName, String name, String 
         return baseName + "_" + scramble;
     }
 
+    public String call(TranspilationInfo info, String... args){
+        Expression[] expressions = new Expression[args.length];
+        for(int i = 0; i < args.length; i++){
+            int finalI = i;
+            Expression expression = new Expression() {
+                @Override
+                public Type getType() {
+                    throw new RuntimeException("Shouldn't be called");
+                }
+
+                @Override
+                public boolean isConstant() {
+                    throw new RuntimeException("Shouldn't be called");
+                }
+
+                @Override
+                public Object getConstantValue() {
+                    throw new RuntimeException("Shouldn't be called");
+                }
+
+                @Override
+                public int getPrecedence() {
+                    throw new RuntimeException("Shouldn't be called");
+                }
+
+                @Override
+                public String toGLSL(TranspilationInfo info, int depth) {
+                    return args[finalI];
+                }
+
+                @Override
+                public Expression resolvePrecedingExpression(Expression precedingExpression) {
+                    throw new RuntimeException("Shouldn't be called");
+                }
+            };
+            expressions[i] = expression;
+        }
+
+        return call(info, expressions);
+    }
+
     public String call(TranspilationInfo info, Expression[] args) {
         StringBuilder sb = new StringBuilder();
 

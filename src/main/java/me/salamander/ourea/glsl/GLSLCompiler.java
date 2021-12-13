@@ -1,6 +1,7 @@
 package me.salamander.ourea.glsl;
 
 import me.salamander.ourea.glsl.transpile.*;
+import me.salamander.ourea.glsl.transpile.annotation.Inline;
 import me.salamander.ourea.glsl.transpile.method.MethodResolver;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
@@ -15,28 +16,37 @@ import org.objectweb.asm.tree.MethodNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GLSLCompiler {
     private static final Map<Class<?>, ConstantType> BUILTIN_TYPES = new HashMap<>();
-    private static final CompiledMethod MARKER = new CompiledMethod(null, null, null, null, null);
+    private static final CompiledMethod MARKER = new CompiledMethod(null, null, null, null, null, false);
+    private static final String HEADER;
 
     private final Map<String, ClassNode> cachedClasses = new HashMap<>();
     private final Map<MethodInfo, CompiledMethod> compiledMethods = new HashMap<>();
     private final Set<MethodInfo> identityLess = new HashSet<>();
     private final Set<Type> nullableTypes = new HashSet<>();
+    private final MethodInfo target;
 
     private final TranspilationInfo transpilationInfo = new TranspilationInfo();
 
     public GLSLCompiler(NoiseSampler sampler, int dimensions){
         String desc = dimensions == 2 ? "(FFI)F" : "(FFFI)F";
         MethodInfo methodInfo = new MethodInfo(sampler, sampler.getClass().getName(), "sample", desc, false);
+        target = methodInfo;
 
         compiledMethods.put(methodInfo, MARKER);
         createInfo();
+
+        if(dimensions == 3){
+            System.err.println("3D noise samplers are not supported yet");
+        }
     }
 
     private void createInfo() {
@@ -49,6 +59,7 @@ public class GLSLCompiler {
         transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "sin", "(F)F", new StaticMethodResolver("sin"));
 
         transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "getGradient", "(III)Lme/salamander/ourea/util/Grad2;", new StaticMethodResolver("getGradient"));
+        transpilationInfo.addMethodResolver("me/salamander/ourea/util/MathHelper", "getGradient", "(IIII)Lme/salamander/ourea/util/Grad3;", new StaticMethodResolver("getGradient"));
 
         transpilationInfo.addMethodResolver("me/salamander/ourea/util/Grad2", "dot", "(FF)F", (owner, name, desc, info, args) -> "dot(" + args[0].toGLSL(info, 0) + ", vec2(" + args[1].toGLSL(info, 0) + ", " + args[2].toGLSL(info, 0) + "))");
     }
@@ -122,7 +133,7 @@ public class GLSLCompiler {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("#version 450 core\n\n");
+        sb.append(HEADER);
 
 
         for(ConstantType type : constantTypes.values()){
@@ -253,6 +264,20 @@ public class GLSLCompiler {
             sb.append("}\n\n");
         }
 
+        sb.append("\n\nint main{\n");
+        sb.append("  float x = (gl_GlobalInvocationID.x + offset) * step + startPos.x;\n");
+        sb.append("  float y = (gl_GlobalInvocationID.y + offset) * step + startPos.y;\n");
+        sb.append("  flaot value = ");
+
+        //TODO: Support for 3 dimensions
+        sb.append(target.call(transpilationInfo, "sample", "x", "y"));
+        sb.append(";\n");
+        sb.append("  uint index = (gl_GlobalInvocationID.y + offset.y) * width + gl_GlobalInvocationID.x + offset.x;\n");
+        sb.append("  data.data[index].height = value;\n");
+        sb.append("  data.data[index].color = vec3((value + 1) / 2, (value + 1) / 2, (value + 1) / 2);\n");
+        sb.append("  data.data[index].normal = normalize(vec3(1.0, 2.0, 1.0));\n");
+        sb.append("}");
+
         return sb.toString();
     }
 
@@ -282,7 +307,17 @@ public class GLSLCompiler {
             clazz = clazz.getSuperclass();
         }
         fields.removeIf(field -> Modifier.isStatic(field.getModifiers()));
-        fields.forEach(f -> f.setAccessible(true));
+        fields.removeIf(field -> field.getType() == String.class);
+
+        List<Field> inaccessibleFields = new ArrayList<>();
+        fields.forEach(field -> {
+            try {
+                field.setAccessible(true);
+            }catch (InaccessibleObjectException e){
+                inaccessibleFields.add(field);
+            }
+        });
+        fields.removeAll(inaccessibleFields);
         return fields;
     }
 
@@ -320,7 +355,7 @@ public class GLSLCompiler {
         return sb.toString();
     }
 
-    private static Class<?> getClass(Type t){
+    public static Class<?> getClass(Type t){
         if(t.getSort() == Type.OBJECT){
             try {
                 return Class.forName(t.getClassName());
@@ -384,7 +419,7 @@ public class GLSLCompiler {
         }
     }
 
-    private CompiledMethod compileMethod(MethodInfo methodInfo) {
+    private void compileMethod(MethodInfo methodInfo) {
         ClassNode classNode = getClass(methodInfo.ownerName());
         MethodInfo finalMethodInfo = methodInfo;
         MethodNode methodNode = classNode.methods.stream().filter(m -> m.name.equals(finalMethodInfo.name()) && m.desc.equals(finalMethodInfo.desc())).findFirst().orElse(null);
@@ -393,34 +428,28 @@ public class GLSLCompiler {
             throw new RuntimeException("Method not found: " + methodInfo.ownerName() + "." + methodInfo.name() + methodInfo.desc());
         }
 
+        boolean inline = shouldInline(methodNode);
+        if(inline){
+            System.out.println("Inlining method: " + methodInfo.ownerName() + "." + methodInfo.name() + methodInfo.desc());
+        }
+
         JavaParser parser = new JavaParser(methodInfo.ownerObj(), classNode, methodNode);
         parser.parseAll();
 
         Statement[] expressions = parser.flattenGraph();
-        boolean needsIdentity = parser.requiresIdentity();
-
-        if(!needsIdentity){
-            MethodInfo newInfo = new MethodInfo(null, methodInfo.ownerName(), methodInfo.name(), methodInfo.desc(), methodInfo.isStatic());
-            compiledMethods.remove(methodInfo);
-            methodInfo = newInfo;
-        }
 
         nullableTypes.addAll(parser.nullableTypes());
-        CompiledMethod compiled = new CompiledMethod(methodInfo, expressions, parser.getDependents(), parser.getVariables(), parser.getConstants());
+        CompiledMethod compiled = new CompiledMethod(methodInfo, expressions, parser.getDependents(), parser.getVariables(), parser.getConstants(), inline);
 
         for(MethodInfo dependent: parser.getDependents()){
-            if(getCompiledMethod(dependent) == null){
-                putCompiledMethod(dependent, MARKER);
+            if(transpilationInfo.getMethodResolver(dependent.ownerName(), dependent.name(), dependent.desc()) == null) {
+                if (getCompiledMethod(dependent) == null) {
+                    putCompiledMethod(dependent, MARKER);
+                }
             }
         }
 
         compiledMethods.put(methodInfo, compiled);
-
-        if(needsIdentity){
-            identityLess.add(methodInfo);
-        }
-
-        return compiled;
     }
 
     private ClassNode getClass(String name){
@@ -470,8 +499,21 @@ public class GLSLCompiler {
         compiledMethods.put(info, marker);
     }
 
+    private static boolean shouldInline(MethodNode methodNode){
+        if(methodNode.visibleAnnotations != null) {
+            return methodNode.visibleAnnotations.stream().filter(a -> a.desc.equals(Inline.class.descriptorString())).findAny().isPresent();
+        }else{
+            return false;
+        }
+    }
+
     static {
         BUILTIN_TYPES.put(Grad2.class, new BuiltinConstantType("vec2", Grad2.class, "x", "y"));
         BUILTIN_TYPES.put(Grad3.class, new BuiltinConstantType("vec3", Grad3.class, "x", "y", "z"));
+        try{
+            HEADER = new String(GLSLCompiler.class.getResourceAsStream("/glsl/header.glsl").readAllBytes(), StandardCharsets.UTF_8);
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
     }
 }

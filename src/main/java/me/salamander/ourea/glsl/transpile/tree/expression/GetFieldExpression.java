@@ -72,4 +72,8 @@ public class GetFieldExpression implements Expression{
             }
         }
     }
+
+    public Expression getExpression() {
+        return expression;
+    }
 }

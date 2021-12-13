@@ -12,6 +12,7 @@ import me.salamander.ourea.modules.source.PerlinSampler;
 import me.salamander.ourea.modules.source.coord.X;
 import me.salamander.ourea.modules.source.coord.Y;
 import me.salamander.ourea.render.opengl.CPUChunkGenerator;
+import me.salamander.ourea.render.opengl.GPUChunkGenerator;
 import me.salamander.ourea.render.opengl.OpenGL2DRenderer;
 
 import java.awt.*;
@@ -22,47 +23,22 @@ public class Main {
     }
 
     public static void glslTest(){
-        NoiseSampler testSampler = new NoiseSampler() {
-            @Override
-            public void setSalt(int salt) {
+        NoiseSampler perlin1 = new PerlinSampler();
+        NoiseSampler perlin2 = new PerlinSampler();
+        NoiseSampler product = new BinaryModule(perlin1, perlin2, BinaryModule.Operator.MUL);
+        NoiseSampler turbulence = new Turbulence(new OpenSimplex2SSampler(), new PerlinSampler(), product);
 
-            }
+        ColorGradient gradient = new ColorGradient();
 
-            @Override
-            public void setFrequency(float frequency) {
+        gradient.put(-1, Color.BLUE);
+        gradient.put(-0.05f, Color.CYAN);
+        gradient.put(0, Color.YELLOW);
+        gradient.put(0.2f, Color.GREEN);
+        gradient.put(0.6f, new Color(0xff0a8c0c));
+        gradient.put(0.8f, Color.GRAY);
+        gradient.put(1, Color.WHITE);
 
-            }
-
-            @Override
-            public float sample(float x, float y, int seed) {
-                float value = (x + y);
-
-                for(int i = 0; i < 10; i++) {
-                    if (x > y) {
-                        x--;
-                        value += (x - y);
-                    } else {
-                        y--;
-                        value += (y - x);
-                    }
-                }
-
-                return value;
-            }
-
-            @Override
-            public float sample(float x, float y, float z, int seed) {
-                return 0;
-            }
-        };
-
-        NoiseSampler sampler = new FBM(new PerlinSampler(), 6, 0.5f, 2.0f);
-        GLSLCompiler compiler = new GLSLCompiler(new OpenSimplex2SSampler(), 3);
-        compiler.compileMethods();
-
-        System.out.println("Compiled!");
-
-        System.out.println(compiler.link());
+        OpenGL2DRenderer renderer = new GPUChunkGenerator(256, 0.01f, 59584, OpenGL2DRenderer.ColorMode.SMOOTH, gradient, turbulence);
     }
 
     public static void CPUTest() {

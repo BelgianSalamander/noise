@@ -2,11 +2,11 @@ package me.salamander.ourea.glsl;
 
 import me.salamander.ourea.glsl.transpile.TranspilationInfo;
 import me.salamander.ourea.glsl.transpile.tree.expression.Expression;
+import me.salamander.ourea.glsl.transpile.tree.statement.ReturnStatement;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.util.Pair;
 import org.objectweb.asm.Type;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,13 +16,16 @@ public class CompiledMethod {
     private final Set<MethodInfo> dependent;
     private final Set<Pair<Integer, Type>> variables;
     private final Set<Object> constants;
+    private final boolean inline;
 
-    public CompiledMethod(MethodInfo info, Statement[] code, Set<MethodInfo> dependent, Set<Pair<Integer, Type>> variables, Set<Object> constants) {
+    //TODO: Inlining
+    public CompiledMethod(MethodInfo info, Statement[] code, Set<MethodInfo> dependent, Set<Pair<Integer, Type>> variables, Set<Object> constants, boolean inline) {
         this.info = info;
         this.code = code;
         this.dependent = dependent;
         this.variables = variables;
         this.constants = constants;
+        this.inline = inline;
     }
 
     public MethodInfo getInfo() {

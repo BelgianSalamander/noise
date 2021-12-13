@@ -32,7 +32,6 @@ public class JavaParser {
     private final Object object;
     private int index = 0;
 
-    private boolean needsIdentity = false;
     private final Set<Pair<Integer, Type>> variables = new HashSet<>();
     private final Set<Object> constants = new HashSet<>();
     private final Set<Type> nullableTypes = new HashSet<>();
@@ -225,14 +224,6 @@ public class JavaParser {
         info.addMethodResolver("me/salamander/ourea/util/MathHelper", "getGradient", "(III)Lme/salamander/ourea/util/Grad2;", new StaticMethodResolver("getGradient"));
 
         info.addMethodResolver("me/salamander/ourea/util/Grad2", "dot", "(FF)F", (owner, name, desc, info, args) -> "dot(" + args[0].toGLSL(info, 0) + ", vec2(" + args[1].toGLSL(info, 0) + ", " + args[2].toGLSL(info, 0) + "))");
-    }
-
-    public void setRequiresIdentity(){
-        needsIdentity = true;
-    }
-
-    public boolean requiresIdentity(){
-        return needsIdentity;
     }
 
     public Set<MethodInfo> getDependents() {

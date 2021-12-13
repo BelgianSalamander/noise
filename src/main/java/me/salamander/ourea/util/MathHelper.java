@@ -39,7 +39,7 @@ public class MathHelper {
         seed ^= seed >> 11;
         seed *= 16807;
         seed ^= seed >> 15;
-        return (int) seed;
+        return seed;
     }
 
     public static int hash(int x, int y, int z, int seed) {
@@ -60,8 +60,6 @@ public class MathHelper {
 
     public static Grad2 getGradient(int x, int y, int seed){
         int hash = hash(x, y, seed);
-        //random.setSeed(seed + x ^ 16363462 + y);
-        //int hash = random.nextInt();
         return grad2[mod(hash, grad2.length)];
     }
 

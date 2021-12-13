@@ -1,5 +1,6 @@
 package me.salamander.ourea.glsl.transpile;
 
+import me.salamander.ourea.glsl.GLSLCompiler;
 import me.salamander.ourea.glsl.MethodInfo;
 import me.salamander.ourea.glsl.transpile.tree.*;
 import me.salamander.ourea.glsl.transpile.tree.comparison.*;
@@ -149,7 +150,6 @@ public class CFGNode {
 
                     if (varNode.var == 0 && transpiler.getObject() != null) {
                         fragment = new ConstantExpression(transpiler.getObject());
-                        transpiler.setRequiresIdentity();
                         break;
                     }
 
@@ -167,11 +167,12 @@ public class CFGNode {
 
                 case GETFIELD -> {
                     fragment = new GetFieldExpression(stack.pop(), ((FieldInsnNode) insn).name, ((FieldInsnNode) insn).desc);
-                    Expression expression = (Expression)  fragment;
+                    GetFieldExpression expression = (GetFieldExpression)  fragment;
                     if(expression.isConstant()){
-                        Object constant = expression.getConstantValue();
-                        if(!(constant instanceof Number) && !(constant instanceof NoiseSampler)){
-                            transpiler.addConstant(constant);
+                        if(expression.getExpression() instanceof GetFieldExpression f){
+                            if(!(f.getConstantValue() instanceof Number)){
+                                transpiler.addConstant(f.getConstantValue());
+                            }
                         }
                     }
                 }
@@ -307,9 +308,27 @@ public class CFGNode {
                     }
 
                     MethodInfo methodInfo = new MethodInfo(methodCaller, ownerName, methodInsnNode.name, methodInsnNode.desc, false);
-                    transpiler.getDependents().add(methodInfo);
 
-                    fragment = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, false, args);
+                    if(args.length == 1) {
+                        try {
+                            Class<?> clazz = Class.forName(args[0].getType().getClassName());
+                            Class<?> returnClazz = GLSLCompiler.getClass(Type.getReturnType(methodInsnNode.desc));
+
+                            Field field = clazz.getDeclaredField(methodInsnNode.name);
+                            if(field.getType() == returnClazz) {
+                                fragment = new GetFieldExpression(args[0], field.getName(), field.getType().descriptorString());
+                            }
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        } catch (NoSuchFieldException e) {
+                            // This isn't a field accessor
+                        }
+                    }
+
+                    if(fragment == null) {
+                        transpiler.getDependents().add(methodInfo);
+                        fragment = new InvokeVirtualExpression(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc, false, args);
+                    }
                 }
                 case INVOKEINTERFACE -> {
                     MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
