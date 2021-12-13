@@ -1,12 +1,12 @@
 package me.salamander.ourea.glsl;
 
-import me.salamander.ourea.glsl.transpile.ConstantType;
-import me.salamander.ourea.glsl.transpile.JavaParser;
-import me.salamander.ourea.glsl.transpile.TranspilationInfo;
+import me.salamander.ourea.glsl.transpile.*;
 import me.salamander.ourea.glsl.transpile.method.MethodResolver;
 import me.salamander.ourea.glsl.transpile.method.StaticMethodResolver;
 import me.salamander.ourea.glsl.transpile.tree.statement.Statement;
 import me.salamander.ourea.modules.NoiseSampler;
+import me.salamander.ourea.util.Grad2;
+import me.salamander.ourea.util.Grad3;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GLSLCompiler {
+    private static final Map<Class<?>, ConstantType> BUILTIN_TYPES = new HashMap<>();
     private static final CompiledMethod MARKER = new CompiledMethod(null, null, null, null, null);
 
     private final Map<String, ClassNode> cachedClasses = new HashMap<>();
@@ -87,7 +88,7 @@ public class GLSLCompiler {
 
         for(Class<?> type : types){
             Type t = Type.getType(type);
-            ConstantType constantType = new ConstantType(type, nullableTypes.contains(t));
+            CustomConstantType constantType = new CustomConstantType(type, nullableTypes.contains(t));
             constantTypes.put(type, constantType);
             transpilationInfo.addConstantType(t, constantType);
             for(String field: constantType.referenceFields()){
@@ -95,12 +96,21 @@ public class GLSLCompiler {
             }
         }
 
+        for(Map.Entry<Class<?>, ConstantType> entry: BUILTIN_TYPES.entrySet()){
+            if(constantTypes.containsKey(entry.getKey())){
+                constantTypes.put(entry.getKey(), entry.getValue());
+                transpilationInfo.addConstantType(Type.getType(entry.getKey()), entry.getValue());
+            }
+        }
+
         Map<ConstantType, List<Object>> constantValues = new HashMap<>();
 
         for(ConstantType type : constantTypes.values()){
             List<Object> values = new ArrayList<>();
-            if(type.isNullable()){
-                values.add(null);
+            if(type instanceof CustomConstantType customType) {
+                if (customType.isNullable()) {
+                    values.add(null);
+                }
             }
             constantValues.put(type, values);
         }
@@ -248,7 +258,7 @@ public class GLSLCompiler {
 
     private Collection<Object> getRelatedValues(Object constant) {
         //TODO: Cache reflection
-        List<Field> fields = getAllFields(constant);
+        List<Field> fields = getAllFields(constant.getClass());
         Set<Object> values = new HashSet<>();
         for(Field field : fields){
             if(!field.getType().isPrimitive()){
@@ -265,9 +275,8 @@ public class GLSLCompiler {
         return values;
     }
 
-    public static List<Field> getAllFields(Object obj){
+    public static List<Field> getAllFields(Class<?> clazz){
         List<Field> fields = new ArrayList<>();
-        Class<?> clazz = obj.getClass();
         while(clazz != null){
             fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
             clazz = clazz.getSuperclass();
@@ -459,5 +468,10 @@ public class GLSLCompiler {
         }
 
         compiledMethods.put(info, marker);
+    }
+
+    static {
+        BUILTIN_TYPES.put(Grad2.class, new BuiltinConstantType("vec2", Grad2.class, "x", "y"));
+        BUILTIN_TYPES.put(Grad3.class, new BuiltinConstantType("vec3", Grad3.class, "x", "y", "z"));
     }
 }
