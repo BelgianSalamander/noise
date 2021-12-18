@@ -6,20 +6,14 @@ public class BinaryModule implements NoiseSampler {
     private NoiseSampler first, second;
     private Operator op;
 
+    public BinaryModule() {
+        this.op = Operator.ADD;
+    }
+
     public BinaryModule(NoiseSampler first, NoiseSampler second, Operator op) {
         this.first = first;
         this.second = second;
         this.op = op;
-    }
-
-    @Override
-    public void setSalt(int salt) {
-
-    }
-
-    @Override
-    public void setFrequency(float frequency) {
-
     }
 
     @Override
@@ -32,6 +26,29 @@ public class BinaryModule implements NoiseSampler {
         return op.apply(first.sample(x, y, z, seed), second.sample(x, y, z, seed));
     }
 
+    public NoiseSampler getFirst() {
+        return first;
+    }
+
+    public NoiseSampler getSecond() {
+        return second;
+    }
+
+    public Operator getOperator() {
+        return op;
+    }
+
+    public void setFirst(NoiseSampler first) {
+        this.first = first;
+    }
+
+    public void setSecond(NoiseSampler second) {
+        this.second = second;
+    }
+
+    public void setOperator(Operator op) {
+        this.op = op;
+    }
 
     public enum Operator{
         ADD{

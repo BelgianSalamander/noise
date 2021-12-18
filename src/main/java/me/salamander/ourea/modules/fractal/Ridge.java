@@ -3,9 +3,7 @@ package me.salamander.ourea.modules.fractal;
 import me.salamander.ourea.modules.NoiseSampler;
 import me.salamander.ourea.util.MathHelper;
 
-/**
- * From https://www.classes.cs.uchicago.edu/archive/2015/fall/23700-1/final-project/MusgraveTerrain00.pdf section 2.4
- */
+//TODO: This ridge noise is really bad.
 public class Ridge implements NoiseSampler{
     private NoiseSampler source;
     private int octaves;
@@ -47,16 +45,6 @@ public class Ridge implements NoiseSampler{
     public void setLacunarity(float lacunarity) {
         this.lacunarity = lacunarity;
         calculateScale();
-    }
-
-    @Override
-    public void setSalt(int salt) {
-
-    }
-
-    @Override
-    public void setFrequency(float frequency) {
-
     }
 
     @Override

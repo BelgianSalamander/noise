@@ -18,22 +18,16 @@ public class Const implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(int salt) {
-
-    }
-
-    @Override
-    public void setFrequency(float frequency) {
-
-    }
-
-    @Override
     public float sample(float x, float y, int seed) {
         return value;
     }
 
     @Override
     public float sample(float x, float y, float z, int seed) {
+        return value;
+    }
+
+    public float getValue() {
         return value;
     }
 }

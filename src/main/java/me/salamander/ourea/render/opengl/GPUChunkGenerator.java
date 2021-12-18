@@ -4,22 +4,31 @@ import me.salamander.ourea.color.ColorGradient;
 import me.salamander.ourea.glsl.GLSLCompiler;
 import me.salamander.ourea.modules.NoiseSampler;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 
 import static org.lwjgl.opengl.GL45.*;
 
 
-public class GPUChunkGenerator extends OpenGL2DRenderer{
+public class GPUChunkGenerator extends OpenGL2DRenderer<GPUChunkGenerator.InterleavedTerrainChunk> {
+    private static final boolean MEND_NORMALS = true;
+
     private int noiseGenerator;
-    private final Queue<InterleavedTerrainChunk> chunks = new ArrayDeque<>(16);
+    private int normalGenerator;
+
+    private final Queue<InterleavedTerrainChunk> computingHeight = new ArrayDeque<>(16);
+    private final Queue<InterleavedTerrainChunk> computingNormals = new ArrayDeque<>(16);
+
+    private int gradientBuffer;
 
     public GPUChunkGenerator(int chunkSize, float step, int seed, ColorMode colorMode, ColorGradient gradient, NoiseSampler sampler) {
         super(chunkSize, step, seed, colorMode, gradient, sampler);
@@ -38,7 +47,7 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
         if(status == GL_FALSE){
             System.err.println("Couldn't compile shader");
             System.err.println(glGetShaderInfoLog(shader));
-            throw new RuntimeException("Couldn't compile shader");
+            throw new RuntimeException("Couldn't compile noise shader");
         }
 
         glAttachShader(noiseGenerator, shader);
@@ -48,7 +57,7 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
         if(status == GL_FALSE){
             System.err.println("Couldn't link shader");
             System.err.println(glGetProgramInfoLog(noiseGenerator));
-            throw new RuntimeException("Couldn't link shader");
+            throw new RuntimeException("Couldn't link noise shader");
         }
 
         glDeleteShader(shader);
@@ -58,6 +67,70 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
         glUniform1i(glGetUniformLocation(noiseGenerator, "baseSeed"), seed);
         glUniform1ui(glGetUniformLocation(noiseGenerator, "width"), chunkSize);
         glUniform1f(glGetUniformLocation(noiseGenerator, "step"), step);
+
+        source = getNormalSource();
+        shader = glCreateShader(GL_COMPUTE_SHADER);
+        glShaderSource(shader, source);
+        glCompileShader(shader);
+
+        status = glGetShaderi(shader, GL_COMPILE_STATUS);
+        if(status == GL_FALSE){
+            System.err.println("Couldn't compile shader");
+            System.err.println(glGetShaderInfoLog(shader));
+            throw new RuntimeException("Couldn't compile normal shader");
+        }
+
+        normalGenerator = glCreateProgram();
+        glAttachShader(normalGenerator, shader);
+        glLinkProgram(normalGenerator);
+
+        status = glGetProgrami(normalGenerator, GL_LINK_STATUS);
+        if(status == GL_FALSE){
+            System.err.println("Couldn't link shader");
+            System.err.println(glGetProgramInfoLog(normalGenerator));
+            throw new RuntimeException("Couldn't link normal shader");
+        }
+
+        glDeleteShader(shader);
+
+        glUseProgram(normalGenerator);
+
+        glUniform1ui(glGetUniformLocation(normalGenerator, "tileWidth"), chunkSize);
+        glUniform1ui(glGetUniformLocation(normalGenerator, "tileHeight"), chunkSize);
+        glUniform1ui(glGetUniformLocation(normalGenerator, "amountPoints"), gradient.size());
+        glUniform2f(glGetUniformLocation(normalGenerator, "offset"), 0, 0);
+
+        gradientBuffer = glGenBuffers();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, gradientBuffer);
+        FloatBuffer buffer = gradient.writeSelf();
+        glBufferData(GL_SHADER_STORAGE_BUFFER, buffer, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        MemoryUtil.memFree(buffer);
+    }
+
+    public long profile(int x, int y){
+        int query = glGenQueries();
+        glBeginQuery(GL_TIME_ELAPSED, query);
+
+        List<InterleavedTerrainChunk> chunks = new ArrayList<>();
+
+        for(int xi = 0; xi < x; xi++){
+            for(int yi = 0; yi < y; yi++){
+                chunks.add(launchHeightGenerator(xi, yi));
+            }
+        }
+
+        glEndQuery(GL_TIME_ELAPSED);
+
+        long[] time = new long[1];
+
+        glGetQueryObjectui64v(query, GL_QUERY_RESULT, time);
+
+        glDeleteQueries(query);
+
+        chunks.forEach(TerrainChunk::delete);
+
+        return time[0];
     }
 
     @Override
@@ -68,7 +141,11 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
     @Override
     protected void queueChunk(int x, int z) {
         System.out.println("Queueing chunk " + x + ", " + z);
+        computingHeight.add(launchHeightGenerator(x, z));
+        //putBakedChunk(x, z, new InterleavedTerrainChunk(x, z, vao, vbo));
+    }
 
+    private InterleavedTerrainChunk launchHeightGenerator(int x, int z){
         int vao = glGenVertexArrays();
         glBindVertexArray(vao);
 
@@ -92,45 +169,102 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
         glUseProgram(noiseGenerator);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, vbo);
 
-        glUniform2f(glGetUniformLocation(noiseGenerator, "startPos"), z * (chunkSize - 1) * step, x * (chunkSize - 1) * step);
+        glUniform2f(glGetUniformLocation(noiseGenerator, "startPos"), x * (chunkSize - 1) * step, z * (chunkSize - 1) * step);
         glUniform2f(glGetUniformLocation(noiseGenerator, "offset"), 0, 0);
 
-        System.out.println("Launching (" + (chunkSize / 32) + ", " + (chunkSize / 32) + ") work groups");
+        //System.out.println("Launching (" + (chunkSize / 32) + ", " + (chunkSize / 32) + ") work groups");
         glDispatchCompute(chunkSize / 32, chunkSize / 32, 1);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, vbo);
 
-        /*FloatBuffer fb = MemoryUtil.memAllocFloat(chunkSize * chunkSize * 8);
-        for(int i = 0; i < chunkSize * chunkSize; i++){
-            fb.put(1); //Color
-            fb.put(0);
-            fb.put(0);
-            fb.put(1);
-            fb.put(0); //Normal
-            fb.put(1);
-            fb.put(0);
-            fb.put(0); //Height
-        }
-
-        fb.flip();
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, fb);*/
-
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-        chunks.add(new InterleavedTerrainChunk(x, z, vao, vbo));
-        //putBakedChunk(x, z, new InterleavedTerrainChunk(x, z, vao, vbo));
+        return new InterleavedTerrainChunk(x, z, vao, vbo);
     }
 
     @Override
     protected void postProcess() {
-        InterleavedTerrainChunk chunk = chunks.poll();
+        InterleavedTerrainChunk chunk = computingHeight.poll();
         if(chunk != null) {
-            putBakedChunk(chunk.x(), chunk.z(), chunk);
+            chunk.completedHeight = true;
+            queueNormals(chunk);
         }
+
+        InterleavedTerrainChunk normalChunk = computingNormals.poll();
+        if(normalChunk != null) {
+            putBakedChunk(normalChunk.x, normalChunk.z, normalChunk);
+        }
+
+        //This is quite hacky
+        glUseProgram(normalGenerator);
+        glUniform1i(glGetUniformLocation(normalGenerator, "debug"), window.isKeyPressed(GLFW.GLFW_KEY_Z) ? 1 : 0);
     }
 
     @Override
     protected void delete() {
         glDeleteProgram(noiseGenerator);
+        glDeleteBuffers(gradientBuffer);
+    }
+
+    private void queueNormals(InterleavedTerrainChunk chunk){
+        glUseProgram(normalGenerator);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, chunk.vbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, gradientBuffer);
+
+        if(MEND_NORMALS){
+            InterleavedTerrainChunk negativeXChunk = getChunk(chunk.x - 1, chunk.z);
+            InterleavedTerrainChunk positiveXChunk = getChunk(chunk.x + 1, chunk.z);
+            InterleavedTerrainChunk negativeZChunk = getChunk(chunk.x, chunk.z + 1);
+            InterleavedTerrainChunk positiveZChunk = getChunk(chunk.x, chunk.z - 1);
+
+            boolean hasNegativeX = negativeXChunk != null;
+            boolean hasPositiveX = positiveXChunk != null;
+            boolean hasNegativeZ = negativeZChunk != null;
+            boolean hasPositiveZ = positiveZChunk != null;
+
+            if(hasNegativeX){
+                hasNegativeX = negativeXChunk.completedHeight;
+            }
+
+            if(hasPositiveX){
+                hasPositiveX = positiveXChunk.completedHeight;
+            }
+
+            if(hasNegativeZ){
+                hasNegativeZ = negativeZChunk.completedHeight;
+            }
+
+            if(hasPositiveZ){
+                hasPositiveZ = positiveZChunk.completedHeight;
+            }
+
+            glUniform1i(glGetUniformLocation(normalGenerator, "hasNegativeXData"), hasNegativeX ? 1 : 0);
+            glUniform1i(glGetUniformLocation(normalGenerator, "hasPositiveXData"), hasPositiveX ? 1 : 0);
+            glUniform1i(glGetUniformLocation(normalGenerator, "hasNegativeYData"), hasNegativeZ ? 1 : 0);
+            glUniform1i(glGetUniformLocation(normalGenerator, "hasPositiveYData"), hasPositiveZ ? 1 : 0);
+
+            if(hasPositiveX){
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, positiveXChunk.vbo);
+            }
+
+            if(hasNegativeX){
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, negativeXChunk.vbo);
+            }
+
+            if(hasPositiveZ){
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, positiveZChunk.vbo);
+            }
+
+            if(hasNegativeZ){
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, negativeZChunk.vbo);
+            }
+        }
+
+        glDispatchCompute(chunkSize / 32, chunkSize / 32, 1);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunk.vbo);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        computingNormals.add(chunk);
     }
 
     private String generateSource(NoiseSampler sampler) {
@@ -151,8 +285,18 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
         return source;
     }
 
+    private String getNormalSource(){
+        try{
+            return new String(GPUChunkGenerator.class.getResourceAsStream("/shaders/heightmap/normals.glsl").readAllBytes());
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
     public class InterleavedTerrainChunk implements TerrainChunk{
         private static final Matrix4f out = new Matrix4f();
+
+        private boolean completedHeight = false;
 
         private final int x;
         private final int z;
@@ -166,7 +310,7 @@ public class GPUChunkGenerator extends OpenGL2DRenderer{
             this.vao = vao;
             this.vbo = vbo;
 
-            this.modelMatrix = new Matrix4f().translate(z * (chunkSize - 1), 0, x * (chunkSize - 1));
+            this.modelMatrix = new Matrix4f().translate(x * (chunkSize - 1), 0, z * (chunkSize - 1));
         }
 
         @Override

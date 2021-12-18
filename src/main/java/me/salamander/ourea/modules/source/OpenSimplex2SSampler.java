@@ -1,6 +1,8 @@
 package me.salamander.ourea.modules.source;
 
+import me.salamander.ourea.modules.FrequencyNoise;
 import me.salamander.ourea.modules.NoiseSampler;
+import me.salamander.ourea.modules.SaltedNoise;
 import me.salamander.ourea.util.Grad2;
 import me.salamander.ourea.util.Grad3;
 import me.salamander.ourea.util.MathHelper;
@@ -9,7 +11,7 @@ import me.salamander.ourea.util.MathHelper;
 /**
  * A lot of this code is taken from K.jpg's OpenSimplex 2, smooth variant ("SuperSimplex")
  */
-public class OpenSimplex2SSampler implements NoiseSampler {
+public class OpenSimplex2SSampler implements NoiseSampler, SaltedNoise, FrequencyNoise {
     private int salt;
     private float frequency = 1;
 
@@ -19,8 +21,18 @@ public class OpenSimplex2SSampler implements NoiseSampler {
     }
 
     @Override
+    public int getSalt() {
+        return salt;
+    }
+
+    @Override
     public void setFrequency(float frequency) {
         this.frequency = frequency;
+    }
+
+    @Override
+    public float getFrequency() {
+        return frequency;
     }
 
     @Override

@@ -61,7 +61,7 @@ jar{
     manifest{
         attributes(
                 'Class-Path': ' ',
-                'Main-Class': 'me.salamander.noisetest.NoiseTest'
+                'Main-Class': 'me.salamander.ourea.Main'
         )
     }
 }

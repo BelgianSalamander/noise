@@ -1,11 +1,13 @@
 package me.salamander.ourea.modules.source;
 
+import me.salamander.ourea.modules.FrequencyNoise;
 import me.salamander.ourea.modules.NoiseSampler;
+import me.salamander.ourea.modules.SaltedNoise;
 import me.salamander.ourea.util.Grad2;
 import me.salamander.ourea.util.Grad3;
 import me.salamander.ourea.util.MathHelper;
 
-public class PerlinSampler implements NoiseSampler {
+public class PerlinSampler implements NoiseSampler, FrequencyNoise, SaltedNoise {
     private static final float SCALE2D = 1 / (float) Math.sqrt(2 / 4F);
     private static final float SCALE3D = 1 / (float) Math.sqrt(3 / 4F);
 
@@ -75,5 +77,13 @@ public class PerlinSampler implements NoiseSampler {
     @Override
     public void setFrequency(float frequency) {
         this.frequency = frequency;
+    }
+
+    public float getFrequency() {
+        return frequency;
+    }
+
+    public int getSalt() {
+        return salt;
     }
 }

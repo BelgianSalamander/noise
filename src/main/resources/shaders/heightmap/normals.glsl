@@ -3,9 +3,9 @@
 uniform uint tileWidth;
 uniform uint tileHeight;
 uniform uint amountPoints;
-uniform float heightScale;
-
 uniform ivec2 offset;
+
+uniform bool debug = true;
 
 struct DataPoint{ //Base Alignment: 16
     vec4 color;
@@ -91,83 +91,92 @@ void main(){
 
 
     //data.data[index].color = vec3((height + 1) / 2, (height + 1) / 2, (height + 1) / 2);
-    data.data[index].color = pointColor;
+    data.data[index].color = vec4(pointColor, 1.0);
 
-    //Compute normals
-    vec3 normal = vec3(0, 0, 0);
+    uint x_coord = gl_GlobalInvocationID.x + offset.x;
+    uint y_coord = gl_GlobalInvocationID.y + offset.y;
 
-    vec3 vertexNorth = vec3(0, 0, 0);
-    vec3 vertexEast = vec3(0, 0, 0);
-    vec3 vertexSouth = vec3(0, 0, 0);
-    vec3 vertexWest = vec3(0, 0, 0);
-
-    float heightAtPoint = height * heightScale;
+    float nx, px, ny, py; //Negative X, Positive X, Negative Y, Positive Y
+    float mult_x = 0.5;
+    float mult_y = 0.5;
 
     bool onEdge = false;
 
-    if(gl_GlobalInvocationID.x + offset.x != 0){
-        vertexWest = vec3(-1, data.data[index - 1].height * heightScale - heightAtPoint, 0);
+    if(x_coord > 0){
+        nx = data.data[index - 1].height;
     }else if(hasNegativeXData){
+        nx = negativeXData.data[index + tileHeight - 2].height;
         onEdge = true;
-        vertexWest = vec3(-1, negativeXData.data[index + tileWidth - 2].height * heightScale - heightAtPoint, 0);
+    }else{
+        nx = data.data[index].height;
+        mult_x = 1;
     }
 
-    if(gl_GlobalInvocationID.y + offset.y != 0){
-        vertexSouth = vec3(0, data.data[index - tileWidth].height * heightScale - heightAtPoint, -1);
-    }else if(hasNegativeYData){
-        onEdge = true;
-        vertexSouth = vec3(0, negativeYData.data[index + (tileHeight - 2) * tileWidth].height * heightScale - heightAtPoint, -1);
-    }
-
-    if(gl_GlobalInvocationID.x + offset.x != tileWidth - 1){
-        vertexEast = vec3(1, data.data[index + 1].height * heightScale - heightAtPoint, 0);
+    if(x_coord < tileWidth - 1){
+        px = data.data[index + 1].height;
     }else if(hasPositiveXData){
+        px = positiveXData.data[index - tileHeight + 2].height;
         onEdge = true;
-        vertexEast = vec3(1, positiveXData.data[index - (tileWidth - 2)].height * heightScale - heightAtPoint, 0);
+    }else{
+        px = data.data[index].height;
+        mult_y = 1;
     }
 
-    if(gl_GlobalInvocationID.y + offset.y != tileHeight - 1){
-        vertexNorth = vec3(0, data.data[index + tileWidth].height * heightScale - heightAtPoint, 1);
+    if(y_coord > 0){
+        ny = data.data[index - tileWidth].height;
+    }else if(hasNegativeYData){
+        ny = negativeYData.data[index + tileWidth * (tileHeight - 2)].height;
+        onEdge = true;
+    }else{
+        ny = data.data[index].height;
+        mult_x = 1;
+    }
+
+    if(y_coord < tileHeight - 1){
+        py = data.data[index + tileWidth].height;
     }else if(hasPositiveYData){
+        py = positiveYData.data[index - tileWidth * (tileHeight - 2)].height;
         onEdge = true;
-        vertexNorth = vec3(0, positiveYData.data[index - (tileHeight - 2) * tileWidth].height * heightScale - heightAtPoint, 1);
+    }else{
+        py = data.data[index].height;
+        mult_y = 1;
     }
 
-    normal += cross(vertexNorth, vertexEast);
-    normal += cross(vertexEast, vertexSouth);
-    normal += cross(vertexSouth, vertexWest);
-    normal += cross(vertexWest, vertexNorth);
+    float dydx = (px - nx) * mult_x;
+    float dzdx = (py - ny) * mult_y;
 
-    vec3 normalizedNormal = normalize(normal);
+    vec3 normal = normalize(vec3(dydx, 1, dzdx));
 
     if(onEdge){
-        int x = int(gl_GlobalInvocationID.x);
-        int y = int(gl_GlobalInvocationID.y);
-
-        //data.data[index].color = vec3(1, 0, 1);
-
-        if(x == 0){
+        if(x_coord == 0){
             if(hasNegativeXData){
-                negativeXData.data[index + tileWidth - 1].normal = normalizedNormal;
-                //negativeXData.data[index + tileWidth - 1].color = vec3(1, 0, 1);
+                negativeXData.data[index + tileWidth - 1].normal = normal;
+                if(debug)
+                    negativeXData.data[index + tileWidth - 1].color = vec4(1.0, 0.0, 0.0, 1.0);
             }
-        } else if(x == tileWidth - 1){
+        } else if(x_coord == tileWidth - 1){
             if(hasPositiveXData){
-                positiveXData.data[index - (tileWidth - 1)].normal = normalizedNormal;
-                //positiveXData.data[index - (tileWidth - 1)].color = vec3(1, 0, 1);
+                positiveXData.data[index - (tileWidth - 1)].normal = normal;
+                if(debug)
+                    positiveXData.data[index - (tileWidth - 1)].color = vec4(1.0, 0.0, 0.0, 1.0);;
             }
-        }else if(y == 0){
+        }else if(y_coord == 0){
             if(hasNegativeYData){
-                negativeYData.data[index + (tileHeight - 1) * tileWidth].normal = normalizedNormal;
-                //negativeYData.data[index + (tileHeight - 1) * tileWidth].color = vec3(1, 0, 1);
+                negativeYData.data[index + (tileHeight - 1) * tileWidth].normal = normal;
+                if(debug)
+                    negativeYData.data[index + (tileHeight - 1) * tileWidth].color = vec4(1.0, 0.0, 0.0, 1.0);
             }
-        } else if(y == tileHeight - 1){
+        } else if(y_coord == tileHeight - 1){
             if(hasPositiveYData){
-                positiveYData.data[index - (tileHeight - 1) * tileWidth].normal = normalizedNormal;
-                //positiveYData.data[index - (tileHeight - 1) * tileWidth].color = vec3(1, 0, 1);
+                positiveYData.data[index - (tileHeight - 1) * tileWidth].normal = normal;
+                if(debug)
+                    positiveYData.data[index - (tileHeight - 1) * tileWidth].color = vec4(1.0, 0.0, 0.0, 1.0);
             }
         }
+
+        if(debug)
+            data.data[index].color = vec4(1.0, 0.0, 0.0, 1.0);
     }
 
-    data.data[index].normal = normalizedNormal;
+    data.data[index].normal = normal;
 }

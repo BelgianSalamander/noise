@@ -1,9 +1,11 @@
 package me.salamander.ourea.modules.source;
 
+import me.salamander.ourea.modules.FrequencyNoise;
 import me.salamander.ourea.modules.NoiseSampler;
+import me.salamander.ourea.modules.SaltedNoise;
 import me.salamander.ourea.util.MathHelper;
 
-public class ValueSampler implements NoiseSampler {
+public class ValueSampler implements NoiseSampler, FrequencyNoise, SaltedNoise {
     private int salt;
     private float frequency = 1;
 
@@ -13,8 +15,18 @@ public class ValueSampler implements NoiseSampler {
     }
 
     @Override
+    public int getSalt() {
+        return salt;
+    }
+
+    @Override
     public void setFrequency(float frequency) {
         this.frequency = frequency;
+    }
+
+    @Override
+    public float getFrequency() {
+        return frequency;
     }
 
     @Override

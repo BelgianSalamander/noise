@@ -20,7 +20,7 @@ import java.util.*;
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.glfw.GLFW.*;
 
-public abstract class OpenGL2DRenderer {
+public abstract class OpenGL2DRenderer<T extends TerrainChunk> {
     private static final int HEIGHT_BYTES = 4;
     private static final int NORMAL_BYTES = 12;
     protected static final int[] LOD_STEPS = {1, 2, 4, 8, 16, 32};
@@ -37,7 +37,7 @@ public abstract class OpenGL2DRenderer {
     protected int[] lodIndices;
     protected int xzBuffer;
 
-    private Window window;
+    protected Window window;
     private Camera camera;
     private int program;
 
@@ -50,7 +50,7 @@ public abstract class OpenGL2DRenderer {
 
     private boolean regenerateChunks = false;
 
-    private final Map<Pos, TerrainChunk> chunks = new HashMap<>();
+    private final Map<Pos, T> chunks = new HashMap<>();
     private final Set<Pos> queuedChunks = new HashSet<>();
 
     private final int bytesPerChunk;
@@ -94,29 +94,9 @@ public abstract class OpenGL2DRenderer {
 
         camera = new Camera(window);
 
-        //ebo = glGenBuffers();
         xzBuffer = glGenBuffers();
 
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBindBuffer(GL_ARRAY_BUFFER, xzBuffer);
-
-        //Generate index buffer
-        /*IntBuffer indices = MemoryUtil.memAllocInt((chunkSize - 1) * (chunkSize - 1) * 6);
-        for (int x = 0; x < (chunkSize - 1); x++) {
-            for (int z = 0; z < (chunkSize - 1); z++) {
-                int baseIndex = z * chunkSize + x;
-                indices.put(baseIndex);
-                indices.put(baseIndex + chunkSize + 1);
-                indices.put(baseIndex + chunkSize);
-
-                indices.put(baseIndex + 1);
-                indices.put(baseIndex + chunkSize + 1);
-                indices.put(baseIndex);
-            }
-        }
-        indices.flip();
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-        MemoryUtil.memFree(indices);*/
 
         generateIndices();
 
@@ -166,9 +146,8 @@ public abstract class OpenGL2DRenderer {
 
         IntBuffer indices = MemoryUtil.memAllocInt((usedInside + neededForEdge + neededForInnerEdge) * 3);
 
-        //For Now, only inner;
-        for(int x = shift; x < end - lodStep; x += lodStep){
-            for(int y = shift; y < end - lodStep; y += lodStep){
+        for(int y = shift; y < end - lodStep; y += lodStep){
+            for(int x = shift; x < end - lodStep; x += lodStep){
                 int baseIndex = (y * chunkSize + x);
 
                 indices.put(baseIndex);
@@ -406,8 +385,8 @@ public abstract class OpenGL2DRenderer {
             Matrix4f projectionMatrix = window.getProjectionMatrix();
             setProjectionMatrix(projectionMatrix);
 
-            int x = (int) Math.floor(camera.getPosition().z / (chunkSize - 1));
-            int z = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
+            int x = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
+            int z = (int) Math.floor(camera.getPosition().z / (chunkSize - 1));
 
             for(TerrainChunk chunk : chunks.values()){
                 int LOD = Math.abs(x - chunk.x()) + Math.abs(z - chunk.z()) / 2;
@@ -422,6 +401,10 @@ public abstract class OpenGL2DRenderer {
             glfwPollEvents();
         }
 
+        close();
+    }
+
+    public void close(){
         for(TerrainChunk chunk : chunks.values()){
             chunk.delete();
         }
@@ -438,8 +421,8 @@ public abstract class OpenGL2DRenderer {
     }
 
     private void trackChunks() {
-        int x = (int) Math.floor(camera.getPosition().z / (chunkSize - 1));
-        int z = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
+        int x = (int) Math.floor(camera.getPosition().x / (chunkSize - 1));
+        int z = (int) Math.floor(camera.getPosition().z / (chunkSize - 1));
 
         Set<Pos> toRemove = new HashSet<>(2);
         chunks.keySet().forEach(key -> {
@@ -474,7 +457,7 @@ public abstract class OpenGL2DRenderer {
 
     protected abstract void delete();
 
-    protected void putBakedChunk(int x, int z, TerrainChunk chunk){
+    protected void putBakedChunk(int x, int z, T chunk){
         System.out.println("Baked chunk at " + x + ", " + z);
         Pos pos = new Pos(x, z);
         queuedChunks.remove(pos);
@@ -482,6 +465,10 @@ public abstract class OpenGL2DRenderer {
         if(prev != null){
             prev.delete();
         }
+    }
+
+    public T getChunk(int x, int z){
+        return chunks.get(new Pos(x, z));
     }
 
     public void setViewDistance(int viewDistance) {

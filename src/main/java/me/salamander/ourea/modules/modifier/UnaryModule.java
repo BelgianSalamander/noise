@@ -12,16 +12,6 @@ public class UnaryModule implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(int salt) {
-
-    }
-
-    @Override
-    public void setFrequency(float frequency) {
-
-    }
-
-    @Override
     public float sample(float x, float y, int seed) {
         return op.apply(source.sample(x, y, seed));
     }

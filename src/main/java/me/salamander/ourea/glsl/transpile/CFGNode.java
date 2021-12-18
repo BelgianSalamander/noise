@@ -538,11 +538,11 @@ public class CFGNode {
                     jumpStatement = new IfElseStatement(condition, ifTrue, ifFalse);
                 }
 
-                boolean isTernary = end.prev.iterator().next().residualValue != null;
+                boolean isTernary = end != null && end.prev.iterator().next().residualValue != null;
                 Statement[] preJump = this.statements.subList(0, this.statements.size() - 1).toArray(new Statement[0]);
 
                 if(!isTernary) {
-                    Statement[] postJump = end.flatten(scopeEnd, loopNodes);
+                    Statement[] postJump = end == null ? new Statement[0] : end.flatten(scopeEnd, loopNodes);
                     Statement[] result = new Statement[preJump.length + 1 + postJump.length];
                     System.arraycopy(preJump, 0, result, 0, preJump.length);
                     result[preJump.length] = jumpStatement;

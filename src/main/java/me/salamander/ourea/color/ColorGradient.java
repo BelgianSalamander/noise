@@ -74,6 +74,10 @@ public class ColorGradient {
         return fb;
     }
 
+    public int size() {
+        return entries.size();
+    }
+
     private static class ColorEntry implements Comparable<ColorEntry> {
         final float position;
         final float r, g, b;

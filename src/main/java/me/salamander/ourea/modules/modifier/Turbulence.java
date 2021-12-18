@@ -21,16 +21,6 @@ public class Turbulence implements NoiseSampler {
     }
 
     @Override
-    public void setSalt(int salt) {
-
-    }
-
-    @Override
-    public void setFrequency(float frequency) {
-
-    }
-
-    @Override
     public float sample(float x, float y, int seed) {
         final float x0 = x + (12148.0f / 65536.0f);
         final float y0 = y + (56346.0f / 65536.0f);

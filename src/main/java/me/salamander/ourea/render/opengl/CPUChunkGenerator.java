@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 
 import static org.lwjgl.opengl.GL45.*;
 
-public class CPUChunkGenerator extends OpenGL2DRenderer{
+public class CPUChunkGenerator extends OpenGL2DRenderer<OpenGL2DRenderer.SplitTerrainChunk> {
     private final ExecutorService executor;
     private final CompletionService<ChunkData> completionService;
     private int code = 0;
